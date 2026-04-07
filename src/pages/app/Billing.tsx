@@ -1,0 +1,445 @@
+﻿import { useEffect, useMemo, useState } from "react";
+import { Card } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { useAuth } from "../../context/AuthContext";
+import { supabase } from "../../lib/supabase";
+
+type PaymentRecord = {
+  id: number;
+  reference: string;
+  amount: number;
+  currency: string;
+  status: string;
+  paid_at: string | null;
+  created_at: string;
+};
+
+declare global {
+  interface Window {
+    PaystackPop?: {
+      setup: (options: {
+        key: string;
+        email: string;
+        amount: number;
+        currency?: string;
+        ref?: string;
+        firstname?: string;
+        lastname?: string;
+        metadata?: Record<string, unknown>;
+        callback: (response: { reference: string }) => void;
+        onClose: () => void;
+      }) => {
+        openIframe: () => void;
+      };
+    };
+  }
+}
+
+const publicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+const PREMIUM_PRICE_NGN = 15000;
+
+function loadPaystackScript() {
+  return new Promise<void>((resolve, reject) => {
+    const existingScript = document.querySelector(
+      'script[src="https://js.paystack.co/v1/inline.js"]'
+    );
+
+    if (existingScript) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://js.paystack.co/v1/inline.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Paystack script."));
+    document.body.appendChild(script);
+  });
+}
+
+function formatMoney(amount: number, currency: string) {
+  return `${currency} ${Number(amount / 100).toLocaleString()}`;
+}
+
+export default function Billing() {
+  const { user, profile, refreshProfile } = useAuth();
+  const [isPaying, setIsPaying] = useState(false);
+  const [isDowngrading, setIsDowngrading] = useState(false);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
+
+  const email = user?.email || "";
+  const plan = profile?.plan || "free";
+  const amountInKobo = useMemo(() => PREMIUM_PRICE_NGN * 100, []);
+
+  const fullName = profile?.full_name || "";
+  const [firstName, ...restName] = fullName.split(" ");
+  const lastName = restName.join(" ");
+
+  const latestPayment = payments[0];
+  const totalSpent = payments.reduce((sum, payment) => sum + payment.amount, 0);
+
+  const fetchPayments = async () => {
+    if (!user?.id) {
+      setPayments([]);
+      setPaymentsLoading(false);
+      return;
+    }
+
+    setPaymentsLoading(true);
+
+    const { data, error } = await supabase
+      .from("payments")
+      .select("id, reference, amount, currency, status, paid_at, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Failed to fetch payments:", error);
+      setPayments([]);
+    } else {
+      setPayments((data as PaymentRecord[]) || []);
+    }
+
+    setPaymentsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchPayments();
+  }, [user?.id]);
+
+  const handleExportCsv = () => {
+    if (!payments.length) {
+      alert("No payments available to export.");
+      return;
+    }
+
+    const rows = [
+      ["Reference", "Amount", "Currency", "Status", "Paid At", "Created At"],
+      ...payments.map((payment) => [
+        payment.reference,
+        String(payment.amount / 100),
+        payment.currency,
+        payment.status,
+        payment.paid_at ?? "",
+        payment.created_at,
+      ]),
+    ];
+
+    const csvContent = rows
+      .map((row) =>
+        row
+          .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+          .join(",")
+      )
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.setAttribute("download", "billing-history.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDowngrade = async () => {
+    if (!user?.id) {
+      alert("No user found.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to downgrade to the free plan?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setIsDowngrading(true);
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({ plan: "free" })
+        .eq("id", user.id);
+
+      if (error) {
+        console.error("Downgrade failed:", error);
+        alert(`Failed to downgrade: ${error.message}`);
+        return;
+      }
+
+      await refreshProfile();
+      await fetchPayments();
+      alert("Your plan has been downgraded to free.");
+      window.location.reload();
+    } catch (error) {
+      console.error("Downgrade error:", error);
+      alert(
+        error instanceof Error
+          ? `Downgrade failed: ${error.message}`
+          : "Downgrade failed."
+      );
+    } finally {
+      setIsDowngrading(false);
+    }
+  };
+
+  const handlePaystackPayment = async () => {
+    if (!publicKey) {
+      alert("Missing Paystack public key.");
+      return;
+    }
+
+    if (!email) {
+      alert("No user email found. Please log in again.");
+      return;
+    }
+
+    if (!user?.id) {
+      alert("No user ID found. Please log in again.");
+      return;
+    }
+
+    try {
+      setIsPaying(true);
+      await loadPaystackScript();
+
+      if (!window.PaystackPop) {
+        throw new Error("Paystack failed to initialize.");
+      }
+
+      const handler = window.PaystackPop.setup({
+        key: publicKey,
+        email,
+        amount: amountInKobo,
+        currency: "NGN",
+        ref: `seo_${Date.now()}`,
+        firstname: firstName || undefined,
+        lastname: lastName || undefined,
+        metadata: {
+          custom_fields: [
+            {
+              display_name: "Plan",
+              variable_name: "plan",
+              value: "premium",
+            },
+          ],
+          userId: user.id,
+          user_id: user.id,
+          plan: "premium",
+        },
+        callback: () => {
+          alert("Payment received. Your account will update shortly after secure verification.");
+
+          setTimeout(async () => {
+            await refreshProfile();
+            await fetchPayments();
+            window.location.reload();
+          }, 5000);
+        },
+        onClose: () => {
+          alert("Transaction was not completed.");
+        },
+      });
+
+      handler.openIframe();
+    } catch (error) {
+      console.error("Paystack start error:", error);
+      alert(
+        error instanceof Error
+          ? `Unable to start payment: ${error.message}`
+          : "Unable to start payment. Please try again."
+      );
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-[1200px] space-y-8 p-6 md:p-8">
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Billing</h1>
+          <p className="mt-1 text-muted-foreground">
+            Manage your subscription and upgrade your SEO workspace.
+          </p>
+        </div>
+
+        <div className="inline-flex w-fit items-center rounded-full border px-3 py-1 text-sm font-medium">
+          Plan: <span className="ml-2 capitalize">{plan}</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <Card className="border-border/50 p-6 lg:col-span-1">
+          <h2 className="mb-2 text-xl font-semibold">Current Plan</h2>
+          <p className="mb-4 text-muted-foreground">
+            Your active subscription and workspace access.
+          </p>
+
+          <div className="mb-3 text-3xl font-bold capitalize">{plan}</div>
+
+          <div className="mb-4 inline-flex rounded-full bg-muted px-3 py-1 text-xs font-medium uppercase tracking-wide">
+            {plan === "premium" ? "Premium Active" : "Free Plan"}
+          </div>
+
+          <p className="mb-6 text-sm text-muted-foreground">
+            {plan === "premium"
+              ? "You currently have access to premium billing features, higher limits, and advanced SEO tools."
+              : "You are currently using the free workspace plan with limited access."}
+          </p>
+
+          {plan === "premium" && (
+            <Button
+              variant="outline"
+              onClick={handleDowngrade}
+              disabled={isDowngrading}
+              className="w-full"
+            >
+              {isDowngrading ? "Downgrading..." : "Downgrade to Free"}
+            </Button>
+          )}
+        </Card>
+
+        <Card className="border-border/50 p-6 lg:col-span-1">
+          {plan === "premium" ? (
+            <>
+              <h2 className="mb-2 text-xl font-semibold">Premium Plan</h2>
+              <p className="mb-4 text-muted-foreground">
+                Your premium subscription is already active.
+              </p>
+
+              <div className="mb-3 text-3xl font-bold">Premium Active</div>
+
+              <div className="mb-4 inline-flex rounded-full bg-muted px-3 py-1 text-xs font-medium uppercase tracking-wide">
+                Subscription Enabled
+              </div>
+
+              <p className="mb-6 text-sm text-muted-foreground">
+                You already have access to all premium SEO billing features on this workspace.
+              </p>
+
+              <Button disabled className="w-full px-6">
+                Current Plan
+              </Button>
+            </>
+          ) : (
+            <>
+              <h2 className="mb-2 text-xl font-semibold">Premium Plan</h2>
+              <p className="mb-4 text-muted-foreground">
+                Unlock advanced SEO tools and premium limits.
+              </p>
+
+              <div className="mb-2 text-3xl font-bold">NGN 15,000 / month</div>
+              <p className="mb-4 text-sm text-muted-foreground">
+                Ideal for growing teams and serious SEO campaigns.
+              </p>
+
+              <ul className="mb-6 space-y-2 text-sm text-muted-foreground">
+                <li>- Unlimited keyword saves</li>
+                <li>- More tracked domains</li>
+                <li>- More audits and reports</li>
+                <li>- Premium SEO tool access</li>
+              </ul>
+
+              <Button
+                onClick={handlePaystackPayment}
+                disabled={isPaying}
+                className="w-full px-6"
+              >
+                {isPaying ? "Processing..." : "Pay with Paystack"}
+              </Button>
+            </>
+          )}
+        </Card>
+
+        <Card className="border-border/50 p-6 lg:col-span-1">
+          <h2 className="mb-4 text-xl font-semibold">Billing Summary</h2>
+
+          <div className="space-y-4">
+            <div className="rounded-lg border p-4">
+              <p className="text-sm text-muted-foreground">Total Payments</p>
+              <p className="mt-1 text-2xl font-bold">{payments.length}</p>
+            </div>
+
+            <div className="rounded-lg border p-4">
+              <p className="text-sm text-muted-foreground">Total Spent</p>
+              <p className="mt-1 text-2xl font-bold">NGN {Number(totalSpent / 100).toLocaleString()}</p>
+            </div>
+
+            <div className="rounded-lg border p-4">
+              <p className="text-sm text-muted-foreground">Latest Payment</p>
+              <p className="mt-1 text-sm font-medium">
+                {latestPayment
+                  ? new Date(latestPayment.paid_at || latestPayment.created_at).toLocaleString()
+                  : "No payments yet"}
+              </p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <Card className="border-border/50 p-6">
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="mb-2 text-xl font-semibold">Billing History</h2>
+            <p className="text-muted-foreground">
+              View your recent payment activity.
+            </p>
+          </div>
+
+          <Button
+            variant="outline"
+            onClick={handleExportCsv}
+            disabled={payments.length === 0}
+          >
+            Export CSV
+          </Button>
+        </div>
+
+        {paymentsLoading ? (
+          <div className="rounded-lg border p-4 text-sm text-muted-foreground">
+            Loading billing history...
+          </div>
+        ) : payments.length === 0 ? (
+          <div className="rounded-lg border p-4 text-sm text-muted-foreground">
+            No payment history yet.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {payments.map((payment) => (
+              <div
+                key={payment.id}
+                className="flex flex-col gap-3 rounded-lg border p-4 md:flex-row md:items-center md:justify-between"
+              >
+                <div>
+                  <p className="font-medium">Reference: {payment.reference}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Date:{" "}
+                    {payment.paid_at
+                      ? new Date(payment.paid_at).toLocaleString()
+                      : new Date(payment.created_at).toLocaleString()}
+                  </p>
+                </div>
+
+                <div className="md:text-right">
+                  <p className="font-semibold">
+                    {formatMoney(payment.amount, payment.currency)}
+                  </p>
+                  <p className="text-sm capitalize text-muted-foreground">
+                    Status: {payment.status}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
