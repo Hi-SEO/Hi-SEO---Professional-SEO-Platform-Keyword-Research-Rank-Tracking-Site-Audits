@@ -1,0 +1,563 @@
+mary/10 text-primary transition-all duration-300 group-hover:scale-110 group-hover:bg-primary group-hover:text-white">
+        <Icon className="h-6 w-6" />
+      </div>
+      <h3 className="mt-5 text-xl font-bold tracking-tight">{title}</h3>
+      <p className="mt-3 leading-relaxed text-muted-foreground">{description}</p>
+    </Card>
+  )
+}
+
+export function FeaturesSection() {
+  return (
+    <section className="py-24">
+      <div className="container mx-auto max-w-7xl px-6 lg:px-12">
+        <div className="mx-auto mb-16 max-w-3xl text-center">
+          <h2 className="text-balance text-3xl font-bold tracking-tight md:text-5xl">
+            Everything you need to rank higher.
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground">
+            Replace your fragmented tool stack with one unified, deeply integrated platform.
+          </p>
+        </div>
+
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          {features.map((feature) => (
+            <FeatureCard key={feature.title} {...feature} />
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+
+--- FILE: src\components\marketing\HeroSection.tsx ---
+
+import { Link } from "react-router-dom"
+import { motion } from "framer-motion"
+import { ArrowRight, CheckCircle2, Sparkles } from "lucide-react"
+import { Button } from "../ui/button"
+import { DashboardMockup } from "./DashboardMockup"
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 80, damping: 16 } },
+}
+
+const stagger = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.12 } },
+}
+
+export function HeroSection() {
+  return (
+    <section className="relative overflow-hidden pt-24 pb-20 lg:pt-32 lg:pb-28">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.16),transparent_45%)]" />
+
+      <div className="container relative mx-auto max-w-7xl px-6 lg:px-12">
+        <motion.div initial="hidden" animate="show" variants={stagger} className="mx-auto max-w-4xl text-center">
+          <motion.div variants={fadeUp}>
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary shadow-sm">
+              <Sparkles className="h-4 w-4" />
+              Introducing Hi-SEO 2.0
+            </span>
+
+            <h1 className="mt-6 text-balance text-5xl font-bold tracking-tighter leading-tight md:text-7xl">
+              Dominate Search with Intelligent SEO Software.
+            </h1>
+          </motion.div>
+
+          <motion.div variants={fadeUp}>
+            <p className="mx-auto mt-6 max-w-2xl text-balance text-xl text-muted-foreground">
+              An enterprise-grade platform for keyword research, rank tracking, and AI-assisted content optimization.
+              Built for serious growth teams that need clean workflows and fast insights.
+            </p>
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Button size="lg" variant="premium" className="w-full px-8 text-base sm:w-auto" asChild>
+              <Link to="/signup">
+                Start Free Trial
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Button>
+
+            <Button size="lg" variant="outline" className="w-full px-8 text-base sm:w-auto" asChild>
+              <Link to="/compare">Compare to Ahrefs</Link>
+            </Button>
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
+            {["Live rank tracking", "AI briefs", "White-label reports"].map((item) => (
+              <span key={item} className="inline-flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+                {item}
+              </span>
+            ))}
+          </motion.div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35, duration: 0.8 }}
+          className="mt-16 lg:mt-20"
+        >
+          <DashboardMockup />
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+
+--- FILE: src\components\marketing\MetricsSection.tsx ---
+
+import { Card } from "../ui/card"
+import { CheckCircle2 } from "lucide-react"
+import { Button } from "../ui/button"
+import { Link } from "react-router-dom"
+
+const metrics = [
+  { value: "150B+", label: "Pages Crawled" },
+  { value: "25B+", label: "Keywords Database" },
+  { value: "4T+", label: "Live Backlinks" },
+  { value: "99.9%", label: "Data Accuracy" },
+]
+
+const proofPoints = [
+  "150+ Billion indexed pages",
+  "25+ Billion keywords tracked globally",
+  "4+ Trillion known backlinks",
+  "Daily updates across 170+ countries",
+]
+
+export function MetricsSection() {
+  return (
+    <section className="relative overflow-hidden border-y bg-card py-24">
+      <div className="absolute right-0 top-0 h-[500px] w-[500px] translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/5 blur-3xl" />
+      <div className="absolute bottom-0 left-0 h-[500px] w-[500px] -translate-x-1/2 translate-y-1/2 rounded-full bg-emerald-500/5 blur-3xl" />
+
+      <div className="container relative z-10 mx-auto max-w-7xl px-6 lg:px-12">
+        <div className="grid items-center gap-16 lg:grid-cols-2">
+          <div className="space-y-8">
+            <h2 className="text-balance text-3xl font-bold tracking-tight md:text-5xl">
+              The most accurate SEO database in the industry.
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              We crawl billions of pages a day to provide the freshest backlink data and keyword metrics available anywhere.
+            </p>
+
+            <ul className="space-y-4">
+              {proofPoints.map((item) => (
+                <li key={item} className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-primary" />
+                  <span className="font-medium">{item}</span>
+                </li>
+              ))}
+            </ul>
+
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/features">Explore Data Quality</Link>
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {metrics.map((metric, index) => (
+              <Card
+                key={metric.label}
+                className={[
+                  "space-y-2 p-6 shadow-soft",
+                  index % 2 === 1 ? "translate-y-8" : "",
+                  index === 0 ? "border-primary/20 bg-primary/5 shadow-none" : "bg-background",
+                ].join(" ")}
+              >
+                <div className="text-3xl font-bold text-foreground">{metric.value}</div>
+                <div className="text-sm font-medium text-muted-foreground">{metric.label}</div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+
+--- FILE: src\components\marketing\TrustedBySection.tsx ---
+
+import { Card } from "../ui/card"
+import { BadgeCheck, Sparkles } from "lucide-react"
+
+const brands = [
+  { name: "Northstar", tag: "B2B SaaS", initials: "N", accent: "from-sky-500 to-cyan-400" },
+  { name: "MetricForge", tag: "Analytics", initials: "M", accent: "from-indigo-500 to-violet-500" },
+  { name: "PulseRank", tag: "SEO Agency", initials: "P", accent: "from-emerald-500 to-teal-400" },
+  { name: "OrbitLabs", tag: "Growth Team", initials: "O", accent: "from-fuchsia-500 to-pink-500" },
+  { name: "SignalMint", tag: "Marketing Ops", initials: "S", accent: "from-amber-500 to-orange-500" },
+]
+
+export function TrustedBySection() {
+  return (
+    <section className="border-y bg-muted/10 py-12">
+      <div className="container mx-auto max-w-7xl px-6 lg:px-12">
+        <div className="text-center">
+          <p className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+            <BadgeCheck className="h-4 w-4" />
+            Trusted by modern SEO teams
+          </p>
+          <h2 className="mt-4 text-2xl font-bold tracking-tight text-balance">
+            Distinctive brands, designed for high-performance marketing.
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
+            Fictional brand marks styled like premium SaaS partner logos — perfect as a polished trust strip until you swap in real customer logos.
+          </p>
+        </div>
+
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {brands.map((brand) => (
+            <Card key={brand.name} className="border-border/60 bg-background/90 p-4 shadow-soft transition-transform duration-300 hover:-translate-y-1">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${brand.accent} text-white shadow-lg`}
+                >
+                  <span className="text-lg font-bold">{brand.initials}</span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">{brand.name}</p>
+                  <p className="text-xs text-muted-foreground">{brand.tag}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
+                <div className={`h-full w-4/5 rounded-full bg-gradient-to-r ${brand.accent}`} />
+              </div>
+
+              <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                Premium partner
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+
+--- FILE: src\components\ui\badge.tsx ---
+
+import * as React from "react"
+import { cn } from "../../lib/utils"
+
+export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: "default" | "secondary" | "destructive" | "outline" | "success" | "warning"
+}
+
+function Badge({ className, variant = "default", ...props }: BadgeProps) {
+  const variants = {
+    default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+    secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+    destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+    outline: "text-foreground",
+    success: "border-transparent bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+    warning: "border-transparent bg-amber-500/15 text-amber-600 dark:text-amber-400"
+  }
+
+  return (
+    <div
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+        variants[variant],
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Badge }
+
+--- FILE: src\components\ui\button.tsx ---
+
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cn } from "../../lib/utils"
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  asChild?: boolean
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | "premium"
+  size?: "default" | "sm" | "lg" | "icon" | "xs"
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = "default", size = "default", asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+
+    const variants = {
+      default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+      destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
+      outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground shadow-sm",
+      secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+      ghost: "hover:bg-accent hover:text-accent-foreground",
+      link: "text-primary underline-offset-4 hover:underline",
+      premium: "bg-gradient-to-r from-indigo-600 to-blue-500 text-white shadow-premium hover:opacity-90 transition-all hover:-translate-y-0.5",
+    }
+
+    const sizes = {
+      default: "h-10 px-4 py-2 rounded-md",
+      sm: "h-9 rounded-md px-3 text-sm",
+      lg: "h-11 rounded-md px-8 text-base",
+      icon: "h-10 w-10 rounded-md",
+      xs: "h-7 rounded px-2 text-xs",
+    }
+
+    return (
+      <Comp
+        className={cn(
+          "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+          variants[variant],
+          sizes[size],
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
+
+export { Button }
+
+
+--- FILE: src\components\ui\card.tsx ---
+
+import * as React from "react"
+import { cn } from "../../lib/utils"
+
+const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn("rounded-xl border bg-card text-card-foreground shadow-soft transition-all hover:shadow-premium duration-300", className)}
+      {...props}
+    />
+  )
+)
+Card.displayName = "Card"
+
+const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("flex flex-col space-y-1.5 p-6", className)} {...props} />
+  )
+)
+CardHeader.displayName = "CardHeader"
+
+const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
+  ({ className, ...props }, ref) => (
+    <h3 ref={ref} className={cn("font-semibold leading-none tracking-tight", className)} {...props} />
+  )
+)
+CardTitle.displayName = "CardTitle"
+
+const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
+  ({ className, ...props }, ref) => (
+    <p ref={ref} className={cn("text-sm text-muted-foreground", className)} {...props} />
+  )
+)
+CardDescription.displayName = "CardDescription"
+
+const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+  )
+)
+CardContent.displayName = "CardContent"
+
+const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div ref={ref} className={cn("flex items-center p-6 pt-0", className)} {...props} />
+  )
+)
+CardFooter.displayName = "CardFooter"
+
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
+
+--- FILE: src\components\ui\input.tsx ---
+
+import * as React from "react"
+import { cn } from "../../lib/utils"
+
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={cn(
+          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Input.displayName = "Input"
+
+export { Input }
+
+--- FILE: src\components\ui\LoadingScreen.tsx ---
+
+export function LoadingScreen() {
+  return (
+    <div className="flex h-screen items-center justify-center bg-white">
+      <div className="flex flex-col items-center gap-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+        <p className="text-sm text-gray-500 animate-pulse">Loading...</p>
+      </div>
+    </div>
+  )
+}
+
+
+--- FILE: src\context\AuthContext.tsx ---
+
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { Session, User, AuthResponse } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
+
+type Profile = {
+  id: string
+  email: string | null
+  full_name: string | null
+  company_name: string | null
+  avatar_url: string | null
+  plan: string | null
+  created_at: string | null
+}
+
+type AuthContextType = {
+  user: User | null
+  session: Session | null
+  profile: Profile | null
+  loading: boolean
+  error: string | null
+  signUp: (email: string, password: string) => Promise<AuthResponse>
+  signIn: (email: string, password: string) => Promise<AuthResponse>
+  signOut: () => Promise<void>
+  refreshProfile: () => Promise<void>
+  clearError: () => void
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (error) {
+      console.error('Error fetching profile:', error.message)
+      setProfile(null)
+      return
+    }
+
+    setProfile(data ?? null)
+  }
+
+  const refreshProfile = async () => {
+    if (user?.id) {
+      await fetchProfile(user.id)
+    }
+  }
+
+  const clearError = () => setError(null)
+
+  useEffect(() => {
+    let mounted = true
+
+    const initializeAuth = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (!mounted) return
+
+        setSession(session)
+        setUser(session?.user ?? null)
+
+        if (session?.user?.id) {
+          await fetchProfile(session.user.id)
+        } else {
+          setProfile(null)
+        }
+      } catch (err) {
+        console.error('Error initializing auth:', err)
+        if (mounted) {
+          setError('Failed to initialize authentication')
+          setProfile(null)
+          setUser(null)
+          setSession(null)
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    initializeAuth()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return
+
+      setSession(session)
+      setUser(session?.user ?? null)
+
+      if (event === 'SIGNED_OUT') {
+        setProfile(null)
+        setError(null)
+      }
+
+      if (
+        event === 'SIGNED_IN' ||
+        event === 'TOKEN_REFRESHED' ||
+        event === 'USER_UPDATED'
+      ) {
+        if (session?.user?.id) {
+          fetchProfile(session.user.id)
+        }
+      }
+
+      setLoading(false)
+    })
+
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  const signUp = (email: string, password: string): Promise<AuthResponse> => {
+    return supabase.auth.signUp({ email, password })
+  }
+
+  const signIn = (email: string, passwor

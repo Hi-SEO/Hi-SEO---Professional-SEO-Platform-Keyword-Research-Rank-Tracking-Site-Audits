@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { Session, User } from '@supabase/supabase-js'
+﻿import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { Session, User, AuthResponse } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 
 type Profile = {
@@ -17,10 +17,12 @@ type AuthContextType = {
   session: Session | null
   profile: Profile | null
   loading: boolean
-  signUp: (email: string, password: string) => Promise<any>
-  signIn: (email: string, password: string) => Promise<any>
+  error: string | null
+  signUp: (email: string, password: string) => Promise<AuthResponse>
+  signIn: (email: string, password: string) => Promise<AuthResponse>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
+  clearError: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -30,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchProfile = async (userId: string) => {
     const { data, error } = await supabase
@@ -53,6 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const clearError = () => setError(null)
+
   useEffect(() => {
     let mounted = true
 
@@ -72,9 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setProfile(null)
         }
-      } catch (error) {
-        console.error('Error initializing auth:', error)
+      } catch (err) {
+        console.error('Error initializing auth:', err)
         if (mounted) {
+          setError('Failed to initialize authentication')
           setProfile(null)
           setUser(null)
           setSession(null)
@@ -91,14 +97,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return
+
       setSession(session)
       setUser(session?.user ?? null)
 
       if (event === 'SIGNED_OUT') {
         setProfile(null)
+        setError(null)
       }
 
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+      if (
+        event === 'SIGNED_IN' ||
+        event === 'TOKEN_REFRESHED' ||
+        event === 'USER_UPDATED'
+      ) {
         if (session?.user?.id) {
           fetchProfile(session.user.id)
         }
@@ -113,23 +126,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const signUp = (email: string, password: string) => {
-    return supabase.auth.signUp({
-      email,
-      password,
-    })
+  const signUp = (email: string, password: string): Promise<AuthResponse> => {
+    return supabase.auth.signUp({ email, password })
   }
 
-  const signIn = (email: string, password: string) => {
-    return supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+  const signIn = (email: string, password: string): Promise<AuthResponse> => {
+    return supabase.auth.signInWithPassword({ email, password })
   }
 
   const signOut = async () => {
     await supabase.auth.signOut()
     setProfile(null)
+    setError(null)
   }
 
   return (
@@ -139,10 +147,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         profile,
         loading,
+        error,
         signUp,
         signIn,
         signOut,
         refreshProfile,
+        clearError,
       }}
     >
       {children}

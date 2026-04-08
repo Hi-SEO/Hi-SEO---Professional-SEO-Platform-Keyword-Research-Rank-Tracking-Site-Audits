@@ -1,233 +1,385 @@
-import { useMemo, useState } from "react";
-import { Button } from "../../components/ui/button";
-import { Card } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
-import { Search, Link2, Globe, BarChart3 } from "lucide-react";
+﻿import { useState, useEffect } from "react"
+import { Button } from "../../components/ui/button"
+import { Card } from "../../components/ui/card"
+import { Input } from "../../components/ui/input"
+import { analyzeBacklinks, BacklinkSummary } from "../../utils/backlinkService"
+import { supabase } from "../../lib/supabase"
+import { useAuth } from "../../context/AuthContext"
+import {
+  Search,
+  Save,
+  RotateCcw,
+  Link2,
+  Globe,
+  Award,
+  ShieldAlert,
+  RefreshCw,
+  AlertTriangle,
+  type LucideIcon,
+} from "lucide-react"
 
-type BacklinkRow = {
-  sourceDomain: string;
-  targetUrl: string;
-  anchorText: string;
-  authority: number;
-  type: "dofollow" | "nofollow";
-};
+type Project = {
+  id: string
+  name: string
+  domain: string | null
+}
 
-function generateBacklinks(domain: string): BacklinkRow[] {
-  const clean = domain.replace(/^https?:\/\//, "").replace(/\/$/, "");
+type BacklinkRow = BacklinkSummary["backlinks"][number]
 
-  return [
-    {
-      sourceDomain: "techcrunch-example.com",
-      targetUrl: `https://${clean}/`,
-      anchorText: clean,
-      authority: 78,
-      type: "dofollow",
-    },
-    {
-      sourceDomain: "marketingweekly.io",
-      targetUrl: `https://${clean}/blog`,
-      anchorText: "best seo platform",
-      authority: 64,
-      type: "dofollow",
-    },
-    {
-      sourceDomain: "startupgrowthhub.com",
-      targetUrl: `https://${clean}/pricing`,
-      anchorText: "seo software pricing",
-      authority: 51,
-      type: "nofollow",
-    },
-    {
-      sourceDomain: "agencyinsider.net",
-      targetUrl: `https://${clean}/features`,
-      anchorText: "rank tracking tools",
-      authority: 72,
-      type: "dofollow",
-    },
-    {
-      sourceDomain: "serpjournal.org",
-      targetUrl: `https://${clean}/compare`,
-      anchorText: "seo tools comparison",
-      authority: 59,
-      type: "dofollow",
-    },
-    {
-      sourceDomain: "digitalworldforum.com",
-      targetUrl: `https://${clean}/`,
-      anchorText: clean,
-      authority: 46,
-      type: "nofollow",
-    },
-  ];
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message
+  return "Failed to analyze backlinks. Please try again."
+}
+
+function MetricCard({
+  icon: Icon,
+  title,
+  value,
+}: {
+  icon: LucideIcon
+  title: string
+  value: string | number
+}) {
+  return (
+    <Card className="p-6">
+      <div className="flex items-center gap-3">
+        <Icon className="h-8 w-8 text-primary" />
+        <div>
+          <p className="text-sm text-muted-foreground">{title}</p>
+          <p className="text-4xl font-bold">{value}</p>
+        </div>
+      </div>
+    </Card>
+  )
 }
 
 export default function BacklinkAnalytics() {
-  const [domain, setDomain] = useState("digitaltoolkt.com.ng");
-  const [submittedDomain, setSubmittedDomain] = useState("digitaltoolkt.com.ng");
+  const { user } = useAuth()
 
-  const backlinks = useMemo(() => generateBacklinks(submittedDomain), [submittedDomain]);
+  const [domainInput, setDomainInput] = useState("digitaltoolkit.com.ng")
+  const [loading, setLoading] = useState(false)
+  const [data, setData] = useState<BacklinkSummary | null>(null)
+  const [error, setError] = useState("")
+  const [message, setMessage] = useState("")
+  const [reloadKey, setReloadKey] = useState(0)
 
-  const referringDomains = backlinks.length;
-  const totalBacklinks = backlinks.length * 4;
-  const avgAuthority = Math.round(
-    backlinks.reduce((sum, row) => sum + row.authority, 0) / backlinks.length
-  );
+  const [projects, setProjects] = useState<Project[]>([])
+  const [selectedProjectId, setSelectedProjectId] = useState("")
+  const [newProjectName, setNewProjectName] = useState("")
+  const [creatingProject, setCreatingProject] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [projectsLoading, setProjectsLoading] = useState(true)
 
-  const anchorSummary = useMemo(() => {
-    const counts: Record<string, number> = {};
-
-    backlinks.forEach((row) => {
-      counts[row.anchorText] = (counts[row.anchorText] || 0) + 1;
-    });
-
-    return Object.entries(counts).map(([term, count]) => ({
-      term,
-      percentage: Math.round((count / backlinks.length) * 100),
-    }));
-  }, [backlinks]);
-
-  const handleAnalyze = () => {
-    if (domain.trim()) {
-      setSubmittedDomain(domain.trim());
+  const loadProjects = async () => {
+    if (!user) {
+      setProjectsLoading(false)
+      return
     }
-  };
+
+    setProjectsLoading(true)
+
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id, name, domain")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+
+      if (error) throw error
+
+      const rows = data || []
+      setProjects(rows)
+
+      if (rows.length > 0 && !selectedProjectId) {
+        setSelectedProjectId(rows[0].id)
+      }
+    } catch (err) {
+      console.error("Error loading projects:", err)
+      setError("Failed to load projects.")
+    } finally {
+      setProjectsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadProjects()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, reloadKey])
+
+  const handleAnalyze = async () => {
+    if (!domainInput.trim()) {
+      setError("Please enter a domain")
+      return
+    }
+
+    setLoading(true)
+    setError("")
+    setMessage("")
+    setData(null)
+
+    try {
+      const result = analyzeBacklinks(domainInput.trim())
+      setData(result)
+    } catch (err: unknown) {
+      setError(getErrorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreateProject = async () => {
+    if (!user) {
+      setError("You must be logged in.")
+      return
+    }
+
+    if (!newProjectName.trim()) {
+      setError("Please enter a project name.")
+      return
+    }
+
+    setCreatingProject(true)
+    setError("")
+    setMessage("")
+
+    try {
+      const { data: newProject, error } = await supabase
+        .from("projects")
+        .insert({
+          user_id: user.id,
+          name: newProjectName.trim(),
+          domain: domainInput.trim() || null,
+        })
+        .select("id, name, domain")
+        .single()
+
+      if (error) throw error
+
+      if (newProject) {
+        setProjects((prev) => [newProject, ...prev])
+        setSelectedProjectId(newProject.id)
+        setNewProjectName("")
+        setMessage("Project created successfully.")
+      }
+    } catch (err) {
+      console.error("Error creating project:", err)
+      setError("Failed to create project. Please try again.")
+    } finally {
+      setCreatingProject(false)
+    }
+  }
+
+  const handleSaveReport = async () => {
+    if (!user || !data) {
+      setError("No data to save.")
+      return
+    }
+
+    if (!selectedProjectId) {
+      setError("Please select or create a project first.")
+      return
+    }
+
+    setSaving(true)
+    setError("")
+    setMessage("")
+
+    try {
+      const { error } = await supabase.from("reports").insert({
+        user_id: user.id,
+        project_id: selectedProjectId,
+        title: `Backlink Analysis - ${data.domain}`,
+        report_type: "backlink-analytics",
+        data,
+      })
+
+      if (error) throw error
+
+      setMessage("Backlink report saved successfully.")
+    } catch (err) {
+      console.error("Error saving report:", err)
+      setError("Failed to save report. Please try again.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const backlinks: BacklinkRow[] = data?.backlinks || []
 
   return (
-    <div className="p-6 md:p-8 space-y-8 max-w-[1600px] mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Backlink Analytics</h1>
-        <p className="text-muted-foreground mt-1">
-          Analyze backlink profiles, referring domains, anchor text, and authority metrics.
-        </p>
+    <div className="mx-auto max-w-[1600px] space-y-8 p-6 md:p-8">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Backlink Analytics</h1>
+          <p className="mt-1 text-muted-foreground">
+            Analyze any website's backlink profile, authority, and link quality.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setReloadKey((k) => k + 1)}
+            disabled={projectsLoading}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh Projects
+          </Button>
+
+          <Button onClick={handleSaveReport} disabled={saving || !data}>
+            <Save className="mr-2 h-4 w-4" />
+            {saving ? "Saving..." : "Save Report"}
+          </Button>
+        </div>
       </div>
 
-      <Card className="p-6 flex flex-col md:flex-row gap-4 items-center">
-        <div className="flex-1 w-full relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+      {error && (
+        <Card className="border-destructive/20 bg-destructive/10 p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
+            <div>
+              <p className="font-semibold text-destructive">Backlink analytics error</p>
+              <p className="text-sm text-muted-foreground">{error}</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Input Section */}
+      <Card className="p-6">
+        <div className="flex flex-col gap-4 md:flex-row">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Enter domain (e.g. example.com)"
+              className="h-14 pl-12 text-lg"
+              value={domainInput}
+              onChange={(e) => setDomainInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
+            />
+          </div>
+
+          <Button
+            variant="premium"
+            className="h-14 px-10"
+            onClick={handleAnalyze}
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <RotateCcw className="h-4 w-4 animate-spin" />
+                Analyzing...
+              </span>
+            ) : (
+              "Analyze Domain"
+            )}
+          </Button>
+        </div>
+      </Card>
+
+      {/* Project Selection */}
+      <Card className="p-6">
+        <h3 className="mb-4 font-semibold">Project</h3>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Input
-            placeholder="Enter a domain"
-            className="pl-12 h-14 text-lg"
-            value={domain}
-            onChange={(e) => setDomain(e.target.value)}
+            placeholder="New project name"
+            value={newProjectName}
+            onChange={(e) => setNewProjectName(e.target.value)}
           />
-        </div>
-        <Button variant="premium" className="h-14 px-8 w-full md:w-auto" onClick={handleAnalyze}>
-          Analyze Domain
-        </Button>
-      </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="p-6 space-y-2 border-border/50">
-          <div className="text-sm font-medium text-muted-foreground">Referring Domains</div>
-          <div className="text-3xl font-bold">{referringDomains}</div>
-          <div className="text-xs text-muted-foreground flex items-center">
-            <Globe className="w-3 h-3 mr-1" /> Unique linking domains
-          </div>
-        </Card>
+          <Button onClick={handleCreateProject} disabled={creatingProject}>
+            {creatingProject ? "Creating..." : "Create & Link Project"}
+          </Button>
 
-        <Card className="p-6 space-y-2 border-border/50">
-          <div className="text-sm font-medium text-muted-foreground">Total Backlinks</div>
-          <div className="text-3xl font-bold">{totalBacklinks}</div>
-          <div className="text-xs text-muted-foreground flex items-center">
-            <Link2 className="w-3 h-3 mr-1" /> Estimated total link count
-          </div>
-        </Card>
-
-        <Card className="p-6 space-y-2 border-border/50">
-          <div className="text-sm font-medium text-muted-foreground">Average Authority</div>
-          <div className="text-3xl font-bold">{avgAuthority}</div>
-          <div className="text-xs text-muted-foreground flex items-center">
-            <BarChart3 className="w-3 h-3 mr-1" /> Referring domain strength
-          </div>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6 border-border/50">
-          <h3 className="font-semibold mb-4">Top Anchor Texts</h3>
-          <div className="space-y-4">
-            {anchorSummary.map((item, i) => (
-              <div key={i} className="flex items-center gap-4">
-                <div className="w-40 truncate text-sm font-medium">{item.term}</div>
-                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: `${item.percentage}%` }}></div>
-                </div>
-                <div className="w-12 text-right text-sm text-muted-foreground">
-                  {item.percentage}%
-                </div>
-              </div>
+          <select
+            className="h-12 rounded-md border border-input bg-background px-4 py-2 font-medium"
+            value={selectedProjectId}
+            onChange={(e) => setSelectedProjectId(e.target.value)}
+            disabled={projectsLoading}
+          >
+            <option value="">{projectsLoading ? "Loading projects..." : "Select Project"}</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name} {p.domain ? `(${p.domain})` : ""}
+              </option>
             ))}
-          </div>
-        </Card>
-
-        <Card className="p-6 border-border/50">
-          <h3 className="font-semibold mb-4">Link Type Distribution</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <span className="font-medium">Dofollow Links</span>
-              <span className="text-emerald-600 font-semibold">
-                {backlinks.filter((b) => b.type === "dofollow").length}
-              </span>
-            </div>
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <span className="font-medium">Nofollow Links</span>
-              <span className="text-amber-600 font-semibold">
-                {backlinks.filter((b) => b.type === "nofollow").length}
-              </span>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      <Card className="overflow-hidden">
-        <div className="border-b bg-muted/20 px-6 py-4">
-          <h3 className="font-semibold">Backlink Table</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/10 border-b">
-              <tr>
-                <th className="px-6 py-3 text-left font-medium text-muted-foreground">
-                  Source Domain
-                </th>
-                <th className="px-6 py-3 text-left font-medium text-muted-foreground">
-                  Target URL
-                </th>
-                <th className="px-6 py-3 text-left font-medium text-muted-foreground">
-                  Anchor Text
-                </th>
-                <th className="px-6 py-3 text-right font-medium text-muted-foreground">
-                  Authority
-                </th>
-                <th className="px-6 py-3 text-center font-medium text-muted-foreground">
-                  Type
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {backlinks.map((row, i) => (
-                <tr key={i} className="hover:bg-muted/10">
-                  <td className="px-6 py-4 font-medium">{row.sourceDomain}</td>
-                  <td className="px-6 py-4 text-muted-foreground">{row.targetUrl}</td>
-                  <td className="px-6 py-4">{row.anchorText}</td>
-                  <td className="px-6 py-4 text-right">{row.authority}</td>
-                  <td className="px-6 py-4 text-center">
-                    <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                        row.type === "dofollow"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-amber-100 text-amber-700"
-                      }`}
-                    >
-                      {row.type}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          </select>
         </div>
       </Card>
+
+      {message && <p className="text-sm text-emerald-600">{message}</p>}
+
+      {loading && (
+        <Card className="flex flex-col items-center justify-center gap-4 p-12">
+          <RotateCcw className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-lg font-medium">Analyzing backlink profile...</p>
+        </Card>
+      )}
+
+      {data && !loading && (
+        <>
+          {/* Metrics */}
+          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+            <MetricCard icon={Globe} title="Domain Rating" value={data.domainRating} />
+            <MetricCard icon={Link2} title="Referring Domains" value={data.referringDomains} />
+            <MetricCard icon={Award} title="Total Backlinks" value={data.totalBacklinks.toLocaleString()} />
+            <MetricCard icon={ShieldAlert} title="Avg Spam Score" value={data.avgSpamScore} />
+          </div>
+
+          {/* Backlinks Table */}
+          <Card className="overflow-hidden">
+            <div className="flex items-center justify-between border-b bg-muted/30 px-6 py-4">
+              <h3 className="text-lg font-semibold">Top Backlinks</h3>
+              <p className="text-sm text-muted-foreground">
+                Showing {backlinks.length} high-quality links
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b bg-muted/50">
+                  <tr>
+                    <th className="px-6 py-4 text-left font-medium text-muted-foreground">Source Domain</th>
+                    <th className="px-6 py-4 text-left font-medium text-muted-foreground">Anchor Text</th>
+                    <th className="px-6 py-4 text-center font-medium text-muted-foreground">Authority</th>
+                    <th className="px-6 py-4 text-center font-medium text-muted-foreground">Spam Score</th>
+                    <th className="px-6 py-4 text-center font-medium text-muted-foreground">Type</th>
+                    <th className="px-6 py-4 text-right font-medium text-muted-foreground">First Seen</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {backlinks.map((link) => (
+                    <tr key={link.id} className="transition-colors hover:bg-muted/50">
+                      <td className="px-6 py-4 font-medium">{link.sourceDomain}</td>
+                      <td className="px-6 py-4 text-muted-foreground">{link.anchorText}</td>
+                      <td className="px-6 py-4 text-center font-bold">{link.authority}</td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`font-medium ${link.spamScore > 15 ? "text-red-500" : "text-emerald-500"}`}>
+                          {link.spamScore}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span
+                          className={`inline-block rounded-full px-3 py-1 text-xs font-medium ${
+                            link.type === "dofollow"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-orange-100 text-orange-700"
+                          }`}
+                        >
+                          {link.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right text-xs text-muted-foreground">
+                        {link.firstSeen}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </>
+      )}
     </div>
-  );
+  )
 }

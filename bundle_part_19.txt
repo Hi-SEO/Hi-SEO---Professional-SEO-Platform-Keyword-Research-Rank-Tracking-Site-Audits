@@ -1,0 +1,500 @@
+emibold">Top Backlinks</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/10 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left font-medium text-muted-foreground">Source</th>
+                <th className="px-6 py-3 text-left font-medium text-muted-foreground">Anchor</th>
+                <th className="px-6 py-3 text-center font-medium text-muted-foreground">Authority</th>
+                <th className="px-6 py-3 text-center font-medium text-muted-foreground">Type</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {data?.backlinks?.map((link: any, index: number) => (
+                <tr key={index} className="hover:bg-muted/10">
+                  <td className="px-6 py-3 font-medium">{link.sourceDomain}</td>
+                  <td className="px-6 py-3 text-muted-foreground">{link.anchorText}</td>
+                  <td className="px-6 py-3 text-center">{link.authority}</td>
+                  <td className="px-6 py-3 text-center">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${link.type === "dofollow" ? "bg-emerald-100 text-emerald-700" : "bg-orange-100 text-orange-700"}`}>
+                      {link.type}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function ContentStrategyRenderer({ data }: { data: any }) {
+  return (
+    <div className="space-y-6">
+      <Card className="p-6 space-y-2">
+        <h3 className="font-semibold">Pillar Page</h3>
+        <p className="text-xl font-bold">{data?.pillarTitle}</p>
+        <p className="text-sm text-muted-foreground">{data?.angle}</p>
+      </Card>
+      <Card className="overflow-hidden">
+        <div className="border-b bg-muted/20 px-6 py-4">
+          <h3 className="font-semibold">Content Ideas</h3>
+        </div>
+        <div className="divide-y">
+          {data?.contentIdeas?.map((item: any, index: number) => (
+            <div key={index} className="px-6 py-4 flex items-center justify-between hover:bg-muted/10">
+              <div>
+                <p className="font-medium">{item.title}</p>
+                <p className="text-sm text-muted-foreground mt-0.5">{item.intent} - {item.type}</p>
+              </div>
+              {item.priority && (
+                <span className={`text-xs font-medium px-2 py-1 rounded-full ${item.priority === "High" ? "bg-red-100 text-red-700" : item.priority === "Medium" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
+                  {item.priority}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function AIWriterRenderer({ data }: { data: any }) {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="p-5"><p className="text-xs text-muted-foreground">Topic</p><p className="font-bold mt-1">{data?.topic}</p></Card>
+        <Card className="p-5"><p className="text-xs text-muted-foreground">Type</p><p className="font-bold mt-1">{data?.contentType}</p></Card>
+        <Card className="p-5"><p className="text-xs text-muted-foreground">Word Count</p><p className="font-bold mt-1">{data?.wordCount?.toLocaleString()}</p></Card>
+        <Card className="p-5"><p className="text-xs text-muted-foreground">Reading Time</p><p className="font-bold mt-1">{data?.readingTime} min</p></Card>
+      </div>
+      <Card className="p-6 space-y-2">
+        <h3 className="font-semibold">Meta Description</h3>
+        <p className="text-sm bg-muted/20 p-4 rounded-lg border">{data?.metaDescription}</p>
+      </Card>
+      <Card className="overflow-hidden">
+        <div className="border-b bg-muted/20 px-6 py-4"><h3 className="font-semibold">Title Ideas</h3></div>
+        <div className="divide-y">
+          {data?.titleIdeas?.map((title: string, index: number) => (
+            <div key={index} className="px-6 py-4 hover:bg-muted/10">{title}</div>
+          ))}
+        </div>
+      </Card>
+      <Card className="overflow-hidden">
+        <div className="border-b bg-muted/20 px-6 py-4"><h3 className="font-semibold">Article Structure</h3></div>
+        <div className="divide-y">
+          {data?.headings?.map((heading: string, index: number) => (
+            <div key={index} className="px-6 py-4 hover:bg-muted/10">{heading}</div>
+          ))}
+        </div>
+      </Card>
+      <Card className="p-6 space-y-3">
+        <h3 className="font-semibold">Target Keywords</h3>
+        <div className="flex flex-wrap gap-2">
+          {data?.targetKeywords?.map((kw: string, index: number) => (
+            <span key={index} className="rounded-full border px-4 py-2 text-sm bg-primary/5 text-primary">{kw}</span>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function SerpRenderer({ data }: { data: any }) {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="p-5"><p className="text-xs text-muted-foreground">Keyword</p><p className="font-bold mt-1 truncate">{data?.keyword}</p></Card>
+        <Card className="p-5"><p className="text-xs text-muted-foreground">Intent</p><p className="font-bold mt-1">{data?.intent}</p></Card>
+        <Card className="p-5"><p className="text-xs text-muted-foreground">Difficulty</p><p className="text-3xl font-bold mt-1">{data?.difficulty}</p></Card>
+        <Card className="p-5"><p className="text-xs text-muted-foreground">Click Opportunity</p><p className="text-3xl font-bold mt-1">{data?.clickOpportunity}%</p></Card>
+      </div>
+      <Card className="overflow-hidden">
+        <div className="border-b bg-muted/20 px-6 py-4"><h3 className="font-semibold">SERP Features</h3></div>
+        <div className="divide-y">
+          {data?.features?.map((feature: any, index: number) => (
+            <div key={index} className="px-6 py-4 flex items-center justify-between hover:bg-muted/10">
+              <span className="font-medium text-sm">{feature.name}</span>
+              <span className={`text-sm font-medium ${feature.present ? "text-emerald-600" : "text-muted-foreground"}`}>
+                {feature.present ? "Present" : "Not Present"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Card>
+      <Card className="p-6 space-y-3">
+        <h3 className="font-semibold">Recommendations</h3>
+        {data?.recommendations?.map((item: string, index: number) => (
+          <div key={index} className="flex items-start gap-3 p-3 rounded-lg border bg-muted/10">
+            <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold flex-shrink-0">{index + 1}</span>
+            <p className="text-sm">{item}</p>
+          </div>
+        ))}
+      </Card>
+    </div>
+  );
+}
+
+function CompetitorRenderer({ data }: { data: any }) {
+  return (
+    <div className="space-y-6">
+      <Card className="p-6">
+        <h3 className="font-semibold mb-2">Your Domain</h3>
+        <p className="text-xl font-bold">{data?.yourDomain}</p>
+      </Card>
+      <Card className="overflow-hidden">
+        <div className="border-b bg-muted/20 px-6 py-4"><h3 className="font-semibold">Competitor Comparison</h3></div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/10 border-b">
+              <tr>
+                <th className="px-6 py-3 text-left font-medium text-muted-foreground">Domain</th>
+                <th className="px-6 py-3 text-center font-medium text-muted-foreground">Authority</th>
+                <th className="px-6 py-3 text-center font-medium text-muted-foreground">Visibility</th>
+                <th className="px-6 py-3 text-center font-medium text-muted-foreground">Shared Keywords</th>
+                <th className="px-6 py-3 text-center font-medium text-muted-foreground">Content Gap</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {data?.competitors?.map((item: any, index: number) => (
+                <tr key={index} className="hover:bg-muted/10">
+                  <td className="px-6 py-3 font-medium">{item.domain}</td>
+                  <td className="px-6 py-3 text-center">{item.authority}</td>
+                  <td className="px-6 py-3 text-center">{item.visibility}%</td>
+                  <td className="px-6 py-3 text-center">{item.sharedKeywords?.toLocaleString()}</td>
+                  <td className="px-6 py-3 text-center">{item.contentGap}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function RenderReportData({ report }: { report: Report }) {
+  if (report.report_type === "site-audit") return <SiteAuditRenderer data={report.data} />;
+  if (report.report_type === "keyword-explorer") return <KeywordRenderer data={report.data} />;
+  if (report.report_type === "rank-tracker") return <RankTrackerRenderer data={report.data} />;
+  if (report.report_type === "backlink-analytics") return <BacklinkRenderer data={report.data} />;
+  if (report.report_type === "content-strategy") return <ContentStrategyRenderer data={report.data} />;
+  if (report.report_type === "ai-writer") return <AIWriterRenderer data={report.data} />;
+  if (report.report_type === "serp-analysis") return <SerpRenderer data={report.data} />;
+  if (report.report_type === "competitor-analysis") return <CompetitorRenderer data={report.data} />;
+
+  return (
+    <Card className="p-6">
+      <h3 className="font-semibold mb-4">Raw Report Data</h3>
+      <pre className="whitespace-pre-wrap break-words text-sm bg-muted/20 p-4 rounded-lg overflow-auto">
+        {JSON.stringify(report.data, null, 2)}
+      </pre>
+    </Card>
+  );
+}
+
+export default function ReportDetails() {
+  const { user } = useAuth();
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [report, setReport] = useState<Report | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    const loadReport = async () => {
+      if (!user || !id) { setLoading(false); return; }
+      setLoading(true);
+      setError("");
+
+      const { data, error } = await supabase
+        .from("reports")
+        .select("id, title, report_type, data, created_at")
+        .eq("user_id", user.id)
+        .eq("id", id)
+        .single();
+
+      if (error) { setError(error.message); setLoading(false); return; }
+
+      setReport(data);
+      setLoading(false);
+    };
+
+    loadReport();
+  }, [user, id]);
+
+  const handleCopyJson = async () => {
+    if (!report) return;
+    await navigator.clipboard.writeText(JSON.stringify(report.data, null, 2));
+    setMessage("Report JSON copied to clipboard.");
+    setTimeout(() => setMessage(""), 2000);
+  };
+
+  const handleDownloadJson = () => {
+    if (!report) return;
+    const blob = new Blob([JSON.stringify(report.data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${report.title.replace(/\s+/g, "-").toLowerCase()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const reportTypeLabels: Record<string, string> = {
+    "site-audit": "Site Audit",
+    "keyword-explorer": "Keyword Research",
+    "rank-tracker": "Rank Tracker",
+    "backlink-analytics": "Backlink Analytics",
+    "content-strategy": "Content Strategy",
+    "ai-writer": "AI Writer",
+    "serp-analysis": "SERP Analysis",
+    "competitor-analysis": "Competitor Analysis",
+  };
+
+  return (
+    <div className="p-6 md:p-8 space-y-8 max-w-[1200px] mx-auto">
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="sm" onClick={() => navigate("/app/reports")}>
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Reports
+        </Button>
+      </div>
+
+      {message && <p className="text-emerald-600 text-sm">{message}</p>}
+
+      {loading ? (
+        <Card className="p-12 text-center text-muted-foreground">Loading report...</Card>
+      ) : error ? (
+        <Card className="p-6 text-red-500">{error}</Card>
+      ) : report ? (
+        <>
+          <Card className="p-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold">{report.title}</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {reportTypeLabels[report.report_type || ""] || report.report_type}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {new Date(report.created_at).toLocaleString()}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" size="sm" onClick={handleCopyJson}>
+                  <Copy className="w-4 h-4 mr-2" /> Copy JSON
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDownloadJson}>
+                  <Download className="w-4 h-4 mr-2" /> Download
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          <RenderReportData report={report} />
+        </>
+      ) : (
+        <Card className="p-6 text-center text-muted-foreground">Report not found.</Card>
+      )}
+    </div>
+  );
+}
+
+
+
+--- FILE: src\pages\app\Reports.tsx ---
+
+import { useEffect, useMemo, useState } from "react"
+import { Link } from "react-router-dom"
+import { supabase } from "../../lib/supabase"
+import { useAuth } from "../../context/AuthContext"
+import { Card } from "../../components/ui/card"
+import { Button } from "../../components/ui/button"
+import { Input } from "../../components/ui/input"
+import {
+  FileText,
+  Trash2,
+  Search,
+  Zap,
+  Target,
+  Link2,
+  BarChart3,
+  Users,
+  Layers,
+  RefreshCw,
+  AlertTriangle,
+  type LucideIcon,
+} from "lucide-react"
+
+type ReportRow = {
+  id: string
+  title: string
+  report_type: string | null
+  created_at: string
+}
+
+type ReportTypeConfig = {
+  label: string
+  icon: LucideIcon
+  color: string
+  bg: string
+}
+
+const reportTypeConfig: Record<string, ReportTypeConfig> = {
+  "site-audit": { label: "Site Audit", icon: Zap, color: "text-blue-500", bg: "bg-blue-500/10" },
+  "keyword-explorer": { label: "Keyword Research", icon: Search, color: "text-purple-500", bg: "bg-purple-500/10" },
+  "rank-tracker": { label: "Rank Tracker", icon: Target, color: "text-amber-500", bg: "bg-amber-500/10" },
+  "backlink-analytics": { label: "Backlink Analytics", icon: Link2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+  "content-strategy": { label: "Content Strategy", icon: Layers, color: "text-indigo-500", bg: "bg-indigo-500/10" },
+  "ai-writer": { label: "AI Writer", icon: FileText, color: "text-pink-500", bg: "bg-pink-500/10" },
+  "serp-analysis": { label: "SERP Analysis", icon: BarChart3, color: "text-orange-500", bg: "bg-orange-500/10" },
+  "competitor-analysis": { label: "Competitor Analysis", icon: Users, color: "text-red-500", bg: "bg-red-500/10" },
+}
+
+export default function Reports() {
+  const { user } = useAuth()
+
+  const [reports, setReports] = useState<ReportRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState("")
+  const [error, setError] = useState("")
+  const [search, setSearch] = useState("")
+  const [reportType, setReportType] = useState("all")
+  const [reloadKey, setReloadKey] = useState(0)
+
+  const loadReports = async () => {
+    if (!user) {
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setError("")
+
+    try {
+      const { data, error } = await supabase
+        .from("reports")
+        .select("id, title, report_type, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+
+      if (error) throw error
+
+      setReports(data || [])
+    } catch (err) {
+      console.error("Error loading reports:", err)
+      setError("Failed to load reports. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadReports()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, reloadKey])
+
+  const filteredReports = useMemo(() => {
+    return reports.filter((report) => {
+      const matchesSearch = report.title.toLowerCase().includes(search.toLowerCase())
+      const matchesType = reportType === "all" || report.report_type === reportType
+      return matchesSearch && matchesType
+    })
+  }, [reports, search, reportType])
+
+  const typeCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    reports.forEach((r) => {
+      const type = r.report_type || "unknown"
+      counts[type] = (counts[type] || 0) + 1
+    })
+    return counts
+  }, [reports])
+
+  const handleDelete = async (id: string) => {
+    if (!user) return
+
+    const confirmed = window.confirm("Are you sure you want to delete this report?")
+    if (!confirmed) return
+
+    setMessage("")
+    setError("")
+
+    try {
+      const { error } = await supabase
+        .from("reports")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", user.id)
+
+      if (error) throw error
+
+      setReports((prev) => prev.filter((report) => report.id !== id))
+      setMessage("Report deleted successfully.")
+      setTimeout(() => setMessage(""), 3000)
+    } catch (err) {
+      console.error("Error deleting report:", err)
+      setError("Failed to delete report. Please try again.")
+    }
+  }
+
+  const visibleTypes = Object.entries(reportTypeConfig)
+
+  return (
+    <div className="mx-auto max-w-[1400px] space-y-8 p-6 md:p-8">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
+          <p className="mt-1 text-muted-foreground">
+            View and manage all saved SEO reports and generated outputs.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={() => setReloadKey((k) => k + 1)}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
+          <div className="text-sm text-muted-foreground">
+            {reports.length} total reports saved
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <Card className="border-destructive/20 bg-destructive/10 p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
+            <div>
+              <p className="font-semibold text-destructive">Could not load reports</p>
+              <p className="text-sm text-muted-foreground">{error}</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Type Summary Cards */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {visibleTypes.slice(0, 4).map(([type, config]) => {
+          const Icon = config.icon
+          return (
+            <Card
+              key={type}
+              className={[
+                "flex cursor-pointer items-center gap-3 p-4 transition-all hover:shadow-md",
+                reportType === type ? "ring-1 ring-primary" : "",
+              ].join(" ")}
+              onClick={() => setReportType(reportType === type ? "all" : type)}
+            >
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${config.bg}`}>
+                <Icon className={`h-5 w-5 ${config.color}`} />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">{config.label}</p>
+                <p class

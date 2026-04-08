@@ -1,0 +1,628 @@
+=== PROJECT AUDIT BUNDLE ===
+Root: C:\Users\adeko\OneDrive\Documents\hi-seo-saas-platform-design
+Generated: 2026-04-08 16:32:03
+
+=== DIRECTORY TREE (filtered) ===
+.gitignore
+.vercel\project.json
+.vercel\README.txt
+fix-both.mjs
+fix-greeting.mjs
+index.html
+package.json
+package-lock.json
+src\App.tsx
+src\components\auth\GuestRoute.tsx
+src\components\auth\ProtectedRoute.tsx
+src\components\marketing\CTASection.tsx
+src\components\marketing\DashboardMockup.tsx
+src\components\marketing\FeaturesSection.tsx
+src\components\marketing\HeroSection.tsx
+src\components\marketing\MetricsSection.tsx
+src\components\marketing\TrustedBySection.tsx
+src\components\ui\badge.tsx
+src\components\ui\button.tsx
+src\components\ui\card.tsx
+src\components\ui\input.tsx
+src\components\ui\LoadingScreen.tsx
+src\context\AuthContext.tsx
+src\index.css
+src\layouts\AppLayout.tsx
+src\layouts\MarketingLayout.tsx
+src\lib\supabase.ts
+src\lib\utils.ts
+src\main.tsx
+src\pages\app\AIWriter.tsx
+src\pages\app\BacklinkAnalytics.tsx
+src\pages\app\Billing.tsx
+src\pages\app\CompetitorAnalysis.tsx
+src\pages\app\ContentStrategy.tsx
+src\pages\app\DashboardOverview.tsx
+src\pages\app\DashboardOverview.tsx.bak
+src\pages\app\KeywordExplorer.tsx
+src\pages\app\PlaceholderTool.tsx
+src\pages\app\Projects.tsx
+src\pages\app\RankTracker.tsx
+src\pages\app\ReportDetails.tsx
+src\pages\app\Reports.tsx
+src\pages\app\SerpAnalysis.tsx
+src\pages\app\Settings.tsx
+src\pages\app\SiteAudit.tsx
+src\pages\app\SiteExplorer.tsx
+src\pages\public\AuthPlaceholder.tsx
+src\pages\public\Compare.tsx
+src\pages\public\Features.tsx
+src\pages\public\ForgotPassword.tsx
+src\pages\public\Glossary.tsx
+src\pages\public\Home.tsx
+src\pages\public\Login.tsx
+src\pages\public\Pricing.tsx
+src\pages\public\ResetPassword.tsx
+src\pages\public\Signup.tsx
+src\utils\auditService.ts
+src\utils\backlinkService.ts
+src\utils\cn.ts
+src\utils\keywordService.ts
+src\utils\rankService.ts
+supabase\.temp\cli-latest
+supabase\.temp\gotrue-version
+supabase\.temp\linked-project.json
+supabase\.temp\pooler-url
+supabase\.temp\postgres-version
+supabase\.temp\project-ref
+supabase\.temp\rest-version
+supabase\.temp\storage-migration
+supabase\.temp\storage-version
+supabase\config.toml
+supabase\functions\paystack-webhook\.npmrc
+supabase\functions\paystack-webhook\deno.json
+supabase\functions\paystack-webhook\index.ts
+supabase\functions\verify-paystack-payment\.npmrc
+supabase\functions\verify-paystack-payment\deno.json
+supabase\functions\verify-paystack-payment\index.ts
+tailwind.config.js
+tsconfig.json
+vite.config.ts
+write-aiwriter.mjs
+write-dashboard-fix.mjs
+write-files.mjs
+write-serp.mjs
+write-serp2.mjs
+write-settings-fix.mjs
+
+=== FILE CONTENTS ===
+
+--- FILE: .gitignore ---
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.staging
+
+# Build output
+dist/
+build/
+
+# Vite
+.vite/
+
+# Next.js (if ever used)
+.next/
+
+# Vercel
+.vercel
+
+# Supabase
+supabase/.temp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+
+
+--- FILE: .vercel\project.json ---
+
+{"projectId":"prj_ZiVLvxUNooKNcmQYEyLBUW3GFjG2","orgId":"team_n7QB0U7CQZQFYO4r9UvAgb69","projectName":"project-5446v"}
+
+--- FILE: .vercel\README.txt ---
+
+> Why do I have a folder named ".vercel" in my project?
+The ".vercel" folder is created when you link a directory to a Vercel project.
+
+> What does the "project.json" file contain?
+The "project.json" file contains:
+- The ID of the Vercel project that you linked ("projectId")
+- The ID of the user or team your Vercel project is owned by ("orgId")
+
+> Should I commit the ".vercel" folder?
+No, you should not share the ".vercel" folder with anyone.
+Upon creation, it will be automatically added to your ".gitignore" file.
+
+
+--- FILE: fix-both.mjs ---
+
+import { readFileSync, writeFileSync } from "fs";
+
+// Fix 1 - Dashboard greeting
+let dashboard = readFileSync("src/pages/app/DashboardOverview.tsx", "utf8");
+
+const lines = dashboard.split("\n");
+const fixedLines = lines.map(line => {
+  if (line.includes("getGreeting()") && line.includes("full_name")) {
+    return '          {getGreeting()}, {profile?.full_name ? profile.full_name.split(" ")[0] : user?.email ? user.email.split("@")[0] : "there"} ??';
+  }
+  return line;
+});
+
+writeFileSync("src/pages/app/DashboardOverview.tsx", fixedLines.join("\n"), "utf8");
+console.log("Dashboard greeting fixed");
+
+// Fix 2 - Settings toggles
+let settings = readFileSync("src/pages/app/Settings.tsx", "utf8");
+
+const settingsLines = settings.split("\n");
+const fixedSettings = settingsLines.map(line => {
+  if (line.includes('onClick={() => item.onChange(!item.value)}')) {
+    return '                  type="button" onClick={() => item.onChange(!item.value)}';
+  }
+  if (line.includes('"bg-primary" : "bg-muted"')) {
+    return '                  className={"relative w-11 h-6 rounded-full transition-all duration-200 " + (item.value ? "bg-blue-500" : "bg-gray-300")}';
+  }
+  if (line.includes('"translate-x-6" : "translate-x-1"')) {
+    return '                    className={"absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 " + (item.value ? "translate-x-5" : "translate-x-0")}';
+  }
+  return line;
+});
+
+writeFileSync("src/pages/app/Settings.tsx", fixedSettings.join("\n"), "utf8");
+console.log("Settings toggles fixed");
+
+
+--- FILE: fix-greeting.mjs ---
+
+import { readFileSync, writeFileSync } from "fs";
+
+let content = readFileSync("src/pages/app/DashboardOverview.tsx", "utf8");
+
+// Find and replace the greeting line
+const oldGreeting = /\{getGreeting\(\)\},.*???/s;
+const newGreeting = `{getGreeting()}, {profile?.full_name ? profile.full_name.split(" ")[0] : user?.email ? user.email.split("@")[0] : "there"} ??`;
+
+content = content.replace(oldGreeting, newGreeting);
+
+writeFileSync("src/pages/app/DashboardOverview.tsx", content, "utf8");
+console.log("Done - check the file now");
+
+
+--- FILE: index.html ---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hi-SEO - Advanced SEO Software | By Charles Izuma</title>
+    <meta name="description" content="An enterprise-grade, all-in-one platform for keyword research, rank tracking, and AI-assisted content optimization. Built by Charles Izuma." />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+--- FILE: package.json ---
+
+{
+  "name": "react-vite-tailwind",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.2.4",
+    "@stripe/stripe-js": "^9.1.0",
+    "@supabase/supabase-js": "^2.101.1",
+    "axios": "^1.14.0",
+    "cheerio": "^1.2.0",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^12.38.0",
+    "lucide-react": "^1.7.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-router-dom": "^7.14.0",
+    "recharts": "^3.8.1",
+    "stripe": "^22.0.0",
+    "tailwind-merge": "^3.4.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.1.17",
+    "@types/node": "22.19.17",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "5.1.1",
+    "tailwindcss": "4.1.17",
+    "typescript": "5.9.3",
+    "vite": "7.2.4",
+    "vite-plugin-singlefile": "2.3.0"
+  }
+}
+
+
+--- FILE: package-lock.json ---
+
+{
+  "name": "react-vite-tailwind",
+  "version": "0.0.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "react-vite-tailwind",
+      "version": "0.0.0",
+      "dependencies": {
+        "@radix-ui/react-slot": "^1.2.4",
+        "@stripe/stripe-js": "^9.1.0",
+        "@supabase/supabase-js": "^2.101.1",
+        "axios": "^1.14.0",
+        "cheerio": "^1.2.0",
+        "clsx": "^2.1.1",
+        "date-fns": "^4.1.0",
+        "framer-motion": "^12.38.0",
+        "lucide-react": "^1.7.0",
+        "react": "19.2.3",
+        "react-dom": "19.2.3",
+        "react-router-dom": "^7.14.0",
+        "recharts": "^3.8.1",
+        "stripe": "^22.0.0",
+        "tailwind-merge": "^3.4.0"
+      },
+      "devDependencies": {
+        "@tailwindcss/vite": "4.1.17",
+        "@types/node": "22.19.17",
+        "@types/react": "19.2.7",
+        "@types/react-dom": "19.2.3",
+        "@vitejs/plugin-react": "5.1.1",
+        "tailwindcss": "4.1.17",
+        "typescript": "5.9.3",
+        "vite": "7.2.4",
+        "vite-plugin-singlefile": "2.3.0"
+      }
+    },
+    "node_modules/@babel/code-frame": {
+      "version": "7.29.0",
+      "resolved": "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.29.0.tgz",
+      "integrity": "sha512-9NhCeYjq9+3uxgdtp20LSiJXJvN0FeCtNGpJxuMFZ1Kv3cWUNb6DOhJwUvcVCzKGR66cw4njwM6hrJLqgOwbcw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/helper-validator-identifier": "^7.28.5",
+        "js-tokens": "^4.0.0",
+        "picocolors": "^1.1.1"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/compat-data": {
+      "version": "7.29.0",
+      "resolved": "https://registry.npmjs.org/@babel/compat-data/-/compat-data-7.29.0.tgz",
+      "integrity": "sha512-T1NCJqT/j9+cn8fvkt7jtwbLBfLC/1y1c7NtCeXFRgzGTsafi68MRv8yzkYSapBnFA6L3U2VSc02ciDzoAJhJg==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/core": {
+      "version": "7.29.0",
+      "resolved": "https://registry.npmjs.org/@babel/core/-/core-7.29.0.tgz",
+      "integrity": "sha512-CGOfOJqWjg2qW/Mb6zNsDm+u5vFQ8DxXfbM09z69p5Z6+mE1ikP2jUXw+j42Pf1XTYED2Rni5f95npYeuwMDQA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/code-frame": "^7.29.0",
+        "@babel/generator": "^7.29.0",
+        "@babel/helper-compilation-targets": "^7.28.6",
+        "@babel/helper-module-transforms": "^7.28.6",
+        "@babel/helpers": "^7.28.6",
+        "@babel/parser": "^7.29.0",
+        "@babel/template": "^7.28.6",
+        "@babel/traverse": "^7.29.0",
+        "@babel/types": "^7.29.0",
+        "@jridgewell/remapping": "^2.3.5",
+        "convert-source-map": "^2.0.0",
+        "debug": "^4.1.0",
+        "gensync": "^1.0.0-beta.2",
+        "json5": "^2.2.3",
+        "semver": "^6.3.1"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/babel"
+      }
+    },
+    "node_modules/@babel/generator": {
+      "version": "7.29.1",
+      "resolved": "https://registry.npmjs.org/@babel/generator/-/generator-7.29.1.tgz",
+      "integrity": "sha512-qsaF+9Qcm2Qv8SRIMMscAvG4O3lJ0F1GuMo5HR/Bp02LopNgnZBC/EkbevHFeGs4ls/oPz9v+Bsmzbkbe+0dUw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/parser": "^7.29.0",
+        "@babel/types": "^7.29.0",
+        "@jridgewell/gen-mapping": "^0.3.12",
+        "@jridgewell/trace-mapping": "^0.3.28",
+        "jsesc": "^3.0.2"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helper-compilation-targets": {
+      "version": "7.28.6",
+      "resolved": "https://registry.npmjs.org/@babel/helper-compilation-targets/-/helper-compilation-targets-7.28.6.tgz",
+      "integrity": "sha512-JYtls3hqi15fcx5GaSNL7SCTJ2MNmjrkHXg4FSpOA/grxK8KwyZ5bubHsCq8FXCkua6xhuaaBit+3b7+VZRfcA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/compat-data": "^7.28.6",
+        "@babel/helper-validator-option": "^7.27.1",
+        "browserslist": "^4.24.0",
+        "lru-cache": "^5.1.1",
+        "semver": "^6.3.1"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helper-globals": {
+      "version": "7.28.0",
+      "resolved": "https://registry.npmjs.org/@babel/helper-globals/-/helper-globals-7.28.0.tgz",
+      "integrity": "sha512-+W6cISkXFa1jXsDEdYA8HeevQT/FULhxzR99pxphltZcVaugps53THCeiWA8SguxxpSp3gKPiuYfSWopkLQ4hw==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helper-module-imports": {
+      "version": "7.28.6",
+      "resolved": "https://registry.npmjs.org/@babel/helper-module-imports/-/helper-module-imports-7.28.6.tgz",
+      "integrity": "sha512-l5XkZK7r7wa9LucGw9LwZyyCUscb4x37JWTPz7swwFE/0FMQAGpiWUZn8u9DzkSBWEcK25jmvubfpw2dnAMdbw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/traverse": "^7.28.6",
+        "@babel/types": "^7.28.6"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helper-module-transforms": {
+      "version": "7.28.6",
+      "resolved": "https://registry.npmjs.org/@babel/helper-module-transforms/-/helper-module-transforms-7.28.6.tgz",
+      "integrity": "sha512-67oXFAYr2cDLDVGLXTEABjdBJZ6drElUSI7WKp70NrpyISso3plG9SAGEF6y7zbha/wOzUByWWTJvEDVNIUGcA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/helper-module-imports": "^7.28.6",
+        "@babel/helper-validator-identifier": "^7.28.5",
+        "@babel/traverse": "^7.28.6"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      },
+      "peerDependencies": {
+        "@babel/core": "^7.0.0"
+      }
+    },
+    "node_modules/@babel/helper-plugin-utils": {
+      "version": "7.28.6",
+      "resolved": "https://registry.npmjs.org/@babel/helper-plugin-utils/-/helper-plugin-utils-7.28.6.tgz",
+      "integrity": "sha512-S9gzZ/bz83GRysI7gAD4wPT/AI3uCnY+9xn+Mx/KPs2JwHJIz1W8PZkg2cqyt3RNOBM8ejcXhV6y8Og7ly/Dug==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helper-string-parser": {
+      "version": "7.27.1",
+      "resolved": "https://registry.npmjs.org/@babel/helper-string-parser/-/helper-string-parser-7.27.1.tgz",
+      "integrity": "sha512-qMlSxKbpRlAridDExk92nSobyDdpPijUq2DW6oDnUqd0iOGxmQjyqhMIihI9+zv4LPyZdRje2cavWPbCbWm3eA==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helper-validator-identifier": {
+      "version": "7.28.5",
+      "resolved": "https://registry.npmjs.org/@babel/helper-validator-identifier/-/helper-validator-identifier-7.28.5.tgz",
+      "integrity": "sha512-qSs4ifwzKJSV39ucNjsvc6WVHs6b7S03sOh2OcHF9UHfVPqWWALUsNUVzhSBiItjRZoLHx7nIarVjqKVusUZ1Q==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helper-validator-option": {
+      "version": "7.27.1",
+      "resolved": "https://registry.npmjs.org/@babel/helper-validator-option/-/helper-validator-option-7.27.1.tgz",
+      "integrity": "sha512-YvjJow9FxbhFFKDSuFnVCe2WxXk1zWc22fFePVNEaWJEu8IrZVlda6N0uHwzZrUM1il7NC9Mlp4MaJYbYd9JSg==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/helpers": {
+      "version": "7.29.2",
+      "resolved": "https://registry.npmjs.org/@babel/helpers/-/helpers-7.29.2.tgz",
+      "integrity": "sha512-HoGuUs4sCZNezVEKdVcwqmZN8GoHirLUcLaYVNBK2J0DadGtdcqgr3BCbvH8+XUo4NGjNl3VOtSjEKNzqfFgKw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/template": "^7.28.6",
+        "@babel/types": "^7.29.0"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/parser": {
+      "version": "7.29.2",
+      "resolved": "https://registry.npmjs.org/@babel/parser/-/parser-7.29.2.tgz",
+      "integrity": "sha512-4GgRzy/+fsBa72/RZVJmGKPmZu9Byn8o4MoLpmNe1m8ZfYnz5emHLQz3U4gLud6Zwl0RZIcgiLD7Uq7ySFuDLA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/types": "^7.29.0"
+      },
+      "bin": {
+        "parser": "bin/babel-parser.js"
+      },
+      "engines": {
+        "node": ">=6.0.0"
+      }
+    },
+    "node_modules/@babel/plugin-transform-react-jsx-self": {
+      "version": "7.27.1",
+      "resolved": "https://registry.npmjs.org/@babel/plugin-transform-react-jsx-self/-/plugin-transform-react-jsx-self-7.27.1.tgz",
+      "integrity": "sha512-6UzkCs+ejGdZ5mFFC/OCUrv028ab2fp1znZmCZjAOBKiBK2jXD1O+BPSfX8X2qjJ75fZBMSnQn3Rq2mrBJK2mw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/helper-plugin-utils": "^7.27.1"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      },
+      "peerDependencies": {
+        "@babel/core": "^7.0.0-0"
+      }
+    },
+    "node_modules/@babel/plugin-transform-react-jsx-source": {
+      "version": "7.27.1",
+      "resolved": "https://registry.npmjs.org/@babel/plugin-transform-react-jsx-source/-/plugin-transform-react-jsx-source-7.27.1.tgz",
+      "integrity": "sha512-zbwoTsBruTeKB9hSq73ha66iFeJHuaFkUbwvqElnygoNbj/jHRsSeokowZFN3CZ64IvEqcmmkVe89OPXc7ldAw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/helper-plugin-utils": "^7.27.1"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      },
+      "peerDependencies": {
+        "@babel/core": "^7.0.0-0"
+      }
+    },
+    "node_modules/@babel/template": {
+      "version": "7.28.6",
+      "resolved": "https://registry.npmjs.org/@babel/template/-/template-7.28.6.tgz",
+      "integrity": "sha512-YA6Ma2KsCdGb+WC6UpBVFJGXL58MDA6oyONbjyF/+5sBgxY/dwkhLogbMT2GXXyU84/IhRw/2D1Os1B/giz+BQ==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/code-frame": "^7.28.6",
+        "@babel/parser": "^7.28.6",
+        "@babel/types": "^7.28.6"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/traverse": {
+      "version": "7.29.0",
+      "resolved": "https://registry.npmjs.org/@babel/traverse/-/traverse-7.29.0.tgz",
+      "integrity": "sha512-4HPiQr0X7+waHfyXPZpWPfWL/J7dcN1mx9gL6WdQVMbPnF3+ZhSMs8tCxN7oHddJE9fhNE7+lxdnlyemKfJRuA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/code-frame": "^7.29.0",
+        "@babel/generator": "^7.29.0",
+        "@babel/helper-globals": "^7.28.0",
+        "@babel/parser": "^7.29.0",
+        "@babel/template": "^7.28.6",
+        "@babel/types": "^7.29.0",
+        "debug": "^4.3.1"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@babel/types": {
+      "version": "7.29.0",
+      "resolved": "https://registry.npmjs.org/@babel/types/-/types-7.29.0.tgz",
+      "integrity": "sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@babel/helper-string-parser": "^7.27.1",
+        "@babel/helper-validator-identifier": "^7.28.5"
+      },
+      "engines": {
+        "node": ">=6.9.0"
+      }
+    },
+    "node_modules/@esbuild/aix-ppc64": {
+      "version": "0.25.12",
+      "resolved": "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.25.12.tgz",
+      "integrity": "sha512-Hhmwd6CInZ3dwpuGTF8fJG6yoWmsToE+vYgD4nytZVxcu1ulHpUQRAB1UJ8+N1Am3Mz4+xOByoQoSZf4D+CpkA==",
+      "cpu": [
+        "ppc64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "aix"
+      ],
+      "engines": {
+        "node": ">=18"
+      }
+    },
+    "node_modules/@esbuild/android-arm": {
+      "version": "0.25.12",
+      "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.25.12.tgz",
+      "integrity": "sha512-VJ+sKvNA/GE7Ccacc9Cha7bpS8nyzVv0jdVgwNDaR4gDMC/2TTRc33Ip8qrNYUcpkOHUT5OZ0bUcNNVZQ9RLlg==",
+      "cpu": [
+        "arm"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "android"
+      ],
+      "engines": {
+        "node": ">=18"
+      }
+    },
+    "node_modules/@esbuild/android-arm64": 

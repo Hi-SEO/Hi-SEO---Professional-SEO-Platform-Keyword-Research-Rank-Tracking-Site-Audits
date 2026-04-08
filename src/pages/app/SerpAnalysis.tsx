@@ -1,161 +1,442 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Search, Layers, Video, MessageSquare, FileText } from "lucide-react";
+import {
+  Search,
+  Layers,
+  Video,
+  MessageSquare,
+  FileText,
+  Save,
+  RotateCcw,
+  CheckCircle2,
+  XCircle,
+  Zap,
+  BarChart3,
+  Target,
+  TrendingUp,
+  Globe,
+} from "lucide-react";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
+import {
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 
 type SerpFeature = {
   name: string;
   present: boolean;
+  icon: React.ComponentType<{ className?: string }>;
+  opportunity: string;
+};
+
+type SerpResult = {
+  keyword: string;
+  intent: string;
+  intentColor: string;
+  difficulty: number;
+  competition: number;
+  clickOpportunity: number;
+  searchVolume: number;
+  cpc: string;
+  features: SerpFeature[];
+  recommendations: string[];
+  radarData: Array<{ metric: string; value: number }>;
 };
 
 function detectIntent(keyword: string) {
   const k = keyword.toLowerCase();
-
-  if (
-    k.includes("buy") ||
-    k.includes("pricing") ||
-    k.includes("price") ||
-    k.includes("service")
-  ) {
-    return "Transactional";
+  if (k.includes("buy") || k.includes("order") || k.includes("purchase")) {
+    return { intent: "Transactional", color: "text-emerald-500" };
   }
-
-  if (
-    k.includes("best") ||
-    k.includes("top") ||
-    k.includes("review") ||
-    k.includes("vs")
-  ) {
-    return "Commercial";
+  if (k.includes("best") || k.includes("top") || k.includes("review") || k.includes("vs") || k.includes("compare")) {
+    return { intent: "Commercial", color: "text-amber-500" };
   }
-
-  return "Informational";
+  if (k.includes("login") || k.includes("sign in") || k.includes("official")) {
+    return { intent: "Navigational", color: "text-purple-500" };
+  }
+  return { intent: "Informational", color: "text-blue-500" };
 }
 
-function generateSerpData(keyword: string) {
-  const intent = detectIntent(keyword);
+function generateSerpData(keyword: string): SerpResult {
+  const { intent, color } = detectIntent(keyword);
+  const k = keyword.toLowerCase();
+
+  const difficulty = Math.floor(Math.random() * 45) + 30;
+  const competition = Math.floor(Math.random() * 40) + 45;
+  const clickOpportunity = Math.floor(Math.random() * 35) + 40;
+  const searchVolume = Math.floor(Math.random() * 40000) + 2000;
+  const cpc = (Math.random() * 8 + 0.5).toFixed(2);
 
   const features: SerpFeature[] = [
-    { name: "Featured Snippet", present: true },
-    { name: "People Also Ask", present: true },
-    { name: "Video Results", present: keyword.toLowerCase().includes("how") || keyword.toLowerCase().includes("guide") },
-    { name: "Ads", present: intent === "Transactional" || intent === "Commercial" },
-    { name: "Image Pack", present: keyword.toLowerCase().includes("examples") || keyword.toLowerCase().includes("ideas") },
-    { name: "Sitelinks", present: true },
+    {
+      name: "Featured Snippet",
+      present: k.includes("what") || k.includes("how") || k.includes("why"),
+      icon: FileText,
+      opportunity: "Write a concise answer to target the snippet.",
+    },
+    {
+      name: "People Also Ask",
+      present: true,
+      icon: MessageSquare,
+      opportunity: "Add FAQ sections that answer related questions.",
+    },
+    {
+      name: "Video Results",
+      present: k.includes("how") || k.includes("tutorial") || k.includes("guide"),
+      icon: Video,
+      opportunity: "Create a supporting video for this keyword.",
+    },
+    {
+      name: "Ads",
+      present: intent === "Transactional" || intent === "Commercial",
+      icon: Zap,
+      opportunity: "Commercial intent is strong, ads may be active.",
+    },
+    {
+      name: "Image Pack",
+      present: k.includes("example") || k.includes("idea") || k.includes("template"),
+      icon: Globe,
+      opportunity: "Use optimized images and descriptive alt text.",
+    },
+    {
+      name: "Sitelinks",
+      present: intent === "Navigational",
+      icon: Layers,
+      opportunity: "Improve site structure for sitelink eligibility.",
+    },
+    {
+      name: "Knowledge Panel",
+      present: k.split(" ").length <= 2,
+      icon: BarChart3,
+      opportunity: "Add structured data to improve rich result chances.",
+    },
+    {
+      name: "Local Pack",
+      present: k.includes("near") || k.includes("local"),
+      icon: Target,
+      opportunity: "Optimize for local SEO if location intent is present.",
+    },
+  ];
+
+  const recommendations = [
+    intent === "Informational"
+      ? "Create a long-form article with clear headings and FAQ sections."
+      : "Build a strong landing page with clear conversion elements.",
+    "Aim for a difficulty score below 50 if you want faster results.",
+    "Target keywords with high click opportunity for better organic traffic.",
+    "Analyze the top 10 results and identify gaps you can outperform.",
+    "Build relevant backlinks to increase authority and ranking potential.",
+  ];
+
+  const radarData = [
+    { metric: "Difficulty", value: difficulty },
+    { metric: "Competition", value: competition },
+    { metric: "Click Opp.", value: clickOpportunity },
+    { metric: "Volume", value: Math.min(100, Math.round(searchVolume / 500)) },
+    { metric: "CPC Value", value: Math.min(100, Math.round(Number(cpc) * 10)) },
   ];
 
   return {
+    keyword,
     intent,
-    difficulty: Math.floor(Math.random() * 50) + 35,
-    competitionLevel: Math.floor(Math.random() * 40) + 50,
-    clickOpportunity: Math.floor(Math.random() * 30) + 50,
+    intentColor: color,
+    difficulty,
+    competition,
+    clickOpportunity,
+    searchVolume,
+    cpc,
     features,
-    recommendations: [
-      "Target a featured snippet with concise question-based answers.",
-      "Add FAQ sections to improve People Also Ask visibility.",
-      "Use comparison or list-style content if the SERP shows commercial intent.",
-      "Optimize headings and schema markup to increase rich result eligibility.",
-    ],
+    recommendations,
+    radarData,
   };
 }
 
 export default function SerpAnalysis() {
+  const { user } = useAuth();
   const [keyword, setKeyword] = useState("best seo tools");
-  const [submittedKeyword, setSubmittedKeyword] = useState("best seo tools");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<SerpResult | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-  const serpData = useMemo(() => generateSerpData(submittedKeyword), [submittedKeyword]);
-
-  const handleAnalyze = () => {
-    if (keyword.trim()) {
-      setSubmittedKeyword(keyword.trim());
+  const handleAnalyze = async () => {
+    if (!keyword.trim()) {
+      setError("Please enter a keyword.");
+      return;
     }
+
+    setLoading(true);
+    setError("");
+    setMessage("");
+    setResult(null);
+
+    await new Promise((r) => setTimeout(r, 1000));
+    setResult(generateSerpData(keyword.trim()));
+    setLoading(false);
+  };
+
+  const handleSave = async () => {
+    if (!user) {
+      setError("You must be logged in.");
+      return;
+    }
+
+    if (!result) {
+      setError("No data to save.");
+      return;
+    }
+
+    setSaving(true);
+    const { error } = await supabase.from("reports").insert({
+      user_id: user.id,
+      title: `SERP Analysis - ${result.keyword}`,
+      report_type: "serp-analysis",
+      data: result,
+    });
+
+    if (error) setError(error.message);
+    else setMessage("SERP analysis saved successfully.");
+
+    setSaving(false);
   };
 
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-[1400px] mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">SERP Analysis</h1>
-        <p className="text-muted-foreground mt-1">
-          Analyze keyword intent, SERP features, and ranking opportunities.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">SERP Analysis</h1>
+          <p className="text-muted-foreground mt-1">
+            Analyze keyword intent, SERP features, and ranking opportunities.
+          </p>
+        </div>
+
+        <Button onClick={handleSave} disabled={saving || !result}>
+          <Save className="w-4 h-4 mr-2" />
+          {saving ? "Saving..." : "Save Analysis"}
+        </Button>
       </div>
 
       <Card className="p-6 flex flex-col md:flex-row gap-4 items-center">
         <div className="flex-1 w-full relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="Enter a keyword"
+            placeholder="Enter a keyword to analyze"
             className="pl-12 h-14 text-lg"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
           />
         </div>
-        <Button variant="premium" className="h-14 px-8 w-full md:w-auto" onClick={handleAnalyze}>
-          Analyze SERP
+
+        <Button
+          variant="premium"
+          className="h-14 px-8 w-full md:w-auto"
+          onClick={handleAnalyze}
+          disabled={loading}
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 animate-spin" />
+              Analyzing...
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Analyze SERP
+            </span>
+          )}
         </Button>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="p-6">
-          <div className="text-sm font-medium text-muted-foreground">Keyword</div>
-          <div className="mt-2 text-xl font-bold">{submittedKeyword}</div>
-        </Card>
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {message && <p className="text-emerald-600 text-sm">{message}</p>}
 
-        <Card className="p-6">
-          <div className="text-sm font-medium text-muted-foreground">Intent</div>
-          <div className="mt-2 text-xl font-bold">{serpData.intent}</div>
+      {loading && (
+        <Card className="p-12 flex flex-col items-center gap-4">
+          <RotateCcw className="w-10 h-10 animate-spin text-primary" />
+          <p className="text-lg font-medium">Analyzing SERP data...</p>
         </Card>
+      )}
 
-        <Card className="p-6">
-          <div className="text-sm font-medium text-muted-foreground">Estimated Difficulty</div>
-          <div className="mt-2 text-3xl font-bold">{serpData.difficulty}</div>
-        </Card>
+      {result && !loading && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="p-6">
+              <p className="text-xs text-muted-foreground">Keyword</p>
+              <p className="font-bold mt-1 truncate">{result.keyword}</p>
+              <span className={`text-xs font-medium mt-1 block ${result.intentColor}`}>
+                {result.intent} Intent
+              </span>
+            </Card>
 
-        <Card className="p-6">
-          <div className="text-sm font-medium text-muted-foreground">Click Opportunity</div>
-          <div className="mt-2 text-3xl font-bold">{serpData.clickOpportunity}%</div>
-        </Card>
-      </div>
+            <Card className="p-6">
+              <p className="text-xs text-muted-foreground">Search Volume</p>
+              <p className="text-3xl font-bold mt-1">
+                {result.searchVolume >= 1000
+                  ? `${(result.searchVolume / 1000).toFixed(1)}K`
+                  : result.searchVolume}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Monthly searches</p>
+            </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4">SERP Features</h3>
-          <div className="space-y-4">
-            {serpData.features.map((feature, index) => (
-              <div key={index} className="flex items-center justify-between rounded-lg border p-4">
-                <div className="flex items-center gap-3">
-                  {feature.name === "Featured Snippet" && <FileText className="w-4 h-4 text-primary" />}
-                  {feature.name === "People Also Ask" && <MessageSquare className="w-4 h-4 text-primary" />}
-                  {feature.name === "Video Results" && <Video className="w-4 h-4 text-primary" />}
-                  {!["Featured Snippet", "People Also Ask", "Video Results"].includes(feature.name) && (
-                    <Layers className="w-4 h-4 text-primary" />
-                  )}
-                  <span className="font-medium">{feature.name}</span>
-                </div>
-                <span
-                  className={`text-sm font-medium ${
-                    feature.present ? "text-emerald-600" : "text-muted-foreground"
+            <Card className="p-6">
+              <p className="text-xs text-muted-foreground">Difficulty</p>
+              <p
+                className={`text-3xl font-bold mt-1 ${
+                  result.difficulty >= 70
+                    ? "text-red-500"
+                    : result.difficulty >= 40
+                    ? "text-amber-500"
+                    : "text-emerald-500"
+                }`}
+              >
+                {result.difficulty}
+              </p>
+              <div className="w-full bg-muted rounded-full h-1.5 mt-2">
+                <div
+                  className={`h-1.5 rounded-full ${
+                    result.difficulty >= 70
+                      ? "bg-red-500"
+                      : result.difficulty >= 40
+                      ? "bg-amber-500"
+                      : "bg-emerald-500"
                   }`}
-                >
-                  {feature.present ? "Present" : "Not Present"}
-                </span>
+                  style={{ width: `${result.difficulty}%` }}
+                />
               </div>
-            ))}
-          </div>
-        </Card>
+            </Card>
 
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4">Recommendations</h3>
-          <div className="space-y-4">
-            {serpData.recommendations.map((item, index) => (
-              <div key={index} className="rounded-lg border p-4 text-sm">
-                {item}
-              </div>
-            ))}
+            <Card className="p-6">
+              <p className="text-xs text-muted-foreground">Click Opportunity</p>
+              <p className="text-3xl font-bold mt-1 text-emerald-500">
+                {result.clickOpportunity}%
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Organic click share</p>
+            </Card>
           </div>
-        </Card>
-      </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="p-6">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-primary" />
+                SERP Metrics Radar
+              </h3>
+              <div className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart data={result.radarData}>
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey="metric" tick={{ fontSize: 12 }} />
+                    <Tooltip />
+                    <Radar
+                      name="Score"
+                      dataKey="value"
+                      stroke="#3b82f6"
+                      fill="#3b82f6"
+                      fillOpacity={0.3}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            <Card className="p-6 space-y-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                Recommendations
+              </h3>
+              <div className="space-y-3">
+                {result.recommendations.map((recommendation, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start gap-3 p-3 rounded-lg border bg-muted/10 hover:bg-muted/20 transition-colors"
+                  >
+                    <p className="text-sm">{recommendation}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          <Card className="overflow-hidden">
+            <div className="border-b bg-muted/20 px-6 py-4">
+              <h3 className="font-semibold text-lg">SERP Features</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x">
+              <div className="divide-y">
+                {result.features.slice(0, 4).map((feature, index) => {
+                  const Icon = feature.icon;
+                  return (
+                    <div key={index} className="p-5 flex items-start gap-4 hover:bg-muted/10 transition-colors">
+                      <div
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          feature.present ? "bg-emerald-500/10" : "bg-muted"
+                        }`}
+                      >
+                        <Icon
+                          className={`w-4 h-4 ${
+                            feature.present ? "text-emerald-500" : "text-muted-foreground"
+                          }`}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm">{feature.name}</p>
+                          {feature.present ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">{feature.opportunity}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="divide-y">
+                {result.features.slice(4).map((feature, index) => {
+                  const Icon = feature.icon;
+                  return (
+                    <div key={index} className="p-5 flex items-start gap-4 hover:bg-muted/10 transition-colors">
+                      <div
+                        className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          feature.present ? "bg-emerald-500/10" : "bg-muted"
+                        }`}
+                      >
+                        <Icon
+                          className={`w-4 h-4 ${
+                            feature.present ? "text-emerald-500" : "text-muted-foreground"
+                          }`}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm">{feature.name}</p>
+                          {feature.present ? (
+                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                          ) : (
+                            <XCircle className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">{feature.opportunity}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

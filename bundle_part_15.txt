@@ -1,0 +1,464 @@
+Here is your SEO workspace overview for today.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={() => navigate("/app/reports")}>
+            <FileText className="mr-2 h-4 w-4" />
+            View Reports
+          </Button>
+          <Button variant="premium" onClick={() => navigate("/app/site-audit")}>
+            <Zap className="mr-2 h-4 w-4" />
+            Run Audit
+          </Button>
+        </div>
+      </div>
+
+      {/* Error */}
+      {error && (
+        <Card className="border-destructive/20 bg-destructive/10 p-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
+              <div>
+                <p className="font-semibold text-destructive">Could not load dashboard data</p>
+                <p className="text-sm text-muted-foreground">{error}</p>
+              </div>
+            </div>
+            <Button variant="outline" onClick={() => setReloadKey((k) => k + 1)}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Retry
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-4">
+        <MetricCard
+          title="Projects"
+          value={loading ? "..." : String(projectCount)}
+          subtitle="Active workspaces"
+          icon={FolderOpen}
+          color="text-blue-500"
+          bg="bg-blue-500/10"
+          onClick={() => navigate("/app/projects")}
+        />
+        <MetricCard
+          title="Saved Keywords"
+          value={loading ? "..." : String(keywordCount)}
+          subtitle="Tracked keywords"
+          icon={Search}
+          color="text-purple-500"
+          bg="bg-purple-500/10"
+          onClick={() => navigate("/app/keyword-explorer")}
+        />
+        <MetricCard
+          title="Audits Run"
+          value={loading ? "..." : String(auditCount)}
+          subtitle="SEO audits completed"
+          icon={Zap}
+          color="text-amber-500"
+          bg="bg-amber-500/10"
+          onClick={() => navigate("/app/site-audit")}
+        />
+        <MetricCard
+          title="Reports Saved"
+          value={loading ? "..." : String(reportCount)}
+          subtitle="Total reports saved"
+          icon={BarChart3}
+          color="text-emerald-500"
+          bg="bg-emerald-500/10"
+          onClick={() => navigate("/app/reports")}
+        />
+      </div>
+
+      {/* Quick Actions */}
+      <Card className="p-6">
+        <h3 className="mb-4 text-lg font-semibold">Quick Actions</h3>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+          {quickActions.map((action) => {
+            const Icon = action.icon
+            return (
+              <button
+                key={action.href}
+                onClick={() => navigate(action.href)}
+                className={"flex flex-col items-center gap-2 rounded-xl border border-transparent p-4 transition-all hover:border-border " + action.color}
+              >
+                <Icon className="h-6 w-6" />
+                <span className="text-center text-xs font-medium">{action.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      </Card>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <Card className="p-6 lg:col-span-2">
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold">Weekly Activity</h3>
+            <p className="text-sm text-muted-foreground">Your real activity over the last 7 days</p>
+          </div>
+          <div className="h-[280px]">
+            {loading ? (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                Loading chart data...
+              </div>
+            ) : weeklyData.every((d) => d.audits === 0 && d.keywords === 0 && d.backlinks === 0) ? (
+              <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+                <BarChart3 className="h-10 w-10 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">No activity in the last 7 days</p>
+                <p className="text-xs text-muted-foreground">Start using tools to see your activity here</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                  <Tooltip contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }} />
+                  <Legend />
+                  <Bar dataKey="audits" name="Audits" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                  <Bar dataKey="keywords" name="Keywords" fill="#a855f7" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                  <Bar dataKey="backlinks" name="Backlinks" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold">SEO Setup Progress</h3>
+          <p className="mb-4 text-sm text-muted-foreground">Complete your workspace setup</p>
+          <div className="flex flex-col items-center justify-center gap-4 py-4">
+            <div className="relative flex h-32 w-32 items-center justify-center">
+              <svg className="h-32 w-32 -rotate-90" viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#f1f5f9" strokeWidth="12" />
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  fill="none"
+                  stroke="#10b981"
+                  strokeWidth="12"
+                  strokeDasharray={`${2 * Math.PI * 50}`}
+                  strokeDashoffset={`${2 * Math.PI * 50 * (1 - checklistPercent / 100)}`}
+                  strokeLinecap="round"
+                  className="transition-all duration-700"
+                />
+              </svg>
+              <div className="absolute flex flex-col items-center">
+                <span className="text-3xl font-bold">{checklistPercent}%</span>
+                <span className="text-xs text-muted-foreground">Complete</span>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {completedItems} of {checklistItems.length} tasks done
+            </p>
+            {checklistPercent === 100 && (
+              <p className="text-sm font-medium text-emerald-600">
+                ?? All tasks complete!
+              </p>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Recent Activity Row */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Recent Projects */}
+        <Card className="overflow-hidden">
+          <div className="flex items-center justify-between border-b bg-muted/20 px-6 py-4">
+            <h3 className="font-semibold">Recent Projects</h3>
+            <button onClick={() => navigate("/app/projects")} className="text-xs text-primary hover:underline">
+              View all
+            </button>
+          </div>
+          <div className="divide-y">
+            {loading ? (
+              <div className="p-6 text-center text-sm text-muted-foreground">Loading...</div>
+            ) : recentProjects.length > 0 ? (
+              recentProjects.map((row) => (
+                <div key={row.id} className="flex items-center gap-3 px-6 py-4 transition-colors hover:bg-muted/10">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
+                    <FolderOpen className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{row.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{row.domain || "No domain"}</p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                </div>
+              ))
+            ) : (
+              <div className="p-6 text-center text-sm text-muted-foreground">
+                No projects yet.
+                <button onClick={() => navigate("/app/projects")} className="mx-auto mt-2 block text-xs text-primary hover:underline">
+                  Create your first project
+                </button>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Recent Audits */}
+        <Card className="overflow-hidden">
+          <div className="flex items-center justify-between border-b bg-muted/20 px-6 py-4">
+            <h3 className="font-semibold">Recent Audits</h3>
+            <button onClick={() => navigate("/app/site-audit")} className="text-xs text-primary hover:underline">
+              Run new
+            </button>
+          </div>
+          <div className="divide-y">
+            {loading ? (
+              <div className="p-6 text-center text-sm text-muted-foreground">Loading...</div>
+            ) : recentAudits.length > 0 ? (
+              recentAudits.map((row) => (
+                <div key={row.id} className="flex items-center gap-3 px-6 py-4 transition-colors hover:bg-muted/10">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{row.target_url || "Unknown URL"}</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      {row.score !== null && (
+                        <>
+                          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
+                            <div
+                              className={"h-full rounded-full " + getScoreBg(row.score)}
+                              style={{ width: `${row.score}%` }}
+                            />
+                          </div>
+                          <span className={"text-xs font-medium " + getScoreColor(row.score)}>
+                            {row.score}/100
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <span className={"rounded-full px-2 py-1 text-xs font-medium " + getStatusBadge(row.status)}>
+                    {row.status || "done"}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div className="p-6 text-center text-sm text-muted-foreground">
+                No audits yet.
+                <button onClick={() => navigate("/app/site-audit")} className="mx-auto mt-2 block text-xs text-primary hover:underline">
+                  Run your first audit
+                </button>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Recent Reports */}
+        <Card className="overflow-hidden">
+          <div className="flex items-center justify-between border-b bg-muted/20 px-6 py-4">
+            <h3 className="font-semibold">Recent Reports</h3>
+            <button onClick={() => navigate("/app/reports")} className="text-xs text-primary hover:underline">
+              View all
+            </button>
+          </div>
+          <div className="divide-y">
+            {loading ? (
+              <div className="p-6 text-center text-sm text-muted-foreground">Loading...</div>
+            ) : recentReports.length > 0 ? (
+              recentReports.map((row) => (
+                <div key={row.id} className="flex items-center gap-3 px-6 py-4 transition-colors hover:bg-muted/10">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
+                    {getReportTypeIcon(row.report_type)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{row.title}</p>
+                    <p className="text-xs text-muted-foreground">{getReportTypeLabel(row.report_type)}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="p-6 text-center text-sm text-muted-foreground">
+                No reports yet.
+                <button onClick={() => navigate("/app/reports")} className="mx-auto mt-2 block text-xs text-primary hover:underline">
+                  View reports
+                </button>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* SEO Health Checklist */}
+      <Card className="p-6">
+        <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+          <Activity className="h-5 w-5 text-primary" />
+          SEO Health Checklist
+        </h3>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+          {checklistItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <button
+                key={item.label}
+                onClick={() => navigate(item.href)}
+                className={
+                  "flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:shadow-sm " +
+                  (item.done
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-border bg-muted/20 hover:bg-muted/40")
+                }
+              >
+                {item.done ? (
+                  <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-emerald-500" />
+                ) : (
+                  <div className="h-5 w-5 flex-shrink-0 rounded-full border-2 border-muted-foreground/30" />
+                )}
+                <div className="flex items-center gap-2">
+                  <Icon className={"h-4 w-4 " + (item.done ? "text-emerald-500" : "text-muted-foreground")} />
+                  <span className="text-sm font-medium">{item.label}</span>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </Card>
+    </div>
+  )
+}
+
+function MetricCard({ title, value, subtitle, icon: Icon, color, bg, onClick }: MetricCardProps) {
+  return (
+    <Card className="cursor-pointer p-6 transition-all hover:shadow-md group" onClick={onClick}>
+      <div className="flex items-center justify-between">
+        <div className={"flex h-10 w-10 items-center justify-center rounded-xl " + bg + " transition-transform group-hover:scale-110"}>
+          <Icon className={"h-5 w-5 " + color} />
+        </div>
+        <ArrowUpRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
+      </div>
+      <div className="mt-4">
+        <p className="text-3xl font-bold">{value}</p>
+        <p className="mt-1 text-sm font-medium">{title}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
+      </div>
+    </Card>
+  )
+}
+
+
+--- FILE: src\pages\app\KeywordExplorer.tsx ---
+
+import { useEffect, useState } from "react";
+import { Button } from "../../components/ui/button";
+import { Card } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
+import { fetchKeywordData, KeywordResult, KeywordData } from "../../utils/keywordService";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
+import {
+  Search, Save, Plus, RotateCcw, TrendingUp,
+  TrendingDown, Minus, Filter, ChevronUp, ChevronDown,
+  Target, Zap, DollarSign, BarChart3
+} from "lucide-react";
+
+type SortKey = "volume" | "kd" | "cpc" | "opportunity";
+type FilterIntent = "all" | "Informational" | "Commercial" | "Transactional" | "Navigational";
+type FilterCompetition = "all" | "Low" | "Medium" | "High";
+
+type Project = {
+  id: string;
+  name: string;
+  domain: string | null;
+};
+
+function formatVolume(value: number) {
+  if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+  if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+  return `${value}`;
+}
+
+function TrendIcon({ trend }: { trend: KeywordData["trend"] }) {
+  if (trend === "Rising") return <TrendingUp className="w-4 h-4 text-emerald-500" />;
+  if (trend === "Declining") return <TrendingDown className="w-4 h-4 text-red-500" />;
+  if (trend === "Seasonal") return <Zap className="w-4 h-4 text-amber-500" />;
+  return <Minus className="w-4 h-4 text-muted-foreground" />;
+}
+
+function KDBar({ value }: { value: number }) {
+  const color = value >= 70 ? "bg-red-500" : value >= 40 ? "bg-amber-500" : "bg-emerald-500";
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-16 bg-muted rounded-full h-1.5">
+        <div className={`h-1.5 rounded-full ${color}`} style={{ width: `${value}%` }} />
+      </div>
+      <span className="text-sm font-medium w-6">{value}</span>
+    </div>
+  );
+}
+
+function OpportunityDot({ value }: { value: number }) {
+  const color = value >= 70 ? "text-emerald-500" : value >= 40 ? "text-amber-500" : "text-red-400";
+  return <span className={`font-bold text-sm ${color}`}>{value}</span>;
+}
+
+export default function KeywordExplorer() {
+  const { user } = useAuth();
+
+  const [query, setQuery] = useState("seo tools");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<KeywordResult | null>(null);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  const [sortKey, setSortKey] = useState<SortKey>("volume");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [filterIntent, setFilterIntent] = useState<FilterIntent>("all");
+  const [filterCompetition, setFilterCompetition] = useState<FilterCompetition>("all");
+  const [searchFilter, setSearchFilter] = useState("");
+
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [newProjectName, setNewProjectName] = useState("");
+  const [newProjectDomain, setNewProjectDomain] = useState("");
+  const [creatingProject, setCreatingProject] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [savingReport, setSavingReport] = useState(false);
+
+  const loadProjects = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("projects")
+      .select("id, name, domain")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    if (data) {
+      setProjects(data);
+      if (data.length > 0 && !selectedProjectId) setSelectedProjectId(data[0].id);
+    }
+  };
+
+  useEffect(() => { loadProjects(); }, [user]);
+
+  const handleExplore = async () => {
+    if (!query.trim()) { setError("Please enter a keyword."); return; }
+    setLoading(true);
+    setError("");
+    setMessage("");
+    setResult(null);
+    try {
+      const data = await fetchKeywordData(query.trim());
+      setResult(data);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch keyword data.");
+    }
+    setLoading(false);
+  };
+
+  const handleCreateProject = async () => {
+    if (!user) { setError("You must be logged in."); return; }
+    if (!newProjectName.trim()) { setError("Project name is required."); return; }
+    setCreatingProject(true);
+    const { data, error: err } = await supabase
+      .from("projects")
+      .insert({ user_id: user.id, name: newProjectName.trim(), domain: newProjectDomain.trim() || null })
+      .select("id, name, domain")
+      .single();
+    if (err) { setError(err.message); setCreatingProject(false); return; }
+    if (data) {
+      setProjects(prev => [data, ...prev]);
+      setSelecte

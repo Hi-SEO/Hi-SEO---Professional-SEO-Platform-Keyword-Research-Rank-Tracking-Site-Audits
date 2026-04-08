@@ -1,0 +1,662 @@
+marketingland.com", "searchengineland.com", "hubspot.com", "neilpatel.com",
+    "backlinko.com", "contentmarketinginstitute.com", "socialmediaexaminer.com",
+    "forbes.com", "entrepreneur.com", "inc.com", "techcrunch.com", "wired.com"
+  ];
+
+  const anchors = [
+    cleanDomain, "best seo tool", "seo platform", "rank tracker", "keyword research",
+    "site audit tool", "backlink checker", "seo software", "try for free",
+    "read more", "learn more", `${cleanDomain} review`, "alternative to ahrefs"
+  ];
+
+  return Array.from({ length: 18 }, (_, i) => {
+    const authority = Math.floor(Math.random() * 55) + 45;
+    const spamScore = Math.floor(Math.random() * 25) + 3;
+    const isDofollow = Math.random() > 0.35;
+    const anchor = anchors[Math.floor(Math.random() * anchors.length)];
+    const source = sources[Math.floor(Math.random() * sources.length)];
+
+    return {
+      id: `bl-${Date.now()}-${i}`,
+      sourceDomain: source,
+      targetUrl: `https://${cleanDomain}${Math.random() > 0.6 ? '/blog' : Math.random() > 0.5 ? '/features' : ''}`,
+      anchorText: anchor,
+      authority,
+      spamScore,
+      type: isDofollow ? "dofollow" : "nofollow",
+      firstSeen: new Date(Date.now() - Math.random() * 31536000000).toISOString().split('T')[0],
+    };
+  });
+}
+
+export function analyzeBacklinks(domain: string): BacklinkSummary {
+  const backlinks = generateRealisticBacklinks(domain);
+  
+  const referringDomains = new Set(backlinks.map(b => b.sourceDomain)).size;
+  const totalBacklinks = backlinks.length * 12;
+  const avgAuthority = Math.round(
+    backlinks.reduce((sum, b) => sum + b.authority, 0) / backlinks.length
+  );
+  const avgSpamScore = Math.round(
+    backlinks.reduce((sum, b) => sum + b.spamScore, 0) / backlinks.length
+  );
+  const dofollowCount = backlinks.filter(b => b.type === "dofollow").length;
+  const dofollowPercentage = Math.round((dofollowCount / backlinks.length) * 100);
+
+  const domainRating = Math.min(98, Math.round(avgAuthority * 0.85 + (100 - avgSpamScore) * 0.4));
+
+  return {
+    domain: domain.replace(/^https?:\/\//, ""),
+    totalBacklinks,
+    referringDomains,
+    domainRating,
+    avgAuthority,
+    avgSpamScore,
+    dofollowPercentage,
+    backlinks: backlinks.sort((a, b) => b.authority - a.authority),
+  };
+}
+
+
+--- FILE: src\utils\cn.ts ---
+
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+
+--- FILE: src\utils\keywordService.ts ---
+
+export type KeywordData = {
+  keyword: string;
+  intent: "Informational" | "Commercial" | "Transactional" | "Navigational";
+  intentCode: "I" | "C" | "T" | "N";
+  kd: number;
+  volume: number;
+  cpc: number;
+  trend: "Rising" | "Stable" | "Declining" | "Seasonal";
+  competition: "Low" | "Medium" | "High";
+  opportunity: number;
+};
+
+export type KeywordResult = {
+  seed: string;
+  total: number;
+  keywords: KeywordData[];
+  summary: {
+    avgKD: number;
+    avgVolume: number;
+    avgCPC: number;
+    totalVolume: number;
+    lowCompetition: number;
+    highVolume: number;
+  };
+};
+
+function detectIntent(keyword: string): KeywordData["intent"] {
+  const k = keyword.toLowerCase();
+  if (k.includes("buy") || k.includes("price") || k.includes("pricing") || k.includes("hire") || k.includes("order") || k.includes("cheap") || k.includes("deal") || k.includes("discount") || k.includes("shop")) return "Transactional";
+  if (k.includes("best") || k.includes("top") || k.includes("review") || k.includes("compare") || k.includes("vs") || k.includes("alternative") || k.includes("versus")) return "Commercial";
+  if (k.includes("login") || k.includes("sign in") || k.includes("dashboard") || k.includes("official") || k.includes("website") || k.includes("homepage")) return "Navigational";
+  return "Informational";
+}
+
+function getIntentCode(intent: KeywordData["intent"]): KeywordData["intentCode"] {
+  const map: Record<KeywordData["intent"], KeywordData["intentCode"]> = {
+    Informational: "I",
+    Commercial: "C",
+    Transactional: "T",
+    Navigational: "N",
+  };
+  return map[intent];
+}
+
+function seededRandom(seed: string, min: number, max: number): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    const char = seed.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  const normalized = Math.abs(hash % 1000) / 1000;
+  return Math.floor(normalized * (max - min + 1)) + min;
+}
+
+function estimateKD(keyword: string): number {
+  const words = keyword.trim().split(/\s+/).length;
+  const base = seededRandom(keyword, 10, 90);
+  if (words === 1) return Math.min(90, base + 20);
+  if (words === 2) return Math.min(80, base + 5);
+  if (words >= 4) return Math.max(10, base - 20);
+  return base;
+}
+
+function estimateVolume(keyword: string, intent: KeywordData["intent"]): number {
+  const words = keyword.trim().split(/\s+/).length;
+  const base = seededRandom(keyword + "vol", 100, 90000);
+  const intentMultiplier = intent === "Transactional" ? 0.6 : intent === "Informational" ? 1.2 : 1.0;
+  const lengthMultiplier = words === 1 ? 1.5 : words === 2 ? 1.2 : words === 3 ? 0.8 : 0.4;
+  return Math.floor(base * intentMultiplier * lengthMultiplier);
+}
+
+function estimateCPC(keyword: string, intent: KeywordData["intent"]): number {
+  const base = seededRandom(keyword + "cpc", 10, 2000) / 100;
+  const multiplier = intent === "Transactional" ? 2.5 : intent === "Commercial" ? 1.8 : intent === "Navigational" ? 0.5 : 0.8;
+  return Number((base * multiplier).toFixed(2));
+}
+
+function estimateTrend(keyword: string): KeywordData["trend"] {
+  const k = keyword.toLowerCase();
+  if (k.includes("2025") || k.includes("new") || k.includes("latest") || k.includes("ai") || k.includes("chatgpt")) return "Rising";
+  if (k.includes("christmas") || k.includes("black friday") || k.includes("halloween") || k.includes("summer") || k.includes("holiday")) return "Seasonal";
+  const rand = seededRandom(keyword + "trend", 0, 10);
+  if (rand > 7) return "Declining";
+  return "Stable";
+}
+
+function getCompetition(kd: number): KeywordData["competition"] {
+  if (kd >= 70) return "High";
+  if (kd >= 40) return "Medium";
+  return "Low";
+}
+
+function getOpportunity(volume: number, kd: number): number {
+  const score = Math.round((volume / 1000) * (1 - kd / 100) * 10);
+  return Math.min(100, Math.max(1, score));
+}
+
+function generateVariants(seed: string): string[] {
+  const base = seed.trim().toLowerCase();
+  return Array.from(new Set([
+    base,
+    `best ${base}`,
+    `${base} tool`,
+    `${base} tools`,
+    `${base} software`,
+    `${base} pricing`,
+    `${base} cost`,
+    `${base} free`,
+    `free ${base}`,
+    `${base} for beginners`,
+    `${base} for small business`,
+    `${base} for agencies`,
+    `how to do ${base}`,
+    `how to use ${base}`,
+    `what is ${base}`,
+    `${base} guide`,
+    `${base} tutorial`,
+    `${base} checklist`,
+    `${base} template`,
+    `${base} strategy`,
+    `${base} tips`,
+    `${base} tricks`,
+    `${base} examples`,
+    `${base} vs semrush`,
+    `${base} vs ahrefs`,
+    `${base} alternatives`,
+    `best ${base} tools 2025`,
+    `${base} services`,
+    `${base} agency`,
+    `${base} dashboard`,
+  ]));
+}
+
+export async function fetchKeywordData(seed: string): Promise<KeywordResult> {
+  await new Promise(resolve => setTimeout(resolve, 1200));
+
+  const variants = generateVariants(seed);
+
+  const keywords: KeywordData[] = variants.map((keyword) => {
+    const intent = detectIntent(keyword);
+    const kd = estimateKD(keyword);
+    const volume = estimateVolume(keyword, intent);
+    const cpc = estimateCPC(keyword, intent);
+    const trend = estimateTrend(keyword);
+    const competition = getCompetition(kd);
+    const opportunity = getOpportunity(volume, kd);
+
+    return {
+      keyword,
+      intent,
+      intentCode: getIntentCode(intent),
+      kd,
+      volume,
+      cpc,
+      trend,
+      competition,
+      opportunity,
+    };
+  });
+
+  keywords.sort((a, b) => b.volume - a.volume);
+
+  const totalVolume = keywords.reduce((sum, k) => sum + k.volume, 0);
+  const avgKD = Math.round(keywords.reduce((sum, k) => sum + k.kd, 0) / keywords.length);
+  const avgVolume = Math.round(totalVolume / keywords.length);
+  const avgCPC = Number((keywords.reduce((sum, k) => sum + k.cpc, 0) / keywords.length).toFixed(2));
+  const lowCompetition = keywords.filter(k => k.competition === "Low").length;
+  const highVolume = keywords.filter(k => k.volume >= 10000).length;
+
+  return {
+    seed,
+    total: keywords.length,
+    keywords,
+    summary: {
+      avgKD,
+      avgVolume,
+      avgCPC,
+      totalVolume,
+      lowCompetition,
+      highVolume,
+    },
+  };
+}
+
+
+--- FILE: src\utils\rankService.ts ---
+
+export type RankingPosition = {
+  id: string
+  keyword: string
+  currentPosition: number
+  previousPosition: number | null
+  change: number
+  volume: number
+  lastUpdated: string
+  bestPosition: number
+}
+
+export type RankChartPoint = {
+  date: string
+} & Record<string, number>
+
+export type RankTrackerData = {
+  domain: string
+  totalKeywords: number
+  averagePosition: number
+  positions: RankingPosition[]
+  chartData: RankChartPoint[]
+}
+
+function hashString(input: string) {
+  let hash = 0
+  for (let i = 0; i < input.length; i++) {
+    const char = input.charCodeAt(i)
+    hash = (hash << 5) - hash + char
+    hash |= 0
+  }
+  return Math.abs(hash)
+}
+
+function seededRandom(seed: string, min: number, max: number): number {
+  const hash = hashString(seed)
+  const normalized = (hash % 1000) / 1000
+  return Math.floor(normalized * (max - min + 1)) + min
+}
+
+function normalizeDomain(domain: string) {
+  return domain.trim() || "yourwebsite.com"
+}
+
+function getRandomPosition(seed: string, min: number = 1, max: number = 85): number {
+  return seededRandom(seed, min, max)
+}
+
+function simulatePositionChange(seed: string, current: number): number {
+  const delta = seededRandom(seed, -3, 3)
+  return Math.max(1, Math.min(100, current + delta))
+}
+
+export function generateRankingData(domain: string, keywords: string[] = []): RankTrackerData {
+  const normalizedDomain = normalizeDomain(domain)
+
+  const seedKeywords =
+    keywords.length > 0
+      ? keywords
+      : ["seo tools", "keyword research", "rank tracker", "site audit", "backlink checker"]
+
+  const positions: RankingPosition[] = seedKeywords.map((keyword, index) => {
+    const baseSeed = `${normalizedDomain}:${keyword}:${index}`
+
+    const currentPosition = getRandomPosition(`${baseSeed}:current`, 3, 45)
+    const previousPosition = simulatePositionChange(`${baseSeed}:previous`, currentPosition)
+    const change = previousPosition - currentPosition
+    const volume = seededRandom(`${baseSeed}:volume`, 800, 18800)
+
+    return {
+      id: `rank-${hashString(baseSeed)}`,
+      keyword,
+      currentPosition,
+      previousPosition,
+      change,
+      volume,
+      lastUpdated: new Date().toISOString(),
+      bestPosition: Math.max(1, currentPosition - seededRandom(`${baseSeed}:best`, 1, 15)),
+    }
+  })
+
+  const averagePosition = Math.round(
+    positions.reduce((sum, p) => sum + p.currentPosition, 0) / positions.length
+  )
+
+  const chartData: RankChartPoint[] = Array.from({ length: 30 }, (_, i) => {
+    const date = new Date()
+    date.setDate(date.getDate() - (29 - i))
+    const day = date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+
+    const dataPoint: RankChartPoint = { date: day }
+
+    positions.forEach((pos, idx) => {
+      const noise = seededRandom(`${normalizedDomain}:${pos.keyword}:${i}:noise`, -5, 5)
+      const trendWave = Math.sin(i / 3) * 5
+      dataPoint[`keyword${idx}`] = Math.max(1, Math.round(pos.currentPosition + trendWave + noise))
+    })
+
+    return dataPoint
+  })
+
+  return {
+    domain: normalizedDomain,
+    totalKeywords: positions.length,
+    averagePosition,
+    positions: positions.sort((a, b) => a.currentPosition - b.currentPosition),
+    chartData,
+  }
+}
+
+export function getPositionChangeColor(change: number): string {
+  if (change > 0) return "text-emerald-500"
+  if (change < 0) return "text-red-500"
+  return "text-muted-foreground"
+}
+
+export function getPositionChangeIcon(change: number) {
+  if (change > 0) return "?"
+  if (change < 0) return "?"
+  return "–"
+}
+
+
+--- FILE: supabase\.temp\linked-project.json ---
+
+{"ref":"wekxfddiexpgkzgjujvu","name":"hi-seo-auth","organization_id":"sypieaqvzgbzzplzfshb","organization_slug":"sypieaqvzgbzzplzfshb"}
+
+--- FILE: supabase\functions\paystack-webhook\.npmrc ---
+
+# Configuration for private npm package dependencies
+# For more information on using private registries with Edge Functions, see:
+# https://supabase.com/docs/guides/functions/import-maps#importing-from-private-registries
+
+
+--- FILE: supabase\functions\paystack-webhook\deno.json ---
+
+{
+  "imports": {
+    "@supabase/functions-js": "jsr:@supabase/functions-js@^2"
+  }
+}
+
+
+--- FILE: supabase\functions\paystack-webhook\index.ts ---
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+serve(async (req) => {
+  try {
+    if (req.method !== "POST") {
+      return new Response(JSON.stringify({ error: "Method not allowed" }), {
+        status: 405,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const paystackSecret = Deno.env.get("PAYSTACK_SECRET_KEY");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceRoleKey =
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SERVICE_ROLE_KEY");
+
+    if (!paystackSecret || !supabaseUrl || !supabaseServiceRoleKey) {
+      return new Response(
+        JSON.stringify({
+          error: "Missing server environment variables",
+          debug: {
+            hasPaystackSecret: !!paystackSecret,
+            hasSupabaseUrl: !!supabaseUrl,
+            hasServiceRoleKey: !!supabaseServiceRoleKey,
+          },
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const signature = req.headers.get("x-paystack-signature");
+    const rawBody = await req.text();
+
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(paystackSecret),
+      { name: "HMAC", hash: "SHA-512" },
+      false,
+      ["sign"]
+    );
+
+    const signedBuffer = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      new TextEncoder().encode(rawBody)
+    );
+
+    const computedSignature = Array.from(new Uint8Array(signedBuffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    if (!signature || signature !== computedSignature) {
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const payload = JSON.parse(rawBody);
+    const event = payload.event;
+    const data = payload.data;
+
+    if (event !== "charge.success") {
+      return new Response(
+        JSON.stringify({ received: true, ignored: true, event }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const reference = data?.reference;
+    const email = data?.customer?.email ?? null;
+    const amount = data?.amount ?? 0;
+    const currency = data?.currency ?? "NGN";
+    const status = data?.status ?? "success";
+    const paidAt = data?.paid_at ?? new Date().toISOString();
+    const userId =
+      data?.metadata?.userId ??
+      data?.metadata?.user_id ??
+      null;
+
+    if (!reference || !userId) {
+      return new Response(
+        JSON.stringify({
+          error: "Missing reference or userId in webhook payload",
+          event,
+          reference,
+          userId,
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+
+    const { error: paymentInsertError } = await supabase
+      .from("payments")
+      .upsert(
+        {
+          user_id: userId,
+          reference,
+          email,
+          amount,
+          currency,
+          status,
+          plan: "premium",
+          paid_at: paidAt,
+        },
+        { onConflict: "reference" }
+      );
+
+    if (paymentInsertError) {
+      return new Response(
+        JSON.stringify({
+          error: "Failed to save payment",
+          details: paymentInsertError,
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { error: profileUpdateError } = await supabase
+      .from("profiles")
+      .update({ plan: "premium" })
+      .eq("id", userId);
+
+    if (profileUpdateError) {
+      return new Response(
+        JSON.stringify({
+          error: "Failed to update profile",
+          details: profileUpdateError,
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Webhook processed successfully",
+        reference,
+        userId,
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+});
+
+
+--- FILE: supabase\functions\verify-paystack-payment\.npmrc ---
+
+# Configuration for private npm package dependencies
+# For more information on using private registries with Edge Functions, see:
+# https://supabase.com/docs/guides/functions/import-maps#importing-from-private-registries
+
+
+--- FILE: supabase\functions\verify-paystack-payment\deno.json ---
+
+{
+  "imports": {
+    "@supabase/functions-js": "jsr:@supabase/functions-js@^2"
+  }
+}
+
+
+--- FILE: supabase\functions\verify-paystack-payment\index.ts ---
+
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Content-Type": "application/json",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    if (req.method !== "POST") {
+      return new Response(
+        JSON.stringify({ error: "Method not allowed", step: "method-check" }),
+        { status: 405, headers: corsHeaders }
+      );
+    }
+
+    const body = await req.json();
+    const { reference, userId } = body;
+
+    if (!reference || !userId) {
+      return new Response(
+        JSON.stringify({
+          error: "Missing reference or userId",
+          step: "request-validation",
+          body,
+        }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const paystackSecret = Deno.env.get("PAYSTACK_SECRET_KEY");
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceRoleKey =
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SERVICE_ROLE_KEY");
+
+    if (!paystackSecret || !supabaseUrl || !supabaseServiceRoleKey) {
+      return new Response(
+        JSON.stringify({
+          error: "Missing server environment variables",
+          step: "env-check",
+          debug: {
+            hasPaystackSecret: !!paystackSecret,
+            hasSupabaseUrl: !!supabaseUrl,
+            hasServiceRoleKey: !!supabaseServiceRoleKey,
+          },
+        }),
+        { status: 500, headers: corsHeaders }
+      );
+    }
+
+    const verifyRes = await fetch(
+      `https://api.paystack.co/transaction/verify/${reference}`,
+      {
+        method: "GET",
+        headers: {
+      

@@ -1,20 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
-import { Search, Target, Filter, Plus, Zap } from "lucide-react";
+import { fetchKeywordData, KeywordResult, KeywordData } from "../../utils/keywordService";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
+import {
+  Search, Save, Plus, RotateCcw, TrendingUp,
+  TrendingDown, Minus, Filter, ChevronUp, ChevronDown,
+  Target, Zap, DollarSign, BarChart3
+} from "lucide-react";
 
-type KeywordRow = {
-  keyword: string;
-  intent: "Informational" | "Commercial" | "Transactional" | "Navigational";
-  intentCode: "I" | "C" | "T" | "N";
-  kd: number;
-  volume: number;
-  cpc: number;
-  trend: "Rising" | "Stable" | "Seasonal";
-};
+type SortKey = "volume" | "kd" | "cpc" | "opportunity";
+type FilterIntent = "all" | "Informational" | "Commercial" | "Transactional" | "Navigational";
+type FilterCompetition = "all" | "Low" | "Medium" | "High";
 
 type Project = {
   id: string;
@@ -22,234 +21,116 @@ type Project = {
   domain: string | null;
 };
 
-function detectIntent(keyword: string): KeywordRow["intent"] {
-  const k = keyword.toLowerCase();
-
-  if (
-    k.includes("buy") ||
-    k.includes("pricing") ||
-    k.includes("price") ||
-    k.includes("service") ||
-    k.includes("hire") ||
-    k.includes("tool")
-  ) {
-    return "Transactional";
-  }
-
-  if (
-    k.includes("best") ||
-    k.includes("top") ||
-    k.includes("review") ||
-    k.includes("compare") ||
-    k.includes("alternative") ||
-    k.includes("vs")
-  ) {
-    return "Commercial";
-  }
-
-  if (
-    k.includes("login") ||
-    k.includes("dashboard") ||
-    k.includes("homepage") ||
-    k.includes("official")
-  ) {
-    return "Navigational";
-  }
-
-  return "Informational";
-}
-
-function getIntentCode(intent: KeywordRow["intent"]): KeywordRow["intentCode"] {
-  if (intent === "Informational") return "I";
-  if (intent === "Commercial") return "C";
-  if (intent === "Transactional") return "T";
-  return "N";
-}
-
-function estimateKD(keyword: string) {
-  const words = keyword.trim().split(/\s+/).length;
-  if (words <= 2) return Math.floor(Math.random() * 30) + 60;
-  if (words === 3) return Math.floor(Math.random() * 25) + 35;
-  return Math.floor(Math.random() * 25) + 10;
-}
-
-function estimateVolume(keyword: string) {
-  const words = keyword.trim().split(/\s+/).length;
-  if (words <= 2) return Math.floor(Math.random() * 40000) + 5000;
-  if (words === 3) return Math.floor(Math.random() * 15000) + 1000;
-  return Math.floor(Math.random() * 5000) + 100;
-}
-
-function estimateCPC(intent: KeywordRow["intent"]) {
-  if (intent === "Transactional") return Number((Math.random() * 20 + 5).toFixed(2));
-  if (intent === "Commercial") return Number((Math.random() * 10 + 2).toFixed(2));
-  if (intent === "Navigational") return Number((Math.random() * 3 + 0.5).toFixed(2));
-  return Number((Math.random() * 4 + 0.2).toFixed(2));
-}
-
-function estimateTrend(keyword: string): KeywordRow["trend"] {
-  const k = keyword.toLowerCase();
-  if (k.includes("2025") || k.includes("new") || k.includes("latest")) return "Rising";
-  if (k.includes("christmas") || k.includes("black friday") || k.includes("seasonal")) return "Seasonal";
-  return "Stable";
-}
-
-function generateKeywordIdeas(seed: string): KeywordRow[] {
-  const base = seed.trim().toLowerCase();
-  if (!base) return [];
-
-  const variants = [
-    `${base}`,
-    `best ${base}`,
-    `${base} tool`,
-    `${base} tools`,
-    `${base} pricing`,
-    `${base} for small business`,
-    `${base} for agencies`,
-    `free ${base}`,
-    `how to use ${base}`,
-    `what is ${base}`,
-    `${base} vs semrush`,
-    `${base} vs ahrefs`,
-    `${base} alternatives`,
-    `${base} strategy`,
-    `${base} checklist`,
-    `${base} template`,
-    `${base} guide`,
-    `${base} software`,
-    `${base} service`,
-    `${base} dashboard`,
-  ];
-
-  const unique = Array.from(new Set(variants));
-
-  return unique.map((keyword) => {
-    const intent = detectIntent(keyword);
-    return {
-      keyword,
-      intent,
-      intentCode: getIntentCode(intent),
-      kd: estimateKD(keyword),
-      volume: estimateVolume(keyword),
-      cpc: estimateCPC(intent),
-      trend: estimateTrend(keyword),
-    };
-  });
-}
-
 function formatVolume(value: number) {
+  if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
   if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
   return `${value}`;
+}
+
+function TrendIcon({ trend }: { trend: KeywordData["trend"] }) {
+  if (trend === "Rising") return <TrendingUp className="w-4 h-4 text-emerald-500" />;
+  if (trend === "Declining") return <TrendingDown className="w-4 h-4 text-red-500" />;
+  if (trend === "Seasonal") return <Zap className="w-4 h-4 text-amber-500" />;
+  return <Minus className="w-4 h-4 text-muted-foreground" />;
+}
+
+function KDBar({ value }: { value: number }) {
+  const color = value >= 70 ? "bg-red-500" : value >= 40 ? "bg-amber-500" : "bg-emerald-500";
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-16 bg-muted rounded-full h-1.5">
+        <div className={`h-1.5 rounded-full ${color}`} style={{ width: `${value}%` }} />
+      </div>
+      <span className="text-sm font-medium w-6">{value}</span>
+    </div>
+  );
+}
+
+function OpportunityDot({ value }: { value: number }) {
+  const color = value >= 70 ? "text-emerald-500" : value >= 40 ? "text-amber-500" : "text-red-400";
+  return <span className={`font-bold text-sm ${color}`}>{value}</span>;
 }
 
 export default function KeywordExplorer() {
   const { user } = useAuth();
 
   const [query, setQuery] = useState("seo tools");
-  const [submittedQuery, setSubmittedQuery] = useState("seo tools");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<KeywordResult | null>(null);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  const [sortKey, setSortKey] = useState<SortKey>("volume");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [filterIntent, setFilterIntent] = useState<FilterIntent>("all");
+  const [filterCompetition, setFilterCompetition] = useState<FilterCompetition>("all");
+  const [searchFilter, setSearchFilter] = useState("");
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDomain, setNewProjectDomain] = useState("");
-
-  const [saving, setSaving] = useState(false);
   const [creatingProject, setCreatingProject] = useState(false);
-  const [saveMessage, setSaveMessage] = useState("");
-  const [saveError, setSaveError] = useState("");
-
-  const results = useMemo(() => generateKeywordIdeas(submittedQuery), [submittedQuery]);
+  const [saving, setSaving] = useState(false);
+  const [savingReport, setSavingReport] = useState(false);
 
   const loadProjects = async () => {
     if (!user) return;
-
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("projects")
       .select("id, name, domain")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
-
-    if (!error && data) {
+    if (data) {
       setProjects(data);
-      if (data.length > 0 && !selectedProjectId) {
-        setSelectedProjectId(data[0].id);
-      }
+      if (data.length > 0 && !selectedProjectId) setSelectedProjectId(data[0].id);
     }
   };
 
-  useEffect(() => {
-    loadProjects();
-  }, [user]);
+  useEffect(() => { loadProjects(); }, [user]);
 
-  const handleExplore = () => {
-    setSubmittedQuery(query.trim());
-    setSaveMessage("");
-    setSaveError("");
+  const handleExplore = async () => {
+    if (!query.trim()) { setError("Please enter a keyword."); return; }
+    setLoading(true);
+    setError("");
+    setMessage("");
+    setResult(null);
+    try {
+      const data = await fetchKeywordData(query.trim());
+      setResult(data);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch keyword data.");
+    }
+    setLoading(false);
   };
 
   const handleCreateProject = async () => {
-    if (!user) {
-      setSaveError("You must be logged in to create a project.");
-      return;
-    }
-
-    if (!newProjectName.trim()) {
-      setSaveError("Project name is required.");
-      return;
-    }
-
+    if (!user) { setError("You must be logged in."); return; }
+    if (!newProjectName.trim()) { setError("Project name is required."); return; }
     setCreatingProject(true);
-    setSaveMessage("");
-    setSaveError("");
-
-    const { data, error } = await supabase
+    const { data, error: err } = await supabase
       .from("projects")
-      .insert({
-        user_id: user.id,
-        name: newProjectName.trim(),
-        domain: newProjectDomain.trim() || null,
-      })
+      .insert({ user_id: user.id, name: newProjectName.trim(), domain: newProjectDomain.trim() || null })
       .select("id, name, domain")
       .single();
-
-    if (error) {
-      setSaveError(error.message);
-      setCreatingProject(false);
-      return;
-    }
-
+    if (err) { setError(err.message); setCreatingProject(false); return; }
     if (data) {
-      setProjects((prev) => [data, ...prev]);
+      setProjects(prev => [data, ...prev]);
       setSelectedProjectId(data.id);
       setNewProjectName("");
       setNewProjectDomain("");
-      setSaveMessage("Project created successfully.");
+      setMessage("Project created successfully.");
     }
-
     setCreatingProject(false);
   };
 
   const handleSaveKeywords = async () => {
-    if (!user) {
-      setSaveError("You must be logged in to save keywords.");
-      return;
-    }
-
-    if (!selectedProjectId) {
-      setSaveError("Please create or select a project first.");
-      return;
-    }
-
-    if (results.length === 0) {
-      setSaveError("No keywords to save.");
-      return;
-    }
-
+    if (!user) { setError("You must be logged in."); return; }
+    if (!selectedProjectId) { setError("Please select a project first."); return; }
+    if (!result) { setError("No keywords to save."); return; }
     setSaving(true);
-    setSaveMessage("");
-    setSaveError("");
-
-    const payload = results.map((row) => ({
+    setError("");
+    const payload = filteredKeywords.map(row => ({
       user_id: user.id,
       project_id: selectedProjectId,
       keyword: row.keyword,
@@ -259,29 +140,88 @@ export default function KeywordExplorer() {
       cpc: row.cpc,
       trend: row.trend,
     }));
-
-    const { error } = await supabase.from("keywords").insert(payload);
-
-    if (error) {
-      setSaveError(error.message);
-      setSaving(false);
-      return;
-    }
-
-    setSaveMessage("Keywords saved successfully to selected project.");
+    const { error: err } = await supabase.from("keywords").insert(payload);
+    if (err) { setError(err.message); setSaving(false); return; }
+    setMessage(`${payload.length} keywords saved to project.`);
     setSaving(false);
+  };
+
+  const handleSaveReport = async () => {
+    if (!user) { setError("You must be logged in."); return; }
+    if (!result) { setError("No data to save."); return; }
+    setSavingReport(true);
+    const { error: err } = await supabase.from("reports").insert({
+      user_id: user.id,
+      project_id: selectedProjectId || null,
+      title: `Keyword Research - ${result.seed}`,
+      report_type: "keyword-explorer",
+      data: result,
+    });
+    if (err) { setError(err.message); setSavingReport(false); return; }
+    setMessage("Report saved successfully.");
+    setSavingReport(false);
+  };
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("desc"); }
+  };
+
+  const filteredKeywords = result
+    ? result.keywords
+        .filter(k => filterIntent === "all" || k.intent === filterIntent)
+        .filter(k => filterCompetition === "all" || k.competition === filterCompetition)
+        .filter(k => k.keyword.toLowerCase().includes(searchFilter.toLowerCase()))
+        .sort((a, b) => {
+          const dir = sortDir === "asc" ? 1 : -1;
+          return (a[sortKey] - b[sortKey]) * dir;
+        })
+    : [];
+
+  const SortButton = ({ label, col }: { label: string; col: SortKey }) => (
+    <button
+      onClick={() => handleSort(col)}
+      className="flex items-center gap-1 hover:text-foreground transition-colors"
+    >
+      {label}
+      {sortKey === col
+        ? sortDir === "desc"
+          ? <ChevronDown className="w-3 h-3" />
+          : <ChevronUp className="w-3 h-3" />
+        : <ChevronDown className="w-3 h-3 opacity-30" />}
+    </button>
+  );
+
+  const intentColors: Record<string, string> = {
+    Informational: "bg-blue-500",
+    Commercial: "bg-amber-500",
+    Transactional: "bg-emerald-500",
+    Navigational: "bg-purple-500",
+  };
+
+  const competitionColors: Record<string, string> = {
+    Low: "text-emerald-500 bg-emerald-500/10 border-emerald-200",
+    Medium: "text-amber-500 bg-amber-500/10 border-amber-200",
+    High: "text-red-500 bg-red-500/10 border-red-200",
   };
 
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-[1600px] mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Keyword Explorer</h1>
-        <p className="text-muted-foreground mt-1">
-          Discover keyword ideas, estimate difficulty, and find content opportunities.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Keyword Explorer</h1>
+          <p className="text-muted-foreground mt-1">
+            Discover keyword ideas, search volume, difficulty and content opportunities.
+          </p>
+        </div>
+        <Button onClick={handleSaveReport} disabled={savingReport || !result}>
+          <Save className="w-4 h-4 mr-2" />
+          {savingReport ? "Saving..." : "Save Report"}
+        </Button>
       </div>
 
-      <Card className="p-4 space-y-4 bg-card shadow-soft">
+      <Card className="p-6 space-y-4">
+        <h3 className="font-semibold">Project</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Input
             placeholder="New project name"
@@ -289,157 +229,263 @@ export default function KeywordExplorer() {
             onChange={(e) => setNewProjectName(e.target.value)}
           />
           <Input
-            placeholder="Project domain (optional)"
+            placeholder="Domain (optional)"
             value={newProjectDomain}
             onChange={(e) => setNewProjectDomain(e.target.value)}
           />
           <Button onClick={handleCreateProject} disabled={creatingProject}>
+            <Plus className="w-4 h-4 mr-2" />
             {creatingProject ? "Creating..." : "Create Project"}
           </Button>
         </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">Select Project</label>
-          <select
-            className="h-12 rounded-md border border-input bg-background px-4 py-2 font-medium w-full"
-            value={selectedProjectId}
-            onChange={(e) => setSelectedProjectId(e.target.value)}
-          >
-            <option value="">Choose a project</option>
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name} {project.domain ? `(${project.domain})` : ""}
-              </option>
-            ))}
-          </select>
-        </div>
+        <select
+          className="h-12 rounded-md border border-input bg-background px-4 py-2 font-medium w-full"
+          value={selectedProjectId}
+          onChange={(e) => setSelectedProjectId(e.target.value)}
+        >
+          <option value="">Choose a project</option>
+          {projects.map(p => (
+            <option key={p.id} value={p.id}>
+              {p.name} {p.domain ? `(${p.domain})` : ""}
+            </option>
+          ))}
+        </select>
       </Card>
 
-      <Card className="p-4 flex flex-col md:flex-row gap-4 items-center bg-card shadow-soft">
-        <div className="flex-1 w-full relative flex items-center">
-          <Search className="absolute left-4 w-5 h-5 text-muted-foreground" />
+      <Card className="p-4 flex flex-col md:flex-row gap-4 items-center">
+        <div className="flex-1 w-full relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="Enter a seed keyword"
+            placeholder="Enter a seed keyword (e.g. seo tools)"
             className="pl-12 h-14 text-lg w-full"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleExplore()}
           />
         </div>
-        <div className="flex w-full md:w-auto gap-4">
-          <select className="h-14 rounded-md border border-input bg-background px-4 py-2 font-medium w-full md:w-48">
-            <option>United States</option>
-            <option>United Kingdom</option>
-            <option>Canada</option>
-            <option>Australia</option>
-            <option>Global</option>
-          </select>
-          <Button variant="premium" className="h-14 px-8 w-full md:w-auto text-base" onClick={handleExplore}>
-            <Search className="w-5 h-5 mr-2" /> Explore
-          </Button>
-        </div>
-      </Card>
-
-      <div className="flex items-center gap-4 flex-wrap">
-        <Button variant="outline" size="sm" className="rounded-full bg-muted/20">
-          <Target className="w-4 h-4 mr-2" /> Free MVP
-        </Button>
-        <Button variant="outline" size="sm" className="rounded-full bg-muted/20">
-          Intent Detection
-        </Button>
-        <Button variant="outline" size="sm" className="rounded-full bg-muted/20">
-          Estimated KD
-        </Button>
-        <Button variant="outline" size="sm" className="rounded-full bg-muted/20 border-dashed border-primary/50 text-primary">
-          <Filter className="w-4 h-4 mr-2" /> More Filters Later
-        </Button>
-      </div>
-
-      <Card className="overflow-hidden">
-        <div className="border-b bg-muted/20 px-6 py-4 flex items-center justify-between">
-          <h3 className="font-semibold">
-            Matching Terms
-            <span className="text-muted-foreground font-normal text-sm ml-2">
-              {results.length} keywords
+        <Button
+          variant="premium"
+          className="h-14 px-8 w-full md:w-auto text-base"
+          onClick={handleExplore}
+          disabled={loading}
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 animate-spin" />
+              Analyzing...
             </span>
-          </h3>
-          <Button variant="outline" size="sm" onClick={handleSaveKeywords} disabled={saving}>
-            <Plus className="w-4 h-4 mr-2" />
-            {saving ? "Saving..." : "Save Keywords"}
-          </Button>
-        </div>
-
-        {(saveError || saveMessage) && (
-          <div className="px-6 py-3 border-b">
-            {saveError && <p className="text-sm text-red-500">{saveError}</p>}
-            {saveMessage && <p className="text-sm text-green-600">{saveMessage}</p>}
-          </div>
-        )}
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/10 border-b">
-              <tr>
-                <th className="px-6 py-3 text-left font-medium text-muted-foreground">Keyword</th>
-                <th className="px-6 py-3 text-left font-medium text-muted-foreground">Intent</th>
-                <th className="px-6 py-3 text-right font-medium text-muted-foreground">KD</th>
-                <th className="px-6 py-3 text-right font-medium text-muted-foreground">Volume</th>
-                <th className="px-6 py-3 text-right font-medium text-muted-foreground">CPC</th>
-                <th className="px-6 py-3 text-center font-medium text-muted-foreground">Trend</th>
-                <th className="px-6 py-3 text-center font-medium text-muted-foreground">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {results.map((row, i) => {
-                const intentColor =
-                  row.intent === "Informational"
-                    ? "bg-blue-500"
-                    : row.intent === "Commercial"
-                    ? "bg-amber-500"
-                    : row.intent === "Transactional"
-                    ? "bg-emerald-500"
-                    : "bg-purple-500";
-
-                const kdColor =
-                  row.kd >= 70
-                    ? "bg-red-500"
-                    : row.kd >= 40
-                    ? "bg-orange-500"
-                    : "bg-emerald-500";
-
-                return (
-                  <tr key={i} className="hover:bg-muted/10 group">
-                    <td className="px-6 py-4 font-medium">{row.keyword}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2" title={row.intent}>
-                        <span
-                          className={`w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold text-white ${intentColor}`}
-                        >
-                          {row.intentCode}
-                        </span>
-                        <span className="text-muted-foreground">{row.intent}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <span className="font-medium">{row.kd}</span>
-                        <div className={`w-2 h-2 rounded-full ${kdColor}`}></div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right font-medium">{formatVolume(row.volume)}</td>
-                    <td className="px-6 py-4 text-right text-muted-foreground">${row.cpc.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-center">{row.trend}</td>
-                    <td className="px-6 py-4 text-center">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <Zap className="w-4 h-4 text-muted-foreground" />
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+          ) : (
+            <span className="flex items-center gap-2">
+              <Search className="w-5 h-5" />
+              Explore
+            </span>
+          )}
+        </Button>
       </Card>
+
+      {error && <p className="text-sm text-red-500">{error}</p>}
+      {message && <p className="text-sm text-emerald-600">{message}</p>}
+
+      {loading && (
+        <Card className="p-12 flex flex-col items-center justify-center gap-4">
+          <RotateCcw className="w-10 h-10 animate-spin text-primary" />
+          <p className="text-lg font-medium">Analyzing keyword data...</p>
+          <p className="text-sm text-muted-foreground">Finding volume, difficulty and opportunities</p>
+        </Card>
+      )}
+
+      {result && !loading && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="p-5 space-y-1">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <BarChart3 className="w-4 h-4" /> Total Keywords
+              </div>
+              <p className="text-3xl font-bold">{result.total}</p>
+              <p className="text-xs text-muted-foreground">Keyword ideas found</p>
+            </Card>
+            <Card className="p-5 space-y-1">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <Target className="w-4 h-4" /> Avg Difficulty
+              </div>
+              <p className={`text-3xl font-bold ${result.summary.avgKD >= 70 ? "text-red-500" : result.summary.avgKD >= 40 ? "text-amber-500" : "text-emerald-500"}`}>
+                {result.summary.avgKD}
+              </p>
+              <p className="text-xs text-muted-foreground">Out of 100</p>
+            </Card>
+            <Card className="p-5 space-y-1">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <TrendingUp className="w-4 h-4" /> Avg Volume
+              </div>
+              <p className="text-3xl font-bold">{formatVolume(result.summary.avgVolume)}</p>
+              <p className="text-xs text-muted-foreground">Monthly searches</p>
+            </Card>
+            <Card className="p-5 space-y-1">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <DollarSign className="w-4 h-4" /> Avg CPC
+              </div>
+              <p className="text-3xl font-bold">${result.summary.avgCPC}</p>
+              <p className="text-xs text-muted-foreground">Cost per click</p>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <Target className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Low Competition</p>
+                <p className="text-xl font-bold text-emerald-500">{result.summary.lowCompetition}</p>
+              </div>
+            </Card>
+            <Card className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">High Volume</p>
+                <p className="text-xl font-bold text-blue-500">{result.summary.highVolume}</p>
+              </div>
+            </Card>
+            <Card className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Total Volume</p>
+                <p className="text-xl font-bold text-purple-500">{formatVolume(result.summary.totalVolume)}</p>
+              </div>
+            </Card>
+            <Card className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Avg CPC</p>
+                <p className="text-xl font-bold text-amber-500">${result.summary.avgCPC}</p>
+              </div>
+            </Card>
+          </div>
+
+          <Card className="overflow-hidden">
+            <div className="border-b bg-muted/20 px-6 py-4 space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h3 className="font-semibold text-lg">
+                  Keyword Ideas
+                  <span className="text-muted-foreground font-normal text-sm ml-2">
+                    {filteredKeywords.length} of {result.total}
+                  </span>
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSaveKeywords}
+                  disabled={saving}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  {saving ? "Saving..." : "Save Keywords to Project"}
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <div className="relative">
+                  <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Filter keywords..."
+                    className="pl-9 pr-4 py-2 text-sm rounded-md border border-input bg-background w-48"
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                  />
+                </div>
+
+                <select
+                  className="px-3 py-2 text-sm rounded-md border border-input bg-background"
+                  value={filterIntent}
+                  onChange={(e) => setFilterIntent(e.target.value as FilterIntent)}
+                >
+                  <option value="all">All Intents</option>
+                  <option value="Informational">Informational</option>
+                  <option value="Commercial">Commercial</option>
+                  <option value="Transactional">Transactional</option>
+                  <option value="Navigational">Navigational</option>
+                </select>
+
+                <select
+                  className="px-3 py-2 text-sm rounded-md border border-input bg-background"
+                  value={filterCompetition}
+                  onChange={(e) => setFilterCompetition(e.target.value as FilterCompetition)}
+                >
+                  <option value="all">All Competition</option>
+                  <option value="Low">Low Competition</option>
+                  <option value="Medium">Medium Competition</option>
+                  <option value="High">High Competition</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/10 border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">Keyword</th>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">Intent</th>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">
+                      <SortButton label="KD" col="kd" />
+                    </th>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">
+                      <SortButton label="Volume" col="volume" />
+                    </th>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">
+                      <SortButton label="CPC" col="cpc" />
+                    </th>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">Competition</th>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">Trend</th>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">
+                      <SortButton label="Opportunity" col="opportunity" />
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {filteredKeywords.map((row, i) => (
+                    <tr key={i} className="hover:bg-muted/10 transition-colors">
+                      <td className="px-6 py-4 font-medium">{row.keyword}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold text-white ${intentColors[row.intent]}`}>
+                            {row.intentCode}
+                          </span>
+                          <span className="text-muted-foreground text-xs">{row.intent}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <KDBar value={row.kd} />
+                      </td>
+                      <td className="px-6 py-4 font-medium">{formatVolume(row.volume)}</td>
+                      <td className="px-6 py-4 text-muted-foreground">${row.cpc.toFixed(2)}</td>
+                      <td className="px-6 py-4">
+                        <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${competitionColors[row.competition]}`}>
+                          {row.competition}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1">
+                          <TrendIcon trend={row.trend} />
+                          <span className="text-xs text-muted-foreground">{row.trend}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <OpportunityDot value={row.opportunity} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </>
+      )}
     </div>
   );
 }

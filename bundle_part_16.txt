@@ -1,0 +1,481 @@
+dProjectId(data.id);
+      setNewProjectName("");
+      setNewProjectDomain("");
+      setMessage("Project created successfully.");
+    }
+    setCreatingProject(false);
+  };
+
+  const handleSaveKeywords = async () => {
+    if (!user) { setError("You must be logged in."); return; }
+    if (!selectedProjectId) { setError("Please select a project first."); return; }
+    if (!result) { setError("No keywords to save."); return; }
+    setSaving(true);
+    setError("");
+    const payload = filteredKeywords.map(row => ({
+      user_id: user.id,
+      project_id: selectedProjectId,
+      keyword: row.keyword,
+      intent: row.intent,
+      difficulty: String(row.kd),
+      volume: row.volume,
+      cpc: row.cpc,
+      trend: row.trend,
+    }));
+    const { error: err } = await supabase.from("keywords").insert(payload);
+    if (err) { setError(err.message); setSaving(false); return; }
+    setMessage(`${payload.length} keywords saved to project.`);
+    setSaving(false);
+  };
+
+  const handleSaveReport = async () => {
+    if (!user) { setError("You must be logged in."); return; }
+    if (!result) { setError("No data to save."); return; }
+    setSavingReport(true);
+    const { error: err } = await supabase.from("reports").insert({
+      user_id: user.id,
+      project_id: selectedProjectId || null,
+      title: `Keyword Research - ${result.seed}`,
+      report_type: "keyword-explorer",
+      data: result,
+    });
+    if (err) { setError(err.message); setSavingReport(false); return; }
+    setMessage("Report saved successfully.");
+    setSavingReport(false);
+  };
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("desc"); }
+  };
+
+  const filteredKeywords = result
+    ? result.keywords
+        .filter(k => filterIntent === "all" || k.intent === filterIntent)
+        .filter(k => filterCompetition === "all" || k.competition === filterCompetition)
+        .filter(k => k.keyword.toLowerCase().includes(searchFilter.toLowerCase()))
+        .sort((a, b) => {
+          const dir = sortDir === "asc" ? 1 : -1;
+          return (a[sortKey] - b[sortKey]) * dir;
+        })
+    : [];
+
+  const SortButton = ({ label, col }: { label: string; col: SortKey }) => (
+    <button
+      onClick={() => handleSort(col)}
+      className="flex items-center gap-1 hover:text-foreground transition-colors"
+    >
+      {label}
+      {sortKey === col
+        ? sortDir === "desc"
+          ? <ChevronDown className="w-3 h-3" />
+          : <ChevronUp className="w-3 h-3" />
+        : <ChevronDown className="w-3 h-3 opacity-30" />}
+    </button>
+  );
+
+  const intentColors: Record<string, string> = {
+    Informational: "bg-blue-500",
+    Commercial: "bg-amber-500",
+    Transactional: "bg-emerald-500",
+    Navigational: "bg-purple-500",
+  };
+
+  const competitionColors: Record<string, string> = {
+    Low: "text-emerald-500 bg-emerald-500/10 border-emerald-200",
+    Medium: "text-amber-500 bg-amber-500/10 border-amber-200",
+    High: "text-red-500 bg-red-500/10 border-red-200",
+  };
+
+  return (
+    <div className="p-6 md:p-8 space-y-8 max-w-[1600px] mx-auto">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Keyword Explorer</h1>
+          <p className="text-muted-foreground mt-1">
+            Discover keyword ideas, search volume, difficulty and content opportunities.
+          </p>
+        </div>
+        <Button onClick={handleSaveReport} disabled={savingReport || !result}>
+          <Save className="w-4 h-4 mr-2" />
+          {savingReport ? "Saving..." : "Save Report"}
+        </Button>
+      </div>
+
+      <Card className="p-6 space-y-4">
+        <h3 className="font-semibold">Project</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Input
+            placeholder="New project name"
+            value={newProjectName}
+            onChange={(e) => setNewProjectName(e.target.value)}
+          />
+          <Input
+            placeholder="Domain (optional)"
+            value={newProjectDomain}
+            onChange={(e) => setNewProjectDomain(e.target.value)}
+          />
+          <Button onClick={handleCreateProject} disabled={creatingProject}>
+            <Plus className="w-4 h-4 mr-2" />
+            {creatingProject ? "Creating..." : "Create Project"}
+          </Button>
+        </div>
+        <select
+          className="h-12 rounded-md border border-input bg-background px-4 py-2 font-medium w-full"
+          value={selectedProjectId}
+          onChange={(e) => setSelectedProjectId(e.target.value)}
+        >
+          <option value="">Choose a project</option>
+          {projects.map(p => (
+            <option key={p.id} value={p.id}>
+              {p.name} {p.domain ? `(${p.domain})` : ""}
+            </option>
+          ))}
+        </select>
+      </Card>
+
+      <Card className="p-4 flex flex-col md:flex-row gap-4 items-center">
+        <div className="flex-1 w-full relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <Input
+            placeholder="Enter a seed keyword (e.g. seo tools)"
+            className="pl-12 h-14 text-lg w-full"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleExplore()}
+          />
+        </div>
+        <Button
+          variant="premium"
+          className="h-14 px-8 w-full md:w-auto text-base"
+          onClick={handleExplore}
+          disabled={loading}
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <RotateCcw className="w-4 h-4 animate-spin" />
+              Analyzing...
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              <Search className="w-5 h-5" />
+              Explore
+            </span>
+          )}
+        </Button>
+      </Card>
+
+      {error && <p className="text-sm text-red-500">{error}</p>}
+      {message && <p className="text-sm text-emerald-600">{message}</p>}
+
+      {loading && (
+        <Card className="p-12 flex flex-col items-center justify-center gap-4">
+          <RotateCcw className="w-10 h-10 animate-spin text-primary" />
+          <p className="text-lg font-medium">Analyzing keyword data...</p>
+          <p className="text-sm text-muted-foreground">Finding volume, difficulty and opportunities</p>
+        </Card>
+      )}
+
+      {result && !loading && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="p-5 space-y-1">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <BarChart3 className="w-4 h-4" /> Total Keywords
+              </div>
+              <p className="text-3xl font-bold">{result.total}</p>
+              <p className="text-xs text-muted-foreground">Keyword ideas found</p>
+            </Card>
+            <Card className="p-5 space-y-1">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <Target className="w-4 h-4" /> Avg Difficulty
+              </div>
+              <p className={`text-3xl font-bold ${result.summary.avgKD >= 70 ? "text-red-500" : result.summary.avgKD >= 40 ? "text-amber-500" : "text-emerald-500"}`}>
+                {result.summary.avgKD}
+              </p>
+              <p className="text-xs text-muted-foreground">Out of 100</p>
+            </Card>
+            <Card className="p-5 space-y-1">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <TrendingUp className="w-4 h-4" /> Avg Volume
+              </div>
+              <p className="text-3xl font-bold">{formatVolume(result.summary.avgVolume)}</p>
+              <p className="text-xs text-muted-foreground">Monthly searches</p>
+            </Card>
+            <Card className="p-5 space-y-1">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <DollarSign className="w-4 h-4" /> Avg CPC
+              </div>
+              <p className="text-3xl font-bold">${result.summary.avgCPC}</p>
+              <p className="text-xs text-muted-foreground">Cost per click</p>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <Target className="w-5 h-5 text-emerald-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Low Competition</p>
+                <p className="text-xl font-bold text-emerald-500">{result.summary.lowCompetition}</p>
+              </div>
+            </Card>
+            <Card className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">High Volume</p>
+                <p className="text-xl font-bold text-blue-500">{result.summary.highVolume}</p>
+              </div>
+            </Card>
+            <Card className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Total Volume</p>
+                <p className="text-xl font-bold text-purple-500">{formatVolume(result.summary.totalVolume)}</p>
+              </div>
+            </Card>
+            <Card className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Avg CPC</p>
+                <p className="text-xl font-bold text-amber-500">${result.summary.avgCPC}</p>
+              </div>
+            </Card>
+          </div>
+
+          <Card className="overflow-hidden">
+            <div className="border-b bg-muted/20 px-6 py-4 space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h3 className="font-semibold text-lg">
+                  Keyword Ideas
+                  <span className="text-muted-foreground font-normal text-sm ml-2">
+                    {filteredKeywords.length} of {result.total}
+                  </span>
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSaveKeywords}
+                  disabled={saving}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  {saving ? "Saving..." : "Save Keywords to Project"}
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <div className="relative">
+                  <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Filter keywords..."
+                    className="pl-9 pr-4 py-2 text-sm rounded-md border border-input bg-background w-48"
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                  />
+                </div>
+
+                <select
+                  className="px-3 py-2 text-sm rounded-md border border-input bg-background"
+                  value={filterIntent}
+                  onChange={(e) => setFilterIntent(e.target.value as FilterIntent)}
+                >
+                  <option value="all">All Intents</option>
+                  <option value="Informational">Informational</option>
+                  <option value="Commercial">Commercial</option>
+                  <option value="Transactional">Transactional</option>
+                  <option value="Navigational">Navigational</option>
+                </select>
+
+                <select
+                  className="px-3 py-2 text-sm rounded-md border border-input bg-background"
+                  value={filterCompetition}
+                  onChange={(e) => setFilterCompetition(e.target.value as FilterCompetition)}
+                >
+                  <option value="all">All Competition</option>
+                  <option value="Low">Low Competition</option>
+                  <option value="Medium">Medium Competition</option>
+                  <option value="High">High Competition</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/10 border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">Keyword</th>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">Intent</th>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">
+                      <SortButton label="KD" col="kd" />
+                    </th>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">
+                      <SortButton label="Volume" col="volume" />
+                    </th>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">
+                      <SortButton label="CPC" col="cpc" />
+                    </th>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">Competition</th>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">Trend</th>
+                    <th className="px-6 py-3 text-left font-medium text-muted-foreground">
+                      <SortButton label="Opportunity" col="opportunity" />
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {filteredKeywords.map((row, i) => (
+                    <tr key={i} className="hover:bg-muted/10 transition-colors">
+                      <td className="px-6 py-4 font-medium">{row.keyword}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className={`w-5 h-5 rounded flex items-center justify-center text-[10px] font-bold text-white ${intentColors[row.intent]}`}>
+                            {row.intentCode}
+                          </span>
+                          <span className="text-muted-foreground text-xs">{row.intent}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <KDBar value={row.kd} />
+                      </td>
+                      <td className="px-6 py-4 font-medium">{formatVolume(row.volume)}</td>
+                      <td className="px-6 py-4 text-muted-foreground">${row.cpc.toFixed(2)}</td>
+                      <td className="px-6 py-4">
+                        <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${competitionColors[row.competition]}`}>
+                          {row.competition}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1">
+                          <TrendIcon trend={row.trend} />
+                          <span className="text-xs text-muted-foreground">{row.trend}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <OpportunityDot value={row.opportunity} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </>
+      )}
+    </div>
+  );
+}
+
+
+--- FILE: src\pages\app\PlaceholderTool.tsx ---
+
+import { Button } from "../../components/ui/button"
+
+export default function PlaceholderTool({ title, description }: { title: string, description: string }) {
+  return (
+    <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+        <p className="text-muted-foreground mt-2 text-lg">{description}</p>
+      </div>
+      
+      <div className="border border-dashed border-border/60 rounded-xl p-12 text-center bg-muted/10 space-y-6">
+        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+          <span className="text-primary font-bold text-xl">Hi</span>
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-semibold">Tool Under Development</h2>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            This feature is currently in design-phase as part of the Hi-SEO ecosystem. 
+            The full production app will feature hundreds of specific tools following this architecture.
+          </p>
+        </div>
+        <Button variant="outline" className="mt-4">Join Waitlist for {title}</Button>
+      </div>
+    </div>
+  )
+}
+
+--- FILE: src\pages\app\Projects.tsx ---
+
+import { FormEvent, useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { supabase } from "../../lib/supabase"
+import { useAuth } from "../../context/AuthContext"
+import { Card } from "../../components/ui/card"
+import { Button } from "../../components/ui/button"
+import { Input } from "../../components/ui/input"
+import {
+  FolderOpen,
+  Globe,
+  Plus,
+  Trash2,
+  Search,
+  Zap,
+  Target,
+  Link2,
+  FileText,
+  Edit2,
+  Check,
+  X,
+  RefreshCw,
+  AlertTriangle,
+  type LucideIcon,
+} from "lucide-react"
+
+type Project = {
+  id: string
+  name: string
+  domain: string | null
+  description: string | null
+  created_at: string
+}
+
+type ProjectStats = {
+  keywords: number
+  audits: number
+  reports: number
+}
+
+type QuickAction = {
+  label: string
+  icon: LucideIcon
+  href: string
+  color: string
+}
+
+export default function Projects() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+
+  const [projects, setProjects] = useState<Project[]>([])
+  const [projectStats, setProjectStats] = useState<Record<string, ProjectStats>>({})
+  const [name, setName] = useState("")
+  const [domain, setDomain] = useState("")
+  const [description, setDescription] = useState("")
+  const [creating, setCreating] = useState(false)
+  const [pageLoading, setPageLoading] = useState(true)
+  const [message, setMessage] = useState("")
+  const [error, setError] = useState("")
+  const [search, setSearch] = useState("")
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editName, setEditName] = useState("")
+  const [editDomain, setEditDomain] = useState("")
+  const [editDescription, setEditDescription] = useState("")
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  const quickActions: QuickAction[] = [
+    { label: "Run Audit", icon: Zap, href: "/app/site-audit", color: "text-blue-500" },
+    { label: "Keywords", icon: Search, href: "/app/keyword-explorer", color: "text-purple-500" },
+    { label: "Rankings", icon: Target, href: "/app/rank-tracker", color: "text-amber-500" },
+    { label: "Backlinks", icon: Link2, href: "/app/backlinks", color: "text-emerald-500" },
+  ]
+
+  const loadProjectStats = async (projectList: Project[]) => {
+    if (!user || pr

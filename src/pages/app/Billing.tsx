@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { useAuth } from "../../context/AuthContext";
@@ -13,6 +13,8 @@ type PaymentRecord = {
   paid_at: string | null;
   created_at: string;
 };
+
+type FeedbackType = "success" | "error" | "info";
 
 declare global {
   interface Window {
@@ -68,17 +70,21 @@ export default function Billing() {
   const [isDowngrading, setIsDowngrading] = useState(false);
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [paymentsLoading, setPaymentsLoading] = useState(true);
+  const [feedback, setFeedback] = useState<{ type: FeedbackType; text: string } | null>(null);
 
   const email = user?.email || "";
   const plan = profile?.plan || "free";
   const amountInKobo = useMemo(() => PREMIUM_PRICE_NGN * 100, []);
-
   const fullName = profile?.full_name || "";
-  const [firstName, ...restName] = fullName.split(" ");
+  const [firstName, ...restName] = fullName.trim().split(/\s+/);
   const lastName = restName.join(" ");
 
   const latestPayment = payments[0];
   const totalSpent = payments.reduce((sum, payment) => sum + payment.amount, 0);
+
+  const showFeedback = (type: FeedbackType, text: string) => {
+    setFeedback({ type, text });
+  };
 
   const fetchPayments = async () => {
     if (!user?.id) {
@@ -98,6 +104,7 @@ export default function Billing() {
     if (error) {
       console.error("Failed to fetch payments:", error);
       setPayments([]);
+      showFeedback("error", "Failed to load billing history.");
     } else {
       setPayments((data as PaymentRecord[]) || []);
     }
@@ -107,11 +114,12 @@ export default function Billing() {
 
   useEffect(() => {
     fetchPayments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const handleExportCsv = () => {
     if (!payments.length) {
-      alert("No payments available to export.");
+      showFeedback("info", "No payments available to export.");
       return;
     }
 
@@ -129,9 +137,7 @@ export default function Billing() {
 
     const csvContent = rows
       .map((row) =>
-        row
-          .map((value) => `"${String(value).replace(/"/g, '""')}"`)
-          .join(",")
+        row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")
       )
       .join("\n");
 
@@ -144,11 +150,14 @@ export default function Billing() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showFeedback("success", "Billing history exported successfully.");
   };
 
   const handleDowngrade = async () => {
     if (!user?.id) {
-      alert("No user found.");
+      showFeedback("error", "No user found. Please log in again.");
       return;
     }
 
@@ -168,17 +177,17 @@ export default function Billing() {
 
       if (error) {
         console.error("Downgrade failed:", error);
-        alert(`Failed to downgrade: ${error.message}`);
+        showFeedback("error", `Failed to downgrade: ${error.message}`);
         return;
       }
 
       await refreshProfile();
       await fetchPayments();
-      alert("Your plan has been downgraded to free.");
-      window.location.reload();
+      showFeedback("success", "Your plan has been downgraded to free.");
     } catch (error) {
       console.error("Downgrade error:", error);
-      alert(
+      showFeedback(
+        "error",
         error instanceof Error
           ? `Downgrade failed: ${error.message}`
           : "Downgrade failed."
@@ -190,17 +199,17 @@ export default function Billing() {
 
   const handlePaystackPayment = async () => {
     if (!publicKey) {
-      alert("Missing Paystack public key.");
+      showFeedback("error", "Missing Paystack public key.");
       return;
     }
 
     if (!email) {
-      alert("No user email found. Please log in again.");
+      showFeedback("error", "No user email found. Please log in again.");
       return;
     }
 
     if (!user?.id) {
-      alert("No user ID found. Please log in again.");
+      showFeedback("error", "No user ID found. Please log in again.");
       return;
     }
 
@@ -232,24 +241,31 @@ export default function Billing() {
           user_id: user.id,
           plan: "premium",
         },
-        callback: () => {
-          alert("Payment received. Your account will update shortly after secure verification.");
+        callback: function (response) {
+  showFeedback(
+    "info",
+    `Payment received. Reference: ${response.reference}. Verifying your account...`
+  );
 
-          setTimeout(async () => {
-            await refreshProfile();
-            await fetchPayments();
-            window.location.reload();
-          }, 5000);
-        },
-        onClose: () => {
-          alert("Transaction was not completed.");
-        },
+  void (async () => {
+    await refreshProfile();
+    await fetchPayments();
+    showFeedback(
+      "success",
+      "Payment verified. Your premium access should now be active."
+    );
+  })();
+},
+onClose: function () {
+  showFeedback("info", "Transaction was closed before completion.");
+},
       });
 
       handler.openIframe();
     } catch (error) {
       console.error("Paystack start error:", error);
-      alert(
+      showFeedback(
+        "error",
         error instanceof Error
           ? `Unable to start payment: ${error.message}`
           : "Unable to start payment. Please try again."
@@ -273,6 +289,21 @@ export default function Billing() {
           Plan: <span className="ml-2 capitalize">{plan}</span>
         </div>
       </div>
+
+      {feedback && (
+        <div
+          className={
+            "rounded-lg border p-4 text-sm " +
+            (feedback.type === "success"
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : feedback.type === "error"
+              ? "border-red-200 bg-red-50 text-red-700"
+              : "border-blue-200 bg-blue-50 text-blue-700")
+          }
+        >
+          {feedback.text}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <Card className="border-border/50 p-6 lg:col-span-1">
@@ -368,14 +399,18 @@ export default function Billing() {
 
             <div className="rounded-lg border p-4">
               <p className="text-sm text-muted-foreground">Total Spent</p>
-              <p className="mt-1 text-2xl font-bold">NGN {Number(totalSpent / 100).toLocaleString()}</p>
+              <p className="mt-1 text-2xl font-bold">
+                NGN {Number(totalSpent / 100).toLocaleString()}
+              </p>
             </div>
 
             <div className="rounded-lg border p-4">
               <p className="text-sm text-muted-foreground">Latest Payment</p>
               <p className="mt-1 text-sm font-medium">
                 {latestPayment
-                  ? new Date(latestPayment.paid_at || latestPayment.created_at).toLocaleString()
+                  ? new Date(
+                      latestPayment.paid_at || latestPayment.created_at
+                    ).toLocaleString()
                   : "No payments yet"}
               </p>
             </div>
