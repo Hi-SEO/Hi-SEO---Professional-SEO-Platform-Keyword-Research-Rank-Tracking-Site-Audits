@@ -1,478 +1,421 @@
-﻿import React from "react"
-import { Link } from "react-router-dom"
-import { motion, useReducedMotion } from "framer-motion"
+﻿import { motion, useReducedMotion } from "framer-motion";
+import { Link } from "react-router-dom";
+import {
+  Search, BarChart3, Link2, FileText, Globe, TrendingUp,
+  Target, Zap, Shield, CheckCircle, ArrowRight,
+  LayoutDashboard, PenTool, Eye, Cpu, BarChart
+} from "lucide-react";
 
 const fadeUp = (delay = 0) => ({
-  initial: { opacity: 0, y: 30 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: "-60px" },
-  transition: { duration: 0.6, delay, ease: [0.4, 0, 0.2, 1] },
-})
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] } },
+});
 
-const FEATURES = [
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
+
+const gridStyle = {
+  backgroundImage: "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
+  backgroundSize: "60px 60px",
+};
+
+const allFeatures = [
   {
-    icon: "search",
+    icon: Search,
     title: "Keyword Explorer",
-    tagline: "Find the exact keywords your audience is searching for",
-    desc: "Discover thousands of keyword ideas with accurate search volume, keyword difficulty scores, CPC data, and search intent classification. Filter by difficulty, volume, or intent to find your perfect target keywords instantly.",
-    bullets: [
-      "Real search volume data updated monthly",
-      "Keyword difficulty scored 0 to 100",
-      "Search intent: informational, navigational, commercial, transactional",
-      "Related keywords and question-based suggestions",
-      "Save keywords to your project with one click",
-    ],
-    color: "blue",
-    accent: "#3b82f6",
+    description: "Discover thousands of keyword opportunities with accurate search volume, keyword difficulty scores, CPC data, and search intent classification. Filter by location, language, and competition level to find the exact keywords that will drive qualified traffic to your site.",
+    colorA: "#3b82f6", colorB: "#06b6d4",
+    benefits: ["Real search volume data", "Keyword difficulty scoring", "Search intent analysis", "Long-tail keyword discovery"],
   },
   {
-    icon: "shield",
-    title: "Site Audit",
-    tagline: "Fix technical SEO issues before they tank your rankings",
-    desc: "Run a comprehensive technical audit across your entire website in seconds. Our crawler checks over 100 SEO factors and gives you a health score from 0 to 100 with prioritized action items sorted by impact.",
-    bullets: [
-      "Full crawl of all pages including subpages",
-      "Critical, warning, and passed issue breakdown",
-      "Meta tags, headings, images, and link checks",
-      "Page speed and Core Web Vitals signals",
-      "Save and compare audit history over time",
-    ],
-    color: "cyan",
-    accent: "#06b6d4",
-  },
-  {
-    icon: "trending",
+    icon: BarChart3,
     title: "Rank Tracker",
-    tagline: "Know exactly where you stand in search every single day",
-    desc: "Track your keyword rankings across Google and other major search engines with daily updates. Visualize position history with beautiful charts and get instant alerts when rankings change significantly.",
-    bullets: [
-      "Daily rank updates for all tracked keywords",
-      "Position history charts going back 90 days",
-      "Track rankings for multiple projects simultaneously",
-      "See rank changes at a glance with color indicators",
-      "Export ranking reports for clients",
-    ],
-    color: "orange",
-    accent: "#f97316",
+    description: "Track your keyword positions across Google and Bing with daily updates. Monitor ranking changes, identify trends, and get instant alerts when your positions shift significantly. Compare your rankings against competitors and measure your SEO progress over time.",
+    colorA: "#f97316", colorB: "#f59e0b",
+    benefits: ["Daily position updates", "Competitor rank comparison", "Historical trend charts", "Instant ranking alerts"],
   },
   {
-    icon: "link",
+    icon: Globe,
+    title: "Site Audit",
+    description: "Run a comprehensive technical SEO audit of your entire website in seconds. Identify crawl errors, broken links, slow-loading pages, missing meta tags, duplicate content, and over 100 other technical issues with clear fix recommendations for each one.",
+    colorA: "#10b981", colorB: "#14b8a6",
+    benefits: ["100+ SEO checks", "Crawl error detection", "Page speed analysis", "On-page SEO scoring"],
+  },
+  {
+    icon: Link2,
     title: "Backlink Analytics",
-    tagline: "Build and monitor a backlink profile that search engines love",
-    desc: "Analyze your complete backlink profile in detail. Monitor new and lost backlinks, evaluate domain authority, identify toxic links, and discover link building opportunities your competitors are missing.",
-    bullets: [
-      "Full backlink discovery and monitoring",
-      "Domain authority and page authority scores",
-      "Anchor text distribution analysis",
-      "New and lost link notifications",
-      "Toxic link identification and disavow support",
-    ],
-    color: "purple",
-    accent: "#a855f7",
+    description: "Get a complete picture of your backlink profile and your competitors. Track new and lost backlinks, analyze domain authority, identify toxic links, and discover high-quality link building opportunities. Monitor your link acquisition progress over time.",
+    colorA: "#8b5cf6", colorB: "#7c3aed",
+    benefits: ["Full backlink profile", "Authority scoring", "Toxic link detection", "Link opportunity finder"],
   },
   {
-    icon: "users",
-    title: "Competitor Analysis",
-    tagline: "See exactly what your competitors are doing and do it better",
-    desc: "Get a complete picture of your competitive landscape. Discover which keywords your competitors rank for that you do not, where their backlinks come from, and what content is driving their traffic.",
-    bullets: [
-      "Side-by-side competitor domain comparison",
-      "Keyword gap analysis to find missed opportunities",
-      "Competitor backlink source discovery",
-      "Top performing competitor pages revealed",
-      "Track up to 10 competitors per project",
-    ],
-    color: "green",
-    accent: "#10b981",
-  },
-  {
-    icon: "zap",
+    icon: FileText,
     title: "AI Content Writer",
-    tagline: "Create SEO-optimized content that ranks from day one",
-    desc: "Generate high-quality SEO content using AI trained on top-ranking pages in your niche. Create full articles, outlines, meta descriptions, title tags, and content briefs in seconds.",
-    bullets: [
-      "Full article generation from keyword input",
-      "SEO-optimized title and meta description writer",
-      "Content brief and outline creator",
-      "NLP-based keyword integration suggestions",
-      "Export to markdown, HTML, or plain text",
-    ],
-    color: "amber",
-    accent: "#f59e0b",
+    description: "Generate high-quality, SEO-optimized content in seconds using our advanced AI. Create comprehensive content briefs, detailed outlines, full blog posts, and meta descriptions that are designed to rank on Google and convert visitors into customers.",
+    colorA: "#ec4899", colorB: "#f43f5e",
+    benefits: ["AI-powered content generation", "SEO-optimized output", "Meta description writer", "Content brief creator"],
   },
   {
-    icon: "globe",
-    title: "Site Explorer",
-    tagline: "Deep-dive into any domain to uncover SEO insights",
-    desc: "Enter any domain and instantly see its full SEO profile. Discover top pages, ranking keywords, estimated traffic, backlink count, and authority metrics for any website in seconds.",
-    bullets: [
-      "Full domain SEO overview in seconds",
-      "Top pages by estimated organic traffic",
-      "All ranking keywords for any domain",
-      "Traffic estimation and trend data",
-      "Works on competitor domains too",
-    ],
-    color: "blue",
-    accent: "#3b82f6",
+    icon: Target,
+    title: "Competitor Analysis",
+    description: "Uncover your competitors complete SEO strategy. Analyze their top-ranking pages, keyword portfolios, backlink sources, and content gaps. Identify exactly what is working for them and use those insights to outrank them on your most important keywords.",
+    colorA: "#06b6d4", colorB: "#3b82f6",
+    benefits: ["Competitor keyword gaps", "Top page analysis", "Backlink comparison", "Content opportunity finder"],
   },
   {
-    icon: "bar",
+    icon: Eye,
     title: "SERP Analysis",
-    tagline: "Understand exactly what it takes to rank on page one",
-    desc: "Analyze the full search engine results page for any keyword. See what content format, word count, backlink count, and domain authority the top 10 results have so you know exactly what to beat.",
-    bullets: [
-      "Full SERP breakdown for any keyword",
-      "Top 10 results with metrics displayed",
-      "Content length and format analysis",
-      "Featured snippet opportunity detection",
-      "People Also Ask question mining",
-    ],
-    color: "cyan",
-    accent: "#06b6d4",
+    description: "Analyze the search engine results page for any keyword to understand what Google is rewarding. See featured snippets, People Also Ask boxes, local packs, and other SERP features. Understand exactly what content format and depth you need to rank.",
+    colorA: "#f59e0b", colorB: "#f97316",
+    benefits: ["SERP feature tracking", "Featured snippet analysis", "Content format insights", "Search intent mapping"],
   },
   {
-    icon: "file",
-    title: "Reports and Projects",
-    tagline: "Manage everything and impress clients with beautiful reports",
-    desc: "Organize all your SEO work into projects. Generate beautiful client-ready reports that show keyword rankings, audit scores, backlink growth, and traffic trends in one professional document.",
-    bullets: [
-      "Multi-project workspace management",
-      "Client-ready PDF and CSV report export",
-      "Audit, keyword, and ranking report types",
-      "Report scheduling and automation",
-      "White-label friendly report design",
-    ],
-    color: "green",
-    accent: "#10b981",
+    icon: LayoutDashboard,
+    title: "Site Explorer",
+    description: "Get a complete overview of any domain including their organic traffic estimates, top ranking pages, keyword rankings, and backlink profile. Use this intelligence to benchmark against competitors and identify new market opportunities.",
+    colorA: "#14b8a6", colorB: "#10b981",
+    benefits: ["Domain overview", "Traffic estimates", "Top pages analysis", "Organic keyword list"],
   },
-]
+  {
+    icon: PenTool,
+    title: "Content Strategy",
+    description: "Plan and organize your entire content calendar with our AI-powered content strategy tool. Map keywords to content topics, identify content gaps, prioritize by traffic potential, and track the performance of your published content.",
+    colorA: "#7c3aed", colorB: "#8b5cf6",
+    benefits: ["Content calendar planning", "Keyword-to-content mapping", "Gap analysis", "Performance tracking"],
+  },
+];
 
-const WORKFLOW = [
-  {
-    step: "01",
-    title: "Audit your site",
-    desc: "Start with a full technical audit to find and fix everything holding your site back from ranking.",
-  },
-  {
-    step: "02",
-    title: "Research keywords",
-    desc: "Find high-opportunity keywords your target audience is searching for and your competitors are missing.",
-  },
-  {
-    step: "03",
-    title: "Create content",
-    desc: "Use the AI writer to generate SEO-optimized content that targets your chosen keywords perfectly.",
-  },
-  {
-    step: "04",
-    title: "Build backlinks",
-    desc: "Discover link building opportunities and monitor your backlink profile as it grows over time.",
-  },
-  {
-    step: "05",
-    title: "Track rankings",
-    desc: "Watch your keywords climb in search results and share beautiful ranking reports with your team or clients.",
-  },
-]
+const workflowSteps = [
+  { step: "01", title: "Audit Your Site", desc: "Start with a comprehensive technical audit to identify all issues holding your rankings back.", icon: Globe },
+  { step: "02", title: "Research Keywords", desc: "Find the highest-value keywords your target audience is searching for every day.", icon: Search },
+  { step: "03", title: "Analyze Competitors", desc: "Understand exactly what your competitors are doing right and where their gaps are.", icon: Target },
+  { step: "04", title: "Create Content", desc: "Use AI to create optimized content that is designed to rank from day one.", icon: FileText },
+  { step: "05", title: "Build Authority", desc: "Track and grow your backlink profile to increase your domain authority.", icon: Link2 },
+  { step: "06", title: "Track and Scale", desc: "Monitor your rankings daily and scale what is working to drive more organic traffic.", icon: TrendingUp },
+];
 
-function FeatureIcon({ type, accent }: { type: string; accent: string }) {
-  const props = { width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: accent, strokeWidth: "2", strokeLinecap: "round" as const, strokeLinejoin: "round" as const }
-  return (
-    <div
-      className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
-      style={{ background: `${accent}18`, border: `1px solid ${accent}30` }}
-    >
-      {type === "search" && <svg {...props}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>}
-      {type === "shield" && <svg {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>}
-      {type === "trending" && <svg {...props}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></svg>}
-      {type === "link" && <svg {...props}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>}
-      {type === "users" && <svg {...props}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>}
-      {type === "zap" && <svg {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>}
-      {type === "globe" && <svg {...props}><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>}
-      {type === "bar" && <svg {...props}><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>}
-      {type === "file" && <svg {...props}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>}
-    </div>
-  )
-}
+const comparisonRows = [
+  { feature: "Keyword Research", hiseo: true, ahrefs: true, semrush: true, moz: true },
+  { feature: "Rank Tracking", hiseo: true, ahrefs: true, semrush: true, moz: true },
+  { feature: "Site Audit", hiseo: true, ahrefs: true, semrush: true, moz: true },
+  { feature: "Backlink Analysis", hiseo: true, ahrefs: true, semrush: true, moz: false },
+  { feature: "AI Content Writer", hiseo: true, ahrefs: false, semrush: false, moz: false },
+  { feature: "African Market Data", hiseo: true, ahrefs: false, semrush: false, moz: false },
+  { feature: "NGN Pricing", hiseo: true, ahrefs: false, semrush: false, moz: false },
+  { feature: "Free Starter Plan", hiseo: true, ahrefs: false, semrush: false, moz: false },
+  { feature: "SERP Analysis", hiseo: true, ahrefs: true, semrush: true, moz: false },
+  { feature: "Competitor Analysis", hiseo: true, ahrefs: true, semrush: true, moz: true },
+];
 
 export default function Features() {
-  const shouldReduceMotion = useReducedMotion()
+  const shouldReduceMotion = useReducedMotion();
+
+  const mv = (delay = 0) =>
+    shouldReduceMotion ? {} : {
+      variants: fadeUp(delay),
+      initial: "hidden",
+      whileInView: "visible",
+      viewport: { once: true, amount: 0.15 },
+    };
 
   return (
-    <div className="overflow-x-hidden">
+    <div style={{ width: "100%", overflowX: "hidden" }}>
 
-      {/* HERO */}
-      <section
-        className="relative py-28 lg:py-36 overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #1239a8 0%, #07123f 100%)" }}
-      >
-        <div className="absolute inset-0 bg-grid-overlay opacity-40" />
-        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(59,130,246,0.25) 0%, transparent 70%)" }} />
-        <div className="hero-blob hero-blob-blue animate-blob" style={{ width: "600px", height: "600px", top: "-200px", right: "-150px", opacity: 0.3 }} />
-        <div className="hero-blob hero-blob-cyan animate-blob animate-blob-delay-2" style={{ width: "400px", height: "400px", bottom: "-100px", left: "-100px", opacity: 0.2 }} />
+      {/* ===== HERO ===== */}
+      <section style={{
+        background: "linear-gradient(135deg, #07123f 0%, #0a1a6e 50%, #1239a8 100%)",
+        position: "relative",
+        width: "100%",
+        overflow: "hidden",
+        paddingTop: "80px",
+      }}>
+        <div style={{ position: "absolute", inset: 0, ...gridStyle }} />
+        <div style={{ position: "absolute", top: "30%", left: "20%", width: 350, height: 350, borderRadius: "50%", backgroundColor: "rgba(59,130,246,0.15)", filter: "blur(100px)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "10%", right: "15%", width: 280, height: 280, borderRadius: "50%", backgroundColor: "rgba(6,182,212,0.1)", filter: "blur(80px)", pointerEvents: "none" }} />
 
-        <div className="section-container relative z-10 text-center max-w-3xl mx-auto">
+        {/* Left geometric */}
+        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 160, opacity: 0.2, pointerEvents: "none" }}>
+          <svg viewBox="0 0 200 500" fill="none" style={{ width: "100%", height: "100%" }}>
+            <rect x="-40" y="150" width="180" height="180" stroke="white" strokeWidth="1" fill="none" transform="rotate(-15 50 240)" />
+            <rect x="-20" y="170" width="180" height="180" stroke="white" strokeWidth="0.5" fill="none" transform="rotate(-15 70 260)" />
+            <circle cx="20" cy="350" r="5" fill="#f97316" />
+            <circle cx="120" cy="280" r="3" fill="#f97316" />
+          </svg>
+        </div>
+        <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 160, opacity: 0.2, pointerEvents: "none" }}>
+          <svg viewBox="0 0 200 500" fill="none" style={{ width: "100%", height: "100%" }}>
+            <rect x="60" y="120" width="180" height="180" stroke="white" strokeWidth="1" fill="none" transform="rotate(15 150 210)" />
+            <rect x="40" y="140" width="180" height="180" stroke="white" strokeWidth="0.5" fill="none" transform="rotate(15 130 230)" />
+            <circle cx="180" cy="100" r="5" fill="#f97316" />
+            <circle cx="80" cy="300" r="3" fill="#f97316" />
+          </svg>
+        </div>
+
+        <div style={{ position: "relative", zIndex: 10, maxWidth: 900, margin: "0 auto", padding: "60px 1.25rem 80px", textAlign: "center" }}>
+
           <motion.div
-            initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: -15 }}
+            animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold mb-8"
-            style={{ background: "rgba(249,115,22,0.15)", border: "1px solid rgba(249,115,22,0.3)", color: "#fb923c" }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 9999, padding: "6px 16px", marginBottom: "1.5rem" }}
           >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-            </svg>
-            Everything included in every plan
+            <Zap size={14} color="#34d399" />
+            <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#bfdbfe" }}>Everything included in every plan</span>
           </motion.div>
 
           <motion.h1
             initial={shouldReduceMotion ? {} : { opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-5xl md:text-6xl font-black text-white tracking-tight leading-tight mb-6"
+            style={{ fontSize: "clamp(2rem, 8vw, 4.5rem)", fontWeight: 900, color: "white", letterSpacing: "-0.02em", lineHeight: 1.05, marginBottom: "1.25rem" }}
           >
-            Every SEO tool you need,{" "}
-            <span style={{ background: "linear-gradient(135deg, #60a5fa, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-              perfectly integrated
-            </span>
+            Every SEO tool you need,
+            <br />
+            <span style={{ color: "#f97316" }}>perfectly integrated</span>
           </motion.h1>
 
           <motion.p
             initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25 }}
-            className="text-blue-200/70 text-xl leading-relaxed mb-10 font-medium"
+            animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            style={{ fontSize: "clamp(0.95rem, 3vw, 1.15rem)", color: "#bfdbfe", maxWidth: 580, margin: "0 auto 2.5rem", lineHeight: 1.7 }}
           >
-            Hi-SEO brings together 9 powerful SEO tools in one premium workspace. No switching tabs, no separate subscriptions, no data silos.
+            From keyword research to content creation, technical audits to backlink analysis -
+            Hi-SEO gives you every tool you need to dominate search rankings and grow organic traffic.
           </motion.p>
 
           <motion.div
-            initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 15 }}
+            animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.35 }}
+            style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginBottom: "3rem" }}
           >
-            <Link
-              to="/signup"
-              className="flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold text-white transition-all duration-300 hover:scale-[1.03]"
-              style={{ background: "linear-gradient(135deg, #f97316, #ea6c04)", boxShadow: "0 4px 24px rgba(249,115,22,0.45)" }}
-            >
-              Start Free Trial
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            <Link to="/signup" className="btn-orange">
+              Start Free Today <ArrowRight size={18} />
             </Link>
-            <Link
-              to="/pricing"
-              className="flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold text-white border border-white/20 hover:bg-white/10 transition-all duration-300"
-            >
+            <Link to="/pricing" className="btn-ghost">
               View Pricing
             </Link>
           </motion.div>
+
+          {/* Quick stats */}
+          <motion.div
+            initial={shouldReduceMotion ? {} : { opacity: 0 }}
+            animate={shouldReduceMotion ? {} : { opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "2rem" }}
+          >
+            {[
+              { value: "9+", label: "Powerful Tools" },
+              { value: "100+", label: "SEO Checks" },
+              { value: "Daily", label: "Rank Updates" },
+              { value: "AI", label: "Content Writer" },
+            ].map((stat) => (
+              <div key={stat.label} style={{ textAlign: "center" }}>
+                <div style={{ fontSize: "clamp(1.5rem, 4vw, 2rem)", fontWeight: 900, color: "white", lineHeight: 1.1 }}>{stat.value}</div>
+                <div style={{ fontSize: "0.8rem", color: "#93c5fd", fontWeight: 500, marginTop: 4 }}>{stat.label}</div>
+              </div>
+            ))}
+          </motion.div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-16">
-            <path d="M0 80L60 72C120 64 240 48 360 40C480 32 600 32 720 37.3C840 43 960 53 1080 58.7C1200 64 1320 64 1380 64L1440 64V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0Z" fill="white" />
+        <div style={{ position: "relative", lineHeight: 0, marginTop: -2 }}>
+          <svg viewBox="0 0 1440 60" fill="white" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", display: "block" }}>
+            <path d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z" />
           </svg>
         </div>
       </section>
 
-      {/* FEATURES GRID */}
-      <section className="py-24 bg-white">
-        <div className="section-container">
-          <motion.div {...fadeUp()} className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">
-              9 tools. One premium workspace.
+      {/* ===== ALL FEATURES ===== */}
+      <section style={{ width: "100%", backgroundColor: "white", padding: "5rem 0" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.25rem" }}>
+          <motion.div {...mv(0)} style={{ textAlign: "center", marginBottom: "3rem" }}>
+            <span className="section-badge-blue">Complete Feature Set</span>
+            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.75rem)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.02em", marginBottom: "1rem" }}>
+              Everything You Need to Win at SEO
             </h2>
-            <p className="text-slate-500 text-lg leading-relaxed">
-              Each tool is purpose-built for a specific SEO workflow and deeply integrated with the others for maximum efficiency.
+            <p style={{ color: "#64748b", fontSize: "1rem", maxWidth: 560, margin: "0 auto", lineHeight: 1.7 }}>
+              Hi-SEO is not just a collection of tools. It is a complete, connected SEO platform where every feature works together to help you rank higher.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURES.map((feature, i) => (
-              <motion.div
-                key={feature.title}
-                {...fadeUp(i * 0.07)}
-                className="group p-7 rounded-2xl border border-slate-100 bg-white hover:border-blue-100 hover:shadow-[0_20px_60px_rgba(59,130,246,0.12)] transition-all duration-300 hover:-translate-y-2 relative overflow-hidden"
-              >
-                <div
-                  className="absolute top-0 left-0 right-0 h-[3px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{ background: `linear-gradient(90deg, ${feature.accent}, transparent)` }}
-                />
-                <FeatureIcon type={feature.icon} accent={feature.accent} />
-                <h3 className="text-lg font-black text-slate-900 mb-1">{feature.title}</h3>
-                <p className="text-xs font-bold mb-3" style={{ color: feature.accent }}>{feature.tagline}</p>
-                <p className="text-sm text-slate-500 leading-relaxed mb-5">{feature.desc}</p>
-                <ul className="space-y-2">
-                  {feature.bullets.map((b) => (
-                    <li key={b} className="flex items-start gap-2 text-xs text-slate-500 font-medium">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={feature.accent} strokeWidth="3" className="shrink-0 mt-0.5">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* WORKFLOW */}
-      <section
-        className="py-24 relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #07123f 0%, #0b1729 100%)" }}
-      >
-        <div className="absolute inset-0 bg-grid-overlay opacity-30" />
-        <div className="hero-blob hero-blob-blue animate-blob" style={{ width: "500px", height: "500px", top: "-100px", right: "-100px", opacity: 0.2 }} />
-
-        <div className="section-container relative z-10">
-          <motion.div {...fadeUp()} className="text-center max-w-2xl mx-auto mb-16">
-            <div
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-4"
-              style={{ background: "rgba(249,115,22,0.15)", border: "1px solid rgba(249,115,22,0.3)", color: "#fb923c" }}
-            >
-              The Hi-SEO workflow
-            </div>
-            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
-              A complete SEO workflow in one loop
-            </h2>
-            <p className="text-blue-200/60 text-lg leading-relaxed">
-              Every tool feeds into the next. Hi-SEO is designed as a continuous improvement loop that compounds your results over time.
-            </p>
-          </motion.div>
-
-          <div className="relative">
-            <div className="hidden lg:block absolute top-12 left-[10%] right-[10%] h-0.5" style={{ background: "linear-gradient(90deg, rgba(59,130,246,0.4), rgba(6,182,212,0.4), rgba(249,115,22,0.4))" }} />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-              {WORKFLOW.map((step, i) => (
+          <motion.div
+            variants={stagger} initial="hidden" whileInView="visible"
+            viewport={{ once: true, amount: 0.05 }}
+            style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
+          >
+            {allFeatures.map((feature, i) => {
+              const Icon = feature.icon;
+              const isEven = i % 2 === 0;
+              return (
                 <motion.div
-                  key={step.step}
-                  {...fadeUp(i * 0.12)}
-                  className="relative text-center"
+                  key={feature.title}
+                  variants={fadeUp(i * 0.05)}
+                  style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "2rem", alignItems: "center", backgroundColor: "#f8fafc", borderRadius: 20, padding: "2rem", border: "1px solid #e2e8f0", transition: "all 0.3s ease" }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = "0 20px 40px rgba(0,0,0,0.08)"; el.style.borderColor = "#bfdbfe"; }}
+                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.boxShadow = "none"; el.style.borderColor = "#e2e8f0"; }}
                 >
-                  <div className="flex justify-center mb-5">
-                    <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-black relative z-10"
-                      style={{
-                        background: "linear-gradient(135deg, #1d4ed8, #06b6d4)",
-                        boxShadow: "0 4px 20px rgba(59,130,246,0.4)",
-                        color: "white",
-                      }}
-                    >
-                      {step.step}
+                  <div style={{ order: isEven ? 0 : 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: "1rem" }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 12, background: `linear-gradient(135deg, ${feature.colorA}, ${feature.colorB})`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", flexShrink: 0 }}>
+                        <Icon size={22} color="white" />
+                      </div>
+                      <h3 style={{ fontWeight: 800, color: "#0f172a", fontSize: "1.25rem" }}>{feature.title}</h3>
                     </div>
+                    <p style={{ color: "#64748b", fontSize: "0.9rem", lineHeight: 1.7, marginBottom: "1.25rem" }}>{feature.description}</p>
+                    <Link
+                      to="/signup"
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6, color: feature.colorA, fontWeight: 700, fontSize: "0.875rem", textDecoration: "none" }}
+                    >
+                      Get started free <ArrowRight size={14} />
+                    </Link>
                   </div>
-                  <h3 className="text-base font-black text-white mb-2">{step.title}</h3>
-                  <p className="text-sm text-blue-200/50 leading-relaxed font-medium">{step.desc}</p>
+                  <div style={{ order: isEven ? 1 : 0 }}>
+                    <ul style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {feature.benefits.map((b) => (
+                        <li key={b} style={{ display: "flex", alignItems: "center", gap: 10, backgroundColor: "white", borderRadius: 10, padding: "10px 14px", border: "1px solid #e2e8f0" }}>
+                          <CheckCircle size={16} color="#10b981" style={{ flexShrink: 0 }} />
+                          <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "#374151" }}>{b}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </motion.div>
-              ))}
-            </div>
-          </div>
+              );
+            })}
+          </motion.div>
         </div>
       </section>
 
-      {/* COMPARISON */}
-      <section className="py-24 bg-white">
-        <div className="section-container">
-          <motion.div {...fadeUp()} className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">
-              Hi-SEO vs buying separate tools
+      {/* ===== WORKFLOW ===== */}
+      <section style={{ position: "relative", width: "100%", padding: "5rem 0", overflow: "hidden", background: "linear-gradient(135deg, #07123f 0%, #0a1a6e 50%, #1239a8 100%)" }}>
+        <div style={{ position: "absolute", inset: 0, ...gridStyle }} />
+        <div style={{ position: "relative", zIndex: 10, maxWidth: 1200, margin: "0 auto", padding: "0 1.25rem" }}>
+          <motion.div {...mv(0)} style={{ textAlign: "center", marginBottom: "3rem" }}>
+            <span className="section-badge-dark">How It Works</span>
+            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.75rem)", fontWeight: 900, color: "white", letterSpacing: "-0.02em", marginBottom: "1rem" }}>
+              Your Complete SEO Workflow
             </h2>
-            <p className="text-slate-500 text-lg leading-relaxed">
-              Why pay for 5 subscriptions when one premium platform does it all better?
+            <p style={{ color: "#bfdbfe", fontSize: "1rem", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
+              Hi-SEO guides you through every step of the SEO process from initial audit to sustained growth.
             </p>
           </motion.div>
 
-          <motion.div {...fadeUp(0.1)} className="max-w-3xl mx-auto">
-            <div className="rounded-2xl overflow-hidden border border-slate-200">
-              <div className="grid grid-cols-3 bg-slate-50 border-b border-slate-200">
-                <div className="p-5 font-bold text-sm text-slate-500">Feature</div>
-                <div className="p-5 text-center font-black text-sm text-slate-900 border-l border-slate-200">Separate Tools</div>
-                <div
-                  className="p-5 text-center font-black text-sm text-white border-l border-blue-600"
-                  style={{ background: "linear-gradient(135deg, #1d4ed8, #2563eb)" }}
+          <motion.div
+            variants={stagger} initial="hidden" whileInView="visible"
+            viewport={{ once: true, amount: 0.05 }}
+            style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1.25rem" }}
+          >
+            {workflowSteps.map((s, i) => {
+              const Icon = s.icon;
+              return (
+                <motion.div
+                  key={s.step} variants={fadeUp(i * 0.08)}
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "1.5rem", textAlign: "center", transition: "all 0.3s ease" }}
+                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.1)"; el.style.transform = "translateY(-4px)"; }}
+                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.05)"; el.style.transform = "translateY(0)"; }}
                 >
-                  Hi-SEO
-                </div>
-              </div>
-              {[
-                { feature: "Keyword Research", separate: "Separate subscription", hiseo: true },
-                { feature: "Site Audit", separate: "Separate subscription", hiseo: true },
-                { feature: "Rank Tracking", separate: "Separate subscription", hiseo: true },
-                { feature: "Backlink Analytics", separate: "Separate subscription", hiseo: true },
-                { feature: "Competitor Analysis", separate: "Separate subscription", hiseo: true },
-                { feature: "AI Content Writer", separate: "Separate subscription", hiseo: true },
-                { feature: "Unified dashboard", separate: "No", hiseo: true },
-                { feature: "Naira pricing", separate: "No", hiseo: true },
-                { feature: "Monthly cost", separate: "NGN 200,000+", hiseo: "From Free" },
-              ].map((row, i) => (
-                <div
-                  key={row.feature}
-                  className={`grid grid-cols-3 border-b border-slate-100 last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-slate-50/50"}`}
-                >
-                  <div className="p-4 text-sm font-semibold text-slate-700">{row.feature}</div>
-                  <div className="p-4 text-center border-l border-slate-100">
-                    {typeof row.separate === "boolean" ? (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" className="mx-auto">
-                        <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
-                    ) : (
-                      <span className="text-sm text-slate-500 font-medium">{row.separate}</span>
-                    )}
+                  <div style={{ fontSize: "2.5rem", fontWeight: 900, color: "rgba(255,255,255,0.08)", lineHeight: 1, marginBottom: "0.75rem" }}>{s.step}</div>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(249,115,22,0.15)", border: "1px solid rgba(249,115,22,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem" }}>
+                    <Icon size={20} color="#f97316" />
                   </div>
-                  <div className="p-4 text-center border-l border-blue-100" style={{ background: "rgba(59,130,246,0.04)" }}>
-                    {typeof row.hiseo === "boolean" ? (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" className="mx-auto">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                    ) : (
-                      <span className="text-sm font-bold text-blue-600">{row.hiseo}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                  <h3 style={{ fontWeight: 700, color: "white", fontSize: "1rem", marginBottom: "0.5rem" }}>{s.title}</h3>
+                  <p style={{ color: "#bfdbfe", fontSize: "0.8rem", lineHeight: 1.6 }}>{s.desc}</p>
+                </motion.div>
+              );
+            })}
           </motion.div>
+        </div>
+        <div style={{ position: "relative", lineHeight: 0, marginTop: 40 }}>
+          <svg viewBox="0 0 1440 50" fill="white" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", display: "block" }}>
+            <path d="M0,25 C480,50 960,0 1440,25 L1440,50 L0,50 Z" />
+          </svg>
         </div>
       </section>
 
-      {/* CTA */}
-      <section
-        className="py-24 relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #1239a8 0%, #07123f 100%)" }}
-      >
-        <div className="absolute inset-0 bg-grid-overlay opacity-30" />
-        <div className="hero-blob hero-blob-orange animate-blob" style={{ width: "400px", height: "400px", top: "-80px", right: "-80px", opacity: 0.2 }} />
-
-        <div className="section-container relative z-10 text-center">
-          <motion.div {...fadeUp()}>
-            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-6">
-              Ready to try every feature for free?
+      {/* ===== COMPARISON TABLE ===== */}
+      <section style={{ width: "100%", backgroundColor: "white", padding: "5rem 0" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 1.25rem" }}>
+          <motion.div {...mv(0)} style={{ textAlign: "center", marginBottom: "3rem" }}>
+            <span className="section-badge-blue">Why Hi-SEO Wins</span>
+            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.75rem)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.02em", marginBottom: "1rem" }}>
+              How We Compare to the Competition
             </h2>
-            <p className="text-blue-200/60 text-xl max-w-xl mx-auto mb-10 leading-relaxed">
-              Start your free account today. No credit card required. Access all core tools immediately.
+            <p style={{ color: "#64748b", fontSize: "1rem", maxWidth: 520, margin: "0 auto" }}>
+              Hi-SEO gives you more value for less money, built specifically for African businesses.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                to="/signup"
-                className="flex items-center gap-2 px-9 py-4 rounded-xl text-base font-bold text-white transition-all duration-300 hover:scale-[1.03]"
-                style={{ background: "linear-gradient(135deg, #f97316, #ea6c04)", boxShadow: "0 4px 28px rgba(249,115,22,0.5)" }}
-              >
-                Start Free Trial
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+          </motion.div>
+
+          <motion.div {...mv(0.1)} style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "left", padding: "1rem", backgroundColor: "#f8fafc", borderRadius: "12px 0 0 0", fontWeight: 700, color: "#0f172a", width: "35%" }}>Feature</th>
+                  {[
+                    { name: "Hi-SEO", highlight: true },
+                    { name: "Ahrefs", highlight: false },
+                    { name: "SEMrush", highlight: false },
+                    { name: "Moz", highlight: false },
+                  ].map((col, i) => (
+                    <th
+                      key={col.name}
+                      style={{ textAlign: "center", padding: "1rem", backgroundColor: col.highlight ? "#07123f" : "#f8fafc", color: col.highlight ? "white" : "#0f172a", fontWeight: 700, borderRadius: i === 3 ? "0 12px 0 0" : 0 }}
+                    >
+                      {col.highlight && <span style={{ display: "block", fontSize: "0.65rem", color: "#34d399", marginBottom: 2 }}>BEST VALUE</span>}
+                      {col.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {comparisonRows.map((row, i) => (
+                  <tr key={row.feature} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                    <td style={{ padding: "0.875rem 1rem", fontWeight: 600, color: "#374151" }}>{row.feature}</td>
+                    {[row.hiseo, row.ahrefs, row.semrush, row.moz].map((has, j) => (
+                      <td key={j} style={{ textAlign: "center", padding: "0.875rem", backgroundColor: j === 0 ? "rgba(7,18,63,0.03)" : "transparent" }}>
+                        {has ? (
+                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, borderRadius: "50%", backgroundColor: j === 0 ? "#07123f" : "#d1fae5" }}>
+                            <CheckCircle size={14} color={j === 0 ? "white" : "#059669"} />
+                          </span>
+                        ) : (
+                          <span style={{ color: "#cbd5e1", fontSize: "1.2rem", fontWeight: 700 }}>-</span>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ===== CTA ===== */}
+      <section style={{ position: "relative", width: "100%", padding: "6rem 0", overflow: "hidden", background: "linear-gradient(135deg, #07123f 0%, #0a1a6e 50%, #1239a8 100%)" }}>
+        <div style={{ position: "absolute", inset: 0, ...gridStyle }} />
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 500, height: 300, borderRadius: "50%", backgroundColor: "rgba(59,130,246,0.1)", filter: "blur(80px)", pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", zIndex: 10, maxWidth: 700, margin: "0 auto", padding: "0 1.25rem", textAlign: "center" }}>
+          <motion.div {...mv(0)}>
+            <h2 style={{ fontSize: "clamp(1.75rem, 6vw, 3rem)", fontWeight: 900, color: "white", letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: "1.25rem" }}>
+              Ready to Start Growing
+              <br />
+              <span style={{ color: "#f97316" }}>Your Organic Traffic?</span>
+            </h2>
+            <p style={{ color: "#bfdbfe", fontSize: "1rem", lineHeight: 1.7, maxWidth: 500, margin: "0 auto 2.5rem" }}>
+              Join 2,400+ businesses using Hi-SEO to rank higher, drive more traffic, and grow their revenue. Start free today.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
+              <Link to="/signup" className="btn-orange" style={{ padding: "15px 32px", fontSize: "1rem" }}>
+                Start Free - No Card Needed <ArrowRight size={18} />
               </Link>
-              <Link
-                to="/pricing"
-                className="flex items-center gap-2 px-9 py-4 rounded-xl text-base font-bold text-white border border-white/20 hover:bg-white/10 transition-all duration-300"
-              >
-                See Pricing
+              <Link to="/pricing" className="btn-ghost" style={{ padding: "15px 24px", fontSize: "1rem" }}>
+                View Pricing
               </Link>
             </div>
           </motion.div>
         </div>
       </section>
+
     </div>
-  )
+  );
 }
