@@ -56,28 +56,37 @@ export default function MarketingLayout() {
   useEffect(() => {
     setMobileOpen(false);
     setOpenDropdown(null);
+    window.scrollTo(0, 0);
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ margin: 0, padding: 0 }}>
+
       {/* NAVBAR */}
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? "bg-[#07123f]/95 backdrop-blur-md shadow-lg shadow-black/20 border-b border-white/10"
-            : "bg-transparent"
-        }`}
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+        style={{
+          background: scrolled
+            ? "rgba(7,18,63,0.97)"
+            : "transparent",
+          backdropFilter: scrolled ? "blur(12px)" : "none",
+          borderBottom: scrolled ? "1px solid rgba(255,255,255,0.08)" : "none",
+          boxShadow: scrolled ? "0 4px 30px rgba(0,0,0,0.3)" : "none",
+        }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <div className="flex items-center justify-between h-16 lg:h-20">
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+            <Link to="/" className="flex items-center gap-2.5 group flex-shrink-0">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300"
+                style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)" }}
+              >
                 <Zap className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-black text-white tracking-tight">
-                Hi<span className="text-cyan-400">-SEO</span>
+                Hi<span style={{ color: "#06b6d4" }}>-SEO</span>
               </span>
             </Link>
 
@@ -91,9 +100,14 @@ export default function MarketingLayout() {
                     onMouseEnter={() => setOpenDropdown(link.label)}
                     onMouseLeave={() => setOpenDropdown(null)}
                   >
-                    <button className="flex items-center gap-1 text-blue-100 hover:text-white font-medium px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm">
+                    <button
+                      className="flex items-center gap-1 text-blue-100 hover:text-white font-medium px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm"
+                    >
                       {link.label}
-                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openDropdown === link.label ? "rotate-180" : ""}`} />
+                      <ChevronDown
+                        className="w-4 h-4 transition-transform duration-200"
+                        style={{ transform: openDropdown === link.label ? "rotate(180deg)" : "rotate(0deg)" }}
+                      />
                     </button>
                     <AnimatePresence>
                       {openDropdown === link.label && (
@@ -102,7 +116,12 @@ export default function MarketingLayout() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 8, scale: 0.95 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute top-full left-0 mt-1 w-52 bg-[#07123f]/98 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+                          className="absolute top-full left-0 mt-2 w-52 rounded-2xl shadow-2xl overflow-hidden"
+                          style={{
+                            background: "rgba(7,18,63,0.98)",
+                            backdropFilter: "blur(12px)",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                          }}
                         >
                           {link.children.map((child) => (
                             <Link
@@ -130,16 +149,20 @@ export default function MarketingLayout() {
             </nav>
 
             {/* Desktop Auth Buttons */}
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
               <Link
                 to="/login"
-                className="text-blue-100 hover:text-white font-medium px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm"
+                className="text-blue-100 hover:text-white font-semibold px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm"
               >
                 Log In
               </Link>
               <Link
                 to="/signup"
-                className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-400 text-white font-bold px-5 py-2.5 rounded-xl text-sm shadow-[0_0_20px_rgba(249,115,22,0.35)] hover:shadow-[0_0_35px_rgba(249,115,22,0.55)] hover:scale-105 transition-all duration-300"
+                className="inline-flex items-center gap-2 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all duration-300 hover:scale-105"
+                style={{
+                  backgroundColor: "#f97316",
+                  boxShadow: "0 0 20px rgba(249,115,22,0.35)",
+                }}
               >
                 Start Free
               </Link>
@@ -164,13 +187,18 @@ export default function MarketingLayout() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-              className="lg:hidden overflow-hidden bg-[#07123f]/98 backdrop-blur-md border-t border-white/10"
+              className="lg:hidden overflow-hidden"
+              style={{
+                background: "rgba(7,18,63,0.98)",
+                backdropFilter: "blur(12px)",
+                borderTop: "1px solid rgba(255,255,255,0.08)",
+              }}
             >
-              <div className="max-w-7xl mx-auto px-4 py-4 space-y-1">
+              <div className="max-w-7xl mx-auto px-6 py-4 space-y-1">
                 {navLinks.map((link) =>
                   link.children ? (
                     <div key={link.label}>
-                      <div className="text-xs font-semibold text-blue-400 uppercase tracking-widest px-3 pt-3 pb-1">
+                      <div className="text-xs font-bold text-blue-400 uppercase tracking-widest px-3 pt-4 pb-2">
                         {link.label}
                       </div>
                       {link.children.map((child) => (
@@ -187,13 +215,13 @@ export default function MarketingLayout() {
                     <Link
                       key={link.label}
                       to={link.href}
-                      className="block text-blue-100 hover:text-white font-medium px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors duration-150 text-sm"
+                      className="block text-blue-100 hover:text-white font-medium px-3 py-3 rounded-lg hover:bg-white/10 transition-colors duration-150 text-sm"
                     >
                       {link.label}
                     </Link>
                   )
                 )}
-                <div className="pt-3 pb-2 border-t border-white/10 space-y-2 mt-2">
+                <div className="pt-4 pb-2 border-t border-white/10 space-y-2 mt-2">
                   <Link
                     to="/login"
                     className="block text-center text-blue-100 hover:text-white font-medium px-3 py-3 rounded-xl hover:bg-white/10 transition-colors duration-150 text-sm"
@@ -202,7 +230,8 @@ export default function MarketingLayout() {
                   </Link>
                   <Link
                     to="/signup"
-                    className="block text-center bg-orange-500 hover:bg-orange-400 text-white font-bold px-3 py-3 rounded-xl text-sm transition-all duration-300"
+                    className="block text-center text-white font-bold px-3 py-3 rounded-xl text-sm transition-all duration-300"
+                    style={{ backgroundColor: "#f97316" }}
                   >
                     Start Free
                   </Link>
@@ -213,46 +242,50 @@ export default function MarketingLayout() {
         </AnimatePresence>
       </header>
 
-      {/* PAGE CONTENT */}
-      <main className="flex-1">
+      {/* PAGE CONTENT - no top padding here, each page handles its own hero */}
+      <main className="flex-1 w-full" style={{ margin: 0, padding: 0 }}>
         <Outlet />
       </main>
 
       {/* FOOTER */}
-      <footer className="bg-[#07123f] border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <footer style={{ backgroundColor: "#07123f", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 mb-12">
 
-            {/* Brand */}
+            {/* Brand col */}
             <div className="lg:col-span-2">
-              <Link to="/" className="flex items-center gap-2 mb-4 group w-fit">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+              <Link to="/" className="inline-flex items-center gap-2.5 mb-5 group">
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300"
+                  style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)" }}
+                >
                   <Zap className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-xl font-black text-white tracking-tight">
-                  Hi<span className="text-cyan-400">-SEO</span>
+                  Hi<span style={{ color: "#06b6d4" }}>-SEO</span>
                 </span>
               </Link>
-              <p className="text-blue-200 text-sm leading-relaxed max-w-xs mb-6">
+              <p className="text-sm leading-relaxed max-w-xs mb-6" style={{ color: "#93c5fd" }}>
                 The all-in-one SEO platform built for African businesses and growth teams.
                 Rank higher, grow faster, and win online with Hi-SEO.
               </p>
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs text-blue-300 font-medium">All systems operational</span>
+                <span className="text-xs font-medium" style={{ color: "#7dd3fc" }}>All systems operational</span>
               </div>
             </div>
 
-            {/* Links */}
+            {/* Footer links */}
             {Object.entries(footerLinks).map(([category, links]) => (
               <div key={category}>
-                <h4 className="text-white font-bold text-sm mb-4 uppercase tracking-wider">{category}</h4>
+                <h4 className="text-white font-bold text-xs mb-5 uppercase tracking-widest">{category}</h4>
                 <ul className="space-y-3">
                   {links.map((link) => (
                     <li key={link.label}>
                       <Link
                         to={link.href}
-                        className="text-blue-300 hover:text-white text-sm transition-colors duration-150"
+                        className="text-sm transition-colors duration-150 hover:text-white"
+                        style={{ color: "#93c5fd" }}
                       >
                         {link.label}
                       </Link>
@@ -264,20 +297,28 @@ export default function MarketingLayout() {
           </div>
 
           {/* Bottom bar */}
-          <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-blue-400 text-sm">
+          <div
+            className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+            style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
+          >
+            <p className="text-sm" style={{ color: "#60a5fa" }}>
               2025 Hi-SEO. All rights reserved. Built for African businesses.
             </p>
             <div className="flex items-center gap-6">
-              <Link to="/terms" className="text-blue-400 hover:text-white text-sm transition-colors duration-150">
-                Terms
-              </Link>
-              <Link to="/privacy" className="text-blue-400 hover:text-white text-sm transition-colors duration-150">
-                Privacy
-              </Link>
-              <Link to="/contact" className="text-blue-400 hover:text-white text-sm transition-colors duration-150">
-                Contact
-              </Link>
+              {[
+                { label: "Terms", href: "/terms" },
+                { label: "Privacy", href: "/privacy" },
+                { label: "Contact", href: "/contact" },
+              ].map((l) => (
+                <Link
+                  key={l.label}
+                  to={l.href}
+                  className="text-sm transition-colors duration-150 hover:text-white"
+                  style={{ color: "#60a5fa" }}
+                >
+                  {l.label}
+                </Link>
+              ))}
             </div>
           </div>
         </div>

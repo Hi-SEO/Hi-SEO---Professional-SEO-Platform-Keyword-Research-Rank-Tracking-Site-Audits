@@ -3,22 +3,25 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import {
   Search, BarChart3, Link2, FileText, Globe,
-  TrendingUp, Shield, CheckCircle, ChevronDown,
-  ArrowRight, Star, Users, Award, Target, Zap
+  TrendingUp, CheckCircle, ChevronDown,
+  ArrowRight, Star, Users, Award, Target, Zap, Shield
 } from "lucide-react";
 
 const fadeUp = (delay = 0) => ({
-  hidden: { opacity: 0, y: 32 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] } },
+  hidden: { opacity: 0, y: 40 },
+  visible: {
+    opacity: 1, y: 0,
+    transition: { duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }
+  },
 });
 
 const stagger = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.08 } },
+  visible: { transition: { staggerChildren: 0.1 } },
 };
 
 const gridStyle = {
-  backgroundImage: "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
+  backgroundImage: "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
   backgroundSize: "60px 60px",
 };
 
@@ -52,8 +55,6 @@ const testimonials = [
   { name: "Chidi Okonkwo", role: "SEO Director, FinTech Nigeria", avatar: "CO", rating: 5, text: "Hi-SEO completely transformed how our team manages SEO. The keyword explorer and rank tracker alone saved us 10 hours per week. Our organic traffic is up 340 percent in 4 months." },
   { name: "Amaka Eze", role: "Founder, GrowthLab Agency", avatar: "AE", rating: 5, text: "I have used every major SEO tool on the market. Hi-SEO is the first one built for the African market that actually understands our search landscape. The pricing is fair and the data is accurate." },
   { name: "Seun Adeyemi", role: "Head of Digital, RetailPro", avatar: "SA", rating: 5, text: "The site audit feature caught 47 critical issues on our e-commerce site that we had no idea about. After fixing them, our rankings jumped significantly within 6 weeks. Incredible tool." },
-  { name: "Ngozi Peters", role: "Marketing Lead, EduTech Lagos", avatar: "NP", rating: 5, text: "We went from page 4 to page 1 for our main keywords in just 8 weeks using Hi-SEO. The AI content writer alone is worth the entire subscription price." },
-  { name: "Emeka Obi", role: "CEO, Digital First Agency", avatar: "EO", rating: 5, text: "Managing SEO for 12 clients used to take a full team. Now 2 people handle everything with Hi-SEO. The reporting features are outstanding and clients love the dashboards." },
 ];
 
 const faqs = [
@@ -64,89 +65,121 @@ const faqs = [
   { question: "Is my data secure?", answer: "Absolutely. All data is encrypted at rest and in transit. We use Supabase with row-level security ensuring your data is never accessible to other users. We do not sell your data or share it with third parties under any circumstances." },
 ];
 
-const trustStats = [
-  { value: "2,400+", label: "Active Users" },
-  { value: "12M+", label: "Keywords Tracked" },
-  { value: "98.7%", label: "Uptime SLA" },
-  { value: "4.9/5", label: "User Rating" },
+const pricingPlans = [
+  {
+    name: "Starter",
+    price: "Free",
+    period: "forever",
+    desc: "Perfect for individuals getting started with SEO",
+    features: ["1 Project", "10 Keywords", "1 Site Audit/mo", "Basic Reports"],
+    popular: false,
+    cta: "Start Free",
+    href: "/signup",
+    accentColor: "#64748b",
+  },
+  {
+    name: "Pro",
+    price: "15,000",
+    period: "/mo",
+    desc: "Best for growing businesses and freelancers",
+    features: ["5 Projects", "500 Keywords", "10 Audits/mo", "AI Writer", "Priority Support"],
+    popular: false,
+    cta: "Get Started",
+    href: "/signup",
+    accentColor: "#1d4ed8",
+  },
+  {
+    name: "Business",
+    price: "45,000",
+    period: "/mo",
+    desc: "For agencies and high-traffic websites",
+    features: ["20 Projects", "2,000 Keywords", "Unlimited Audits", "White-label Reports", "API Access"],
+    popular: true,
+    cta: "Get Started",
+    href: "/signup",
+    accentColor: "#f97316",
+  },
+  {
+    name: "Agency",
+    price: "Custom",
+    period: "",
+    desc: "Enterprise-grade for large teams and agencies",
+    features: ["Unlimited Projects", "Unlimited Keywords", "Dedicated Manager", "Custom Integrations", "SLA Guarantee"],
+    popular: false,
+    cta: "Contact Sales",
+    href: "/contact",
+    accentColor: "#7c3aed",
+  },
 ];
-
-function GeometricLeft() {
-  return (
-    <div className="absolute left-0 bottom-0 top-0 flex items-center opacity-25 pointer-events-none select-none">
-      <svg width="220" height="400" viewBox="0 0 220 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="-30" y="120" width="160" height="160" stroke="white" strokeWidth="1" fill="none" transform="rotate(-20 50 200)" />
-        <rect x="-10" y="140" width="160" height="160" stroke="white" strokeWidth="0.5" fill="none" transform="rotate(-20 70 220)" />
-        <rect x="10" y="160" width="160" height="160" stroke="white" strokeWidth="0.3" fill="none" transform="rotate(-20 90 240)" />
-        <line x1="80" y1="200" x2="180" y2="320" stroke="white" strokeWidth="0.5" />
-        <line x1="20" y1="240" x2="120" y2="360" stroke="white" strokeWidth="0.3" />
-        <circle cx="30" cy="320" r="5" fill="#f97316" />
-        <circle cx="150" cy="260" r="3" fill="#f97316" />
-        <circle cx="80" cy="380" r="4" fill="#06b6d4" />
-      </svg>
-    </div>
-  );
-}
-
-function GeometricRight() {
-  return (
-    <div className="absolute right-0 bottom-0 top-0 flex items-center opacity-25 pointer-events-none select-none">
-      <svg width="220" height="400" viewBox="0 0 220 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="60" y="100" width="180" height="180" stroke="white" strokeWidth="1" fill="none" transform="rotate(20 150 190)" />
-        <rect x="40" y="120" width="180" height="180" stroke="white" strokeWidth="0.5" fill="none" transform="rotate(20 130 210)" />
-        <rect x="20" y="140" width="180" height="180" stroke="white" strokeWidth="0.3" fill="none" transform="rotate(20 110 230)" />
-        <line x1="140" y1="180" x2="40" y2="300" stroke="white" strokeWidth="0.5" />
-        <line x1="200" y1="220" x2="100" y2="340" stroke="white" strokeWidth="0.3" />
-        <circle cx="200" cy="80" r="5" fill="#f97316" />
-        <circle cx="80" cy="260" r="3" fill="#f97316" />
-        <circle cx="160" cy="340" r="4" fill="#06b6d4" />
-      </svg>
-    </div>
-  );
-}
 
 export default function Home() {
   const shouldReduceMotion = useReducedMotion();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
 
-  const motionProps = (delay = 0) =>
+  const mv = (delay = 0) =>
     shouldReduceMotion
       ? {}
-      : { variants: fadeUp(delay), initial: "hidden", whileInView: "visible", viewport: { once: true } };
-
-  const prevTestimonial = () => setActiveTestimonial((p) => (p === 0 ? testimonials.length - 1 : p - 1));
-  const nextTestimonial = () => setActiveTestimonial((p) => (p === testimonials.length - 1 ? 0 : p + 1));
+      : {
+          variants: fadeUp(delay),
+          initial: "hidden",
+          whileInView: "visible",
+          viewport: { once: true, amount: 0.2 },
+        };
 
   return (
-    <div className="overflow-hidden">
+    <div className="w-full overflow-x-hidden">
 
-      {/* ===== HERO ===== */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0a1a6e]" style={{ background: "linear-gradient(135deg, #07123f 0%, #0a1a6e 40%, #1239a8 100%)" }}>
-        <div className="absolute inset-0 opacity-100" style={gridStyle} />
+      {/* ============ HERO ============ */}
+      <section
+        className="relative w-full min-h-screen flex items-center justify-center overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #07123f 0%, #0a1a6e 50%, #1239a8 100%)" }}
+      >
+        {/* Grid */}
+        <div className="absolute inset-0" style={gridStyle} />
 
         {/* Glow blobs */}
-        <div className="absolute top-1/4 left-1/3 w-96 h-96 rounded-full bg-blue-600/20 blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/3 w-80 h-80 rounded-full bg-cyan-500/15 blur-[100px] animate-pulse" style={{ animationDelay: "1.5s" }} />
+        <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] rounded-full opacity-20 blur-[120px]" style={{ backgroundColor: "#3b82f6" }} />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full opacity-15 blur-[100px]" style={{ backgroundColor: "#06b6d4" }} />
 
-        {/* Geometric decorations */}
-        <GeometricLeft />
-        <GeometricRight />
+        {/* Left geometric */}
+        <div className="absolute left-0 top-0 bottom-0 w-48 flex items-center opacity-20 pointer-events-none">
+          <svg viewBox="0 0 200 500" fill="none" className="w-full h-full">
+            <rect x="-40" y="150" width="180" height="180" stroke="white" strokeWidth="1" fill="none" transform="rotate(-15 50 240)" />
+            <rect x="-20" y="170" width="180" height="180" stroke="white" strokeWidth="0.5" fill="none" transform="rotate(-15 70 260)" />
+            <circle cx="20" cy="350" r="5" fill="#f97316" />
+            <circle cx="120" cy="280" r="3" fill="#f97316" />
+            <circle cx="60" cy="420" r="4" fill="#06b6d4" />
+          </svg>
+        </div>
 
-        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
+        {/* Right geometric */}
+        <div className="absolute right-0 top-0 bottom-0 w-48 flex items-center opacity-20 pointer-events-none">
+          <svg viewBox="0 0 200 500" fill="none" className="w-full h-full">
+            <rect x="60" y="120" width="180" height="180" stroke="white" strokeWidth="1" fill="none" transform="rotate(15 150 210)" />
+            <rect x="40" y="140" width="180" height="180" stroke="white" strokeWidth="0.5" fill="none" transform="rotate(15 130 230)" />
+            <circle cx="180" cy="100" r="5" fill="#f97316" />
+            <circle cx="80" cy="300" r="3" fill="#f97316" />
+            <circle cx="150" cy="380" r="4" fill="#06b6d4" />
+          </svg>
+        </div>
 
-          {/* Badge */}
+        {/* Hero content */}
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-6 sm:px-8 lg:px-12 py-32 text-center">
+
           <motion.div
-            {...(shouldReduceMotion ? {} : { initial: { opacity: 0, y: -20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.5 } })}
-            className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2 mb-10"
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: -20 }}
+            animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2 mb-8"
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-sm font-semibold text-blue-100 tracking-wide">The SEO Platform Built for African Businesses</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0" />
+            <span className="text-sm font-semibold text-blue-100">The SEO Platform Built for African Businesses</span>
           </motion.div>
 
-          {/* Main headline - NameHero style: large, bold, centered */}
           <motion.h1
-            {...(shouldReduceMotion ? {} : { initial: { opacity: 0, y: 40 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.7, delay: 0.1 } })}
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 40 }}
+            animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             className="text-5xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.05] mb-6"
           >
             Rank Higher and Grow
@@ -154,146 +187,164 @@ export default function Home() {
             <span style={{ color: "#f97316" }}>Your Business Online</span>
           </motion.h1>
 
-          {/* Subheadline */}
           <motion.p
-            {...(shouldReduceMotion ? {} : { initial: { opacity: 0, y: 30 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.7, delay: 0.2 } })}
-            className="text-lg sm:text-xl text-blue-100 max-w-2xl mx-auto mb-10 leading-relaxed font-medium"
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 30 }}
+            animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="text-lg sm:text-xl text-blue-100 max-w-2xl mx-auto mb-10 leading-relaxed"
           >
-            Hi-SEO gives you the keyword research, rank tracking, site audits, backlink analysis,
-            and AI content tools you need to dominate Google and drive consistent organic traffic.
+            Hi-SEO gives you keyword research, rank tracking, site audits, backlink analysis,
+            and AI content tools to dominate Google and drive consistent organic traffic to your business.
           </motion.p>
 
-          {/* Single orange CTA - NameHero style */}
           <motion.div
-            {...(shouldReduceMotion ? {} : { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6, delay: 0.35 } })}
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+            animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
           >
             <Link
               to="/signup"
-              className="group inline-flex items-center gap-3 text-white font-bold px-10 py-5 rounded-lg text-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-              style={{ backgroundColor: "#f97316", boxShadow: "0 4px 30px rgba(249,115,22,0.5)" }}
+              className="group inline-flex items-center justify-center gap-2 text-white font-bold px-10 py-4 rounded-xl text-lg transition-all duration-300 hover:scale-105"
+              style={{ backgroundColor: "#f97316", boxShadow: "0 8px 32px rgba(249,115,22,0.45)" }}
             >
               Get Started Now
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
             </Link>
             <Link
               to="/features"
-              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 text-white font-semibold px-8 py-5 rounded-lg text-lg transition-all duration-300"
+              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/30 text-white font-semibold px-8 py-4 rounded-xl text-lg transition-all duration-300"
             >
               See How It Works
             </Link>
           </motion.div>
 
-          {/* Trust stats */}
+          {/* Stats */}
           <motion.div
-            {...(shouldReduceMotion ? {} : { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.8, delay: 0.5 } })}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-2xl mx-auto"
+            initial={shouldReduceMotion ? {} : { opacity: 0 }}
+            animate={shouldReduceMotion ? {} : { opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.55 }}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-8 max-w-2xl mx-auto"
           >
-            {trustStats.map((stat) => (
+            {[
+              { value: "2,400+", label: "Active Users" },
+              { value: "12M+", label: "Keywords Tracked" },
+              { value: "98.7%", label: "Uptime SLA" },
+              { value: "4.9/5", label: "User Rating" },
+            ].map((stat) => (
               <div key={stat.label} className="text-center">
-                <div className="text-2xl sm:text-3xl font-black text-white mb-1">{stat.value}</div>
+                <div className="text-3xl font-black text-white mb-1">{stat.value}</div>
                 <div className="text-sm text-blue-300 font-medium">{stat.label}</div>
               </div>
             ))}
           </motion.div>
         </div>
 
-        {/* Bottom wave transition to white */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-            <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="white" />
+        {/* Wave bottom */}
+        <div className="absolute bottom-0 left-0 right-0 leading-none">
+          <svg viewBox="0 0 1440 80" fill="white" xmlns="http://www.w3.org/2000/svg" className="w-full block">
+            <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" />
           </svg>
         </div>
       </section>
 
-      {/* ===== SOCIAL PROOF / TESTIMONIALS CAROUSEL ===== */}
-      <section className="bg-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div {...motionProps(0)} className="text-center mb-12">
+      {/* ============ SOCIAL PROOF ============ */}
+      <section className="w-full bg-white py-20">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+          <motion.div {...mv(0)} className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight mb-3">
               Join 2,400+ Businesses Already Using Hi-SEO
             </h2>
             <p className="text-slate-500 text-lg">Real results from real customers across Africa and beyond</p>
           </motion.div>
 
-          {/* Testimonial carousel - NameHero style */}
-          <div className="relative">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {testimonials.slice(0, 3).map((t, i) => (
-                <motion.div
-                  key={t.name}
-                  {...motionProps(i * 0.08)}
-                  className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group"
-                >
-                  <div className="flex items-center gap-1 mb-3">
-                    {[...Array(t.rating)].map((_, si) => (
-                      <Star key={si} className="w-4 h-4 text-emerald-500 fill-emerald-500" />
-                    ))}
-                  </div>
-                  <p className="font-semibold text-slate-900 text-sm mb-2 line-clamp-1">{t.text.split(".")[0]}.</p>
-                  <p className="text-slate-500 text-sm mb-4 line-clamp-2">{t.text}</p>
-                  <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-xs">
-                      {t.avatar}
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-slate-900">{t.name}</div>
-                      <div className="text-xs text-slate-500">{t.role}</div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Trustpilot style rating bar */}
-            <motion.div {...motionProps(0.2)} className="text-center">
-              <div className="inline-flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-full px-6 py-3">
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 text-emerald-500 fill-emerald-500" />
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10"
+          >
+            {testimonials.map((t, i) => (
+              <motion.div
+                key={t.name}
+                variants={fadeUp(i * 0.08)}
+                className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 group relative overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="flex items-center gap-1 mb-3">
+                  {[...Array(t.rating)].map((_, si) => (
+                    <Star key={si} className="w-4 h-4 text-emerald-500 fill-emerald-500" />
                   ))}
                 </div>
-                <span className="text-slate-700 text-sm font-semibold">Rated 4.9 / 5 based on 2,400+ reviews</span>
-                <span className="text-emerald-600 font-bold text-sm">Verified</span>
+                <p className="text-slate-600 text-sm leading-relaxed mb-5">{t.text}</p>
+                <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-slate-900">{t.name}</div>
+                    <div className="text-xs text-slate-500">{t.role}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.div {...mv(0.2)} className="flex justify-center">
+            <div className="inline-flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-full px-6 py-3">
+              <div className="flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 text-emerald-500 fill-emerald-500" />
+                ))}
               </div>
-            </motion.div>
-          </div>
+              <span className="text-slate-700 text-sm font-semibold">Rated 4.9 / 5 based on 2,400+ reviews</span>
+              <span className="text-emerald-600 font-bold text-sm">Verified</span>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ===== FEATURES SECTION ===== */}
-      <section className="bg-slate-50 py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div {...motionProps(0)} className="text-center mb-16">
-            <span className="inline-block bg-blue-100 text-blue-700 text-sm font-bold px-4 py-2 rounded-full mb-4 uppercase tracking-wider">
+      {/* ============ FEATURES ============ */}
+      <section className="w-full bg-slate-50 py-24">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+          <motion.div {...mv(0)} className="text-center mb-16">
+            <span className="inline-block bg-blue-100 text-blue-700 text-xs font-bold px-4 py-2 rounded-full mb-4 uppercase tracking-widest">
               Everything You Need
             </span>
             <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-4">
               One Platform. Every SEO Tool.
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Stop juggling 6 different tools. Hi-SEO brings your entire SEO workflow into one intelligent, connected platform.
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+              Stop juggling 6 different tools and spreadsheets. Hi-SEO brings your entire SEO workflow
+              into one intelligent, connected platform built for teams that want to move fast.
             </p>
           </motion.div>
 
-          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.1 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
             {features.map((feature) => {
               const Icon = feature.icon;
               return (
                 <motion.div
                   key={feature.title}
                   variants={fadeUp()}
-                  className="group relative bg-white border border-slate-200 rounded-2xl p-8 cursor-default overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-blue-200"
+                  className="group relative bg-white border border-slate-200 rounded-2xl p-8 overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-blue-200 cursor-default"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${feature.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
                   <div className="relative z-10">
-                    <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                    <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${feature.color} mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                       <Icon className="w-7 h-7 text-white" />
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 mb-3">{feature.title}</h3>
                     <p className="text-slate-600 leading-relaxed text-sm">{feature.description}</p>
-                    <div className="mt-5 flex items-center gap-1 text-blue-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="mt-5 flex items-center gap-1 text-blue-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-0 group-hover:translate-x-1">
                       Learn more <ArrowRight className="w-4 h-4" />
                     </div>
                   </div>
@@ -302,10 +353,10 @@ export default function Home() {
             })}
           </motion.div>
 
-          <motion.div {...motionProps(0.2)} className="text-center mt-12">
+          <motion.div {...mv(0.2)} className="text-center mt-12">
             <Link
               to="/features"
-              className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-xl text-white transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              className="inline-flex items-center gap-2 text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-xl"
               style={{ backgroundColor: "#1239a8", boxShadow: "0 4px 20px rgba(18,57,168,0.3)" }}
             >
               Explore All Features <ArrowRight className="w-5 h-5" />
@@ -314,16 +365,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== HOW IT WORKS - dark blue with geometric decorations ===== */}
-      <section className="relative py-24 overflow-hidden" style={{ background: "linear-gradient(135deg, #07123f 0%, #0a1a6e 50%, #1239a8 100%)" }}>
-        <div className="absolute inset-0 opacity-100" style={gridStyle} />
-        <GeometricLeft />
-        <GeometricRight />
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-cyan-500/10 blur-[100px]" />
+      {/* ============ HOW IT WORKS ============ */}
+      <section
+        className="relative w-full py-24 overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #07123f 0%, #0a1a6e 50%, #1239a8 100%)" }}
+      >
+        <div className="absolute inset-0" style={gridStyle} />
+        <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10 blur-[120px]" style={{ backgroundColor: "#06b6d4" }} />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div {...motionProps(0)} className="text-center mb-16">
-            <span className="inline-block bg-white/10 text-blue-200 text-sm font-bold px-4 py-2 rounded-full mb-4 uppercase tracking-wider">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+          <motion.div {...mv(0)} className="text-center mb-16">
+            <span className="inline-block bg-white/10 text-blue-200 text-xs font-bold px-4 py-2 rounded-full mb-4 uppercase tracking-widest">
               Simple Setup
             </span>
             <h2 className="text-4xl sm:text-5xl font-black text-white tracking-tight mb-4">
@@ -334,19 +386,25 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          >
             {steps.map((step, i) => {
               const Icon = step.icon;
               return (
                 <motion.div
                   key={step.number}
-                  variants={fadeUp(i * 0.1)}
-                  className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/10 hover:-translate-y-2 transition-all duration-300 group text-center"
+                  variants={fadeUp(i * 0.12)}
+                  className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 text-center hover:bg-white/10 hover:-translate-y-2 transition-all duration-300 group"
                 >
                   <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-400 to-amber-400 rounded-t-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="text-6xl font-black text-white/10 mb-4 leading-none">{step.number}</div>
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/10 border border-white/20 mb-5 group-hover:scale-110 transition-transform duration-300">
-                    <Icon className="w-7 h-7 text-orange-400" />
+                  <div className="text-7xl font-black leading-none mb-4" style={{ color: "rgba(255,255,255,0.07)" }}>{step.number}</div>
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl border border-white/20 mb-5 group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: "rgba(249,115,22,0.15)" }}>
+                    <Icon className="w-7 h-7" style={{ color: "#f97316" }} />
                   </div>
                   <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
                   <p className="text-blue-200 leading-relaxed text-sm">{step.description}</p>
@@ -356,38 +414,46 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {/* Bottom wave */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-            <path d="M0,30 C480,60 960,0 1440,30 L1440,60 L0,60 Z" fill="#f8fafc" />
+        {/* Wave bottom */}
+        <div className="absolute bottom-0 left-0 right-0 leading-none">
+          <svg viewBox="0 0 1440 60" fill="#f8fafc" xmlns="http://www.w3.org/2000/svg" className="w-full block">
+            <path d="M0,30 C480,60 960,0 1440,30 L1440,60 L0,60 Z" />
           </svg>
         </div>
       </section>
 
-      {/* ===== BENEFITS ===== */}
-      <section className="bg-slate-50 py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* ============ BENEFITS ============ */}
+      <section className="w-full bg-slate-50 py-24">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <motion.div {...motionProps(0)}>
-              <span className="inline-block bg-orange-100 text-orange-700 text-sm font-bold px-4 py-2 rounded-full mb-4 uppercase tracking-wider">
+            <motion.div {...mv(0)}>
+              <span className="inline-block bg-orange-100 text-orange-700 text-xs font-bold px-4 py-2 rounded-full mb-5 uppercase tracking-widest">
                 Why Hi-SEO
               </span>
-              <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-6">
+              <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-6 leading-tight">
                 Every Feature You Need to Dominate Search
               </h2>
               <p className="text-lg text-slate-600 mb-8 leading-relaxed">
-                Hi-SEO is not just another SEO dashboard. It is an integrated growth engine that connects your keyword data, technical health, content performance, and backlink authority into one unified view.
+                Hi-SEO is not just another SEO dashboard. It is an integrated growth engine that connects
+                your keyword data, technical health, content performance, and backlink authority into one
+                unified view of your SEO performance.
               </p>
               <Link
                 to="/signup"
-                className="inline-flex items-center gap-2 text-white font-bold px-7 py-4 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-xl"
+                className="inline-flex items-center gap-2 text-white font-bold px-7 py-4 rounded-xl transition-all duration-300 hover:scale-105"
                 style={{ backgroundColor: "#f97316", boxShadow: "0 4px 20px rgba(249,115,22,0.35)" }}
               >
                 Start Free Today <ArrowRight className="w-5 h-5" />
               </Link>
             </motion.div>
 
-            <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+            >
               {benefits.map((benefit) => (
                 <motion.div
                   key={benefit}
@@ -405,11 +471,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== PRICING PREVIEW - NameHero style cards ===== */}
-      <section className="bg-white py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div {...motionProps(0)} className="text-center mb-16">
-            <span className="inline-block bg-blue-100 text-blue-700 text-sm font-bold px-4 py-2 rounded-full mb-4 uppercase tracking-wider">
+      {/* ============ PRICING PREVIEW ============ */}
+      <section className="w-full bg-white py-24">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
+          <motion.div {...mv(0)} className="text-center mb-16">
+            <span className="inline-block bg-blue-100 text-blue-700 text-xs font-bold px-4 py-2 rounded-full mb-4 uppercase tracking-widest">
               Simple Pricing
             </span>
             <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-4">
@@ -420,89 +486,131 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { name: "Starter", price: "Free", period: "forever", desc: "Perfect for individuals getting started with SEO", color: "from-slate-500 to-slate-600", features: ["1 Project", "10 Keywords", "1 Site Audit/mo", "Basic Reports"], popular: false },
-              { name: "Pro", price: "15,000", period: "/mo", desc: "Best for growing businesses and freelancers", color: "from-blue-500 to-blue-600", features: ["5 Projects", "500 Keywords", "10 Audits/mo", "AI Writer", "Priority Support"], popular: false },
-              { name: "Business", price: "45,000", period: "/mo", desc: "For agencies and high-traffic websites", color: "from-orange-500 to-orange-600", features: ["20 Projects", "2,000 Keywords", "Unlimited Audits", "White-label Reports", "API Access"], popular: true },
-              { name: "Agency", price: "Custom", period: "", desc: "Enterprise-grade for large teams and agencies", color: "from-purple-500 to-purple-600", features: ["Unlimited Projects", "Unlimited Keywords", "Dedicated Manager", "Custom Integrations", "SLA Guarantee"], popular: false },
-            ].map((plan, i) => (
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.1 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
+            {pricingPlans.map((plan, i) => (
               <motion.div
                 key={plan.name}
                 variants={fadeUp(i * 0.08)}
-                className={`relative bg-white border-2 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-3 hover:shadow-2xl group ${plan.popular ? "border-orange-400 shadow-xl shadow-orange-100" : "border-slate-200 hover:border-blue-200"}`}
+                className={`relative bg-white rounded-2xl p-6 transition-all duration-300 hover:-translate-y-3 hover:shadow-2xl ${
+                  plan.popular
+                    ? "border-2 shadow-xl"
+                    : "border border-slate-200 hover:border-blue-200"
+                }`}
+                style={plan.popular ? { borderColor: "#f97316", boxShadow: "0 8px 40px rgba(249,115,22,0.15)" } : {}}
               >
+                {/* Top accent line */}
+                <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl" style={{ backgroundColor: plan.accentColor }} />
+
+                {/* Most popular badge */}
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap">
                     <span className="inline-block text-white text-xs font-bold px-4 py-1.5 rounded-full" style={{ backgroundColor: "#f97316" }}>
                       Most Popular
                     </span>
                   </div>
                 )}
-                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${plan.color} rounded-t-2xl`} />
-                <div className="pt-2">
+
+                <div className="pt-3">
                   <h3 className="text-lg font-black text-slate-900 mb-1">{plan.name}</h3>
-                  <p className="text-slate-500 text-xs mb-4">{plan.desc}</p>
+                  <p className="text-slate-500 text-xs mb-5 leading-relaxed">{plan.desc}</p>
+
+                  {/* Price */}
                   <div className="mb-5">
                     {plan.price === "Free" ? (
-                      <span className="text-3xl font-black text-slate-900">Free</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-4xl font-black text-slate-900">Free</span>
+                        <span className="text-slate-500 text-sm">{plan.period}</span>
+                      </div>
                     ) : plan.price === "Custom" ? (
-                      <span className="text-3xl font-black text-slate-900">Custom</span>
+                      <span className="text-4xl font-black text-slate-900">Custom</span>
                     ) : (
-                      <div>
-                        <span className="text-xs text-slate-400 font-medium">NGN</span>
-                        <span className="text-3xl font-black text-slate-900"> {plan.price}</span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-xs text-slate-400 font-semibold">NGN</span>
+                        <span className="text-4xl font-black text-slate-900">{plan.price}</span>
                         <span className="text-slate-500 text-sm">{plan.period}</span>
                       </div>
                     )}
                   </div>
-                  <div className="w-12 h-0.5 mb-5" style={{ background: "linear-gradient(90deg, #1239a8, #06b6d4)" }} />
-                  <ul className="space-y-2 mb-6">
+
+                  {/* Divider */}
+                  <div className="w-10 h-0.5 mb-5 rounded-full" style={{ background: `linear-gradient(90deg, ${plan.accentColor}, transparent)` }} />
+
+                  {/* Features */}
+                  <ul className="space-y-2.5 mb-6">
                     {plan.features.map((f) => (
                       <li key={f} className="flex items-center gap-2 text-sm text-slate-600">
-                        <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: "#10b981" }} />
                         {f}
                       </li>
                     ))}
                   </ul>
+
+                  {/* CTA */}
                   <Link
-                    to={plan.name === "Agency" ? "/contact" : "/signup"}
-                    className={`block text-center font-bold py-3 rounded-xl text-sm transition-all duration-300 hover:scale-105 ${plan.popular ? "text-white" : "text-white"}`}
-                    style={{ backgroundColor: plan.popular ? "#f97316" : "#1239a8" }}
+                    to={plan.href}
+                    className="block w-full text-center text-white font-bold py-3 rounded-xl text-sm transition-all duration-300 hover:scale-105 hover:opacity-90"
+                    style={{ backgroundColor: plan.popular ? "#f97316" : plan.accentColor }}
                   >
-                    {plan.name === "Agency" ? "Contact Sales" : plan.price === "Free" ? "Start Free" : "Get Started"}
+                    {plan.cta}
                   </Link>
                 </div>
               </motion.div>
             ))}
           </motion.div>
 
-          <motion.div {...motionProps(0.3)} className="text-center mt-10">
-            <Link to="/pricing" className="text-blue-600 hover:text-blue-800 font-semibold text-sm underline underline-offset-4 transition-colors duration-200">
+          <motion.div {...mv(0.3)} className="text-center mt-10">
+            <Link
+              to="/pricing"
+              className="text-blue-600 hover:text-blue-800 font-semibold text-sm underline underline-offset-4 transition-colors duration-200"
+            >
               View full pricing comparison table
             </Link>
           </motion.div>
         </div>
       </section>
 
-      {/* ===== FAQ ===== */}
-      <section className="bg-slate-50 py-24">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div {...motionProps(0)} className="text-center mb-14">
-            <span className="inline-block bg-blue-100 text-blue-700 text-sm font-bold px-4 py-2 rounded-full mb-4 uppercase tracking-wider">FAQ</span>
-            <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-4">Common Questions</h2>
-            <p className="text-lg text-slate-600">Everything you need to know before getting started with Hi-SEO.</p>
+      {/* ============ FAQ ============ */}
+      <section className="w-full bg-slate-50 py-24">
+        <div className="max-w-3xl mx-auto px-6 sm:px-8">
+          <motion.div {...mv(0)} className="text-center mb-14">
+            <span className="inline-block bg-blue-100 text-blue-700 text-xs font-bold px-4 py-2 rounded-full mb-4 uppercase tracking-widest">
+              FAQ
+            </span>
+            <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight mb-4">
+              Common Questions
+            </h2>
+            <p className="text-lg text-slate-600">
+              Everything you need to know before getting started with Hi-SEO.
+            </p>
           </motion.div>
 
-          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }} className="space-y-3">
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.1 }}
+            className="space-y-3"
+          >
             {faqs.map((faq, i) => (
-              <motion.div key={i} variants={fadeUp()} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+              <motion.div
+                key={i}
+                variants={fadeUp()}
+                className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm"
+              >
                 <button
-                  className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-blue-50/50 transition-colors duration-200"
+                  className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-blue-50/50 transition-colors duration-200 gap-4"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                 >
-                  <span className="font-bold text-slate-900 pr-4">{faq.question}</span>
-                  <ChevronDown className={`w-5 h-5 text-slate-400 flex-shrink-0 transition-transform duration-300 ${openFaq === i ? "rotate-180 text-blue-600" : ""}`} />
+                  <span className="font-bold text-slate-900 text-sm sm:text-base">{faq.question}</span>
+                  <ChevronDown
+                    className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${openFaq === i ? "rotate-180 text-blue-600" : "text-slate-400"}`}
+                  />
                 </button>
                 <AnimatePresence>
                   {openFaq === i && (
@@ -513,7 +621,7 @@ export default function Home() {
                       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                       className="overflow-hidden"
                     >
-                      <div className="px-6 pb-6 text-slate-600 leading-relaxed border-t border-slate-100 pt-4 text-sm">
+                      <div className="px-6 pb-6 pt-3 text-slate-600 leading-relaxed text-sm border-t border-slate-100">
                         {faq.answer}
                       </div>
                     </motion.div>
@@ -525,47 +633,77 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== FINAL CTA - NameHero style dark blue with geometric decorations ===== */}
-      <section className="relative py-28 overflow-hidden" style={{ background: "linear-gradient(135deg, #07123f 0%, #0a1a6e 50%, #1239a8 100%)" }}>
-        <div className="absolute inset-0 opacity-100" style={gridStyle} />
-        <GeometricLeft />
-        <GeometricRight />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-blue-500/15 blur-[100px]" />
+      {/* ============ FINAL CTA ============ */}
+      <section
+        className="relative w-full py-28 overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #07123f 0%, #0a1a6e 50%, #1239a8 100%)" }}
+      >
+        <div className="absolute inset-0" style={gridStyle} />
 
-        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div {...motionProps(0)}>
+        {/* Left geometric */}
+        <div className="absolute left-0 top-0 bottom-0 w-48 flex items-center opacity-20 pointer-events-none">
+          <svg viewBox="0 0 200 500" fill="none" className="w-full h-full">
+            <rect x="-40" y="150" width="180" height="180" stroke="white" strokeWidth="1" fill="none" transform="rotate(-15 50 240)" />
+            <rect x="-20" y="170" width="180" height="180" stroke="white" strokeWidth="0.5" fill="none" transform="rotate(-15 70 260)" />
+            <circle cx="20" cy="350" r="5" fill="#f97316" />
+            <circle cx="120" cy="280" r="3" fill="#f97316" />
+          </svg>
+        </div>
+
+        {/* Right geometric */}
+        <div className="absolute right-0 top-0 bottom-0 w-48 flex items-center opacity-20 pointer-events-none">
+          <svg viewBox="0 0 200 500" fill="none" className="w-full h-full">
+            <rect x="60" y="120" width="180" height="180" stroke="white" strokeWidth="1" fill="none" transform="rotate(15 150 210)" />
+            <rect x="40" y="140" width="180" height="180" stroke="white" strokeWidth="0.5" fill="none" transform="rotate(15 130 230)" />
+            <circle cx="180" cy="100" r="5" fill="#f97316" />
+            <circle cx="80" cy="300" r="3" fill="#f97316" />
+          </svg>
+        </div>
+
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-10 blur-[120px]" style={{ backgroundColor: "#3b82f6" }} />
+
+        <div className="relative z-10 max-w-4xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
+          <motion.div {...mv(0)}>
             <div className="flex justify-center gap-3 mb-8">
               {[Award, Shield, Users, Zap].map((Icon, i) => (
-                <div key={i} className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors duration-200">
+                <div
+                  key={i}
+                  className="w-12 h-12 rounded-xl border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors duration-200"
+                  style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
+                >
                   <Icon className="w-6 h-6 text-blue-200" />
                 </div>
               ))}
             </div>
+
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight mb-6 leading-tight">
               Your Competitors Are Already
               <br />
               <span style={{ color: "#f97316" }}>Gaining Ground on You.</span>
             </h2>
+
             <p className="text-lg text-blue-100 mb-10 max-w-2xl mx-auto leading-relaxed">
               Every day without Hi-SEO is another day your competitors rank above you and capture your customers.
               Start your free account in 60 seconds. No credit card. No commitment. Just results.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link
                 to="/signup"
                 className="group inline-flex items-center justify-center gap-2 text-white font-bold px-12 py-5 rounded-xl text-lg transition-all duration-300 hover:scale-105"
-                style={{ backgroundColor: "#f97316", boxShadow: "0 4px 40px rgba(249,115,22,0.5)" }}
+                style={{ backgroundColor: "#f97316", boxShadow: "0 8px 40px rgba(249,115,22,0.5)" }}
               >
                 Start Free - No Card Needed
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
               </Link>
               <Link
                 to="/pricing"
-                className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold px-10 py-5 rounded-xl text-lg transition-all duration-300"
+                className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold px-10 py-5 rounded-xl text-lg transition-all duration-300"
               >
                 View Pricing
               </Link>
             </div>
+
             <p className="mt-6 text-blue-300 text-sm font-medium">
               Free plan available forever. Upgrade when you are ready to scale.
             </p>

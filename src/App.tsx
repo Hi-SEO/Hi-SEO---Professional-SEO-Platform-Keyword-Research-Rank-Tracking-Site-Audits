@@ -42,27 +42,13 @@ const Settings = lazy(() => import("./pages/app/Settings"));
 const Billing = lazy(() => import("./pages/app/Billing"));
 const PlaceholderTool = lazy(() => import("./pages/app/PlaceholderTool"));
 
-function PageLoader() {
-  return (
-    <div className="min-h-screen bg-[#07111f] flex items-center justify-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center">
-          <span className="text-white font-black text-sm">Hi</span>
-        </div>
-        <div className="w-48 h-1 bg-white/5 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full animate-pulse" style={{ width: "60%" }} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Suspense fallback={<PageLoader />}>
+        <Suspense fallback={<LoadingScreen />}>
           <Routes>
+
             {/* Marketing Routes */}
             <Route element={<MarketingLayout />}>
               <Route path="/" element={<Home />} />
@@ -105,8 +91,9 @@ export default function App() {
               <Route path="*" element={<PlaceholderTool />} />
             </Route>
 
-            {/* 404 Catch All */}
+            {/* 404 */}
             <Route path="*" element={<Navigate to="/" replace />} />
+
           </Routes>
         </Suspense>
       </AuthProvider>
