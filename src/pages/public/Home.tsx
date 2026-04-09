@@ -9,16 +9,10 @@ import {
 
 const fadeUp = (delay = 0) => ({
   hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1, y: 0,
-    transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }
-  },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] } },
 });
 
-const stagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.08 } },
-};
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
 
 const gridStyle = {
   backgroundImage: "linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
@@ -26,12 +20,12 @@ const gridStyle = {
 };
 
 const features = [
-  { icon: Search, title: "Keyword Explorer", description: "Uncover high-value keywords with real search volume, difficulty scores, and intent signals.", color: "from-blue-500 to-cyan-500" },
-  { icon: BarChart3, title: "Rank Tracker", description: "Monitor your keyword positions daily across Google and Bing. Get instant alerts when rankings shift.", color: "from-orange-500 to-amber-500" },
-  { icon: Globe, title: "Site Audit", description: "Run comprehensive technical SEO audits in seconds. Identify crawl errors, broken links, and slow pages.", color: "from-emerald-500 to-teal-500" },
-  { icon: Link2, title: "Backlink Analytics", description: "Analyze your backlink profile and your competitors. Discover new link opportunities and track authority growth.", color: "from-purple-500 to-violet-500" },
-  { icon: FileText, title: "AI Content Writer", description: "Generate SEO-optimized content briefs, outlines, and full articles in seconds that rank and convert.", color: "from-pink-500 to-rose-500" },
-  { icon: Target, title: "Competitor Analysis", description: "Reverse-engineer your competitors top pages, keyword gaps, and backlink sources.", color: "from-cyan-500 to-blue-500" },
+  { icon: Search, title: "Keyword Explorer", description: "Uncover high-value keywords with real search volume, difficulty scores, and intent signals.", color: "#3b82f6", colorEnd: "#06b6d4" },
+  { icon: BarChart3, title: "Rank Tracker", description: "Monitor your keyword positions daily across Google and Bing. Get instant alerts when rankings shift.", color: "#f97316", colorEnd: "#f59e0b" },
+  { icon: Globe, title: "Site Audit", description: "Run comprehensive technical SEO audits in seconds. Identify crawl errors, broken links, and slow pages.", color: "#10b981", colorEnd: "#14b8a6" },
+  { icon: Link2, title: "Backlink Analytics", description: "Analyze your backlink profile and competitors. Discover new link opportunities and track authority.", color: "#8b5cf6", colorEnd: "#7c3aed" },
+  { icon: FileText, title: "AI Content Writer", description: "Generate SEO-optimized content briefs, outlines, and full articles in seconds that rank and convert.", color: "#ec4899", colorEnd: "#f43f5e" },
+  { icon: Target, title: "Competitor Analysis", description: "Reverse-engineer your competitors top pages, keyword gaps, and backlink sources.", color: "#06b6d4", colorEnd: "#3b82f6" },
 ];
 
 const steps = [
@@ -53,8 +47,8 @@ const benefits = [
 
 const testimonials = [
   { name: "Chidi Okonkwo", role: "SEO Director, FinTech Nigeria", avatar: "CO", rating: 5, text: "Hi-SEO completely transformed how our team manages SEO. Our organic traffic is up 340 percent in 4 months." },
-  { name: "Amaka Eze", role: "Founder, GrowthLab Agency", avatar: "AE", rating: 5, text: "The first SEO platform built for the African market that actually understands our search landscape. The pricing is fair and the data is accurate." },
-  { name: "Seun Adeyemi", role: "Head of Digital, RetailPro", avatar: "SA", rating: 5, text: "The site audit feature caught 47 critical issues we had no idea about. After fixing them, our rankings jumped significantly within 6 weeks." },
+  { name: "Amaka Eze", role: "Founder, GrowthLab Agency", avatar: "AE", rating: 5, text: "The first SEO platform built for the African market that actually understands our search landscape. Fair pricing and accurate data." },
+  { name: "Seun Adeyemi", role: "Head of Digital, RetailPro", avatar: "SA", rating: 5, text: "The site audit caught 47 critical issues we had no idea about. After fixing them, our rankings jumped significantly within 6 weeks." },
 ];
 
 const faqs = [
@@ -72,6 +66,8 @@ const pricingPlans = [
   { name: "Agency", price: "Custom", period: "", desc: "Enterprise-grade for large teams", features: ["Unlimited Projects", "Unlimited Keywords", "Dedicated Manager", "Custom Integrations", "SLA Guarantee"], popular: false, cta: "Contact Sales", href: "/contact", accent: "#7c3aed" },
 ];
 
+const NAV_HEIGHT = 64;
+
 export default function Home() {
   const shouldReduceMotion = useReducedMotion();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -88,26 +84,22 @@ export default function Home() {
     <div style={{ width: "100%", overflowX: "hidden" }}>
 
       {/* ===== HERO ===== */}
-      <section
-        style={{
-          background: "linear-gradient(135deg, #07123f 0%, #0a1a6e 50%, #1239a8 100%)",
-          position: "relative",
-          width: "100%",
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          paddingTop: "80px",
-        }}
-      >
+      <section style={{
+        background: "linear-gradient(135deg, #07123f 0%, #0a1a6e 50%, #1239a8 100%)",
+        position: "relative",
+        width: "100%",
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+        paddingTop: NAV_HEIGHT,
+      }}>
         <div style={{ position: "absolute", inset: 0, ...gridStyle }} />
-
-        {/* Glow blobs - hidden on mobile for performance */}
         <div style={{ position: "absolute", top: "20%", left: "10%", width: 400, height: 400, borderRadius: "50%", backgroundColor: "rgba(59,130,246,0.15)", filter: "blur(100px)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: "20%", right: "10%", width: 300, height: 300, borderRadius: "50%", backgroundColor: "rgba(6,182,212,0.1)", filter: "blur(80px)", pointerEvents: "none" }} />
 
-        {/* Geometric - desktop only */}
+        {/* Geometric decorations */}
         <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 160, display: "flex", alignItems: "center", opacity: 0.2, pointerEvents: "none" }}>
           <svg viewBox="0 0 200 500" fill="none" style={{ width: "100%", height: "100%" }}>
             <rect x="-40" y="150" width="180" height="180" stroke="white" strokeWidth="1" fill="none" transform="rotate(-15 50 240)" />
@@ -125,10 +117,8 @@ export default function Home() {
           </svg>
         </div>
 
-        {/* Hero Content */}
-        <div style={{ position: "relative", zIndex: 10, width: "100%", maxWidth: 900, margin: "0 auto", padding: "3rem 1.25rem 5rem", textAlign: "center" }}>
+        <div style={{ position: "relative", zIndex: 10, width: "100%", maxWidth: 900, margin: "0 auto", padding: "4rem 1.25rem 6rem", textAlign: "center" }}>
 
-          {/* Badge */}
           <motion.div
             initial={shouldReduceMotion ? {} : { opacity: 0, y: -15 }}
             animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
@@ -136,78 +126,52 @@ export default function Home() {
             style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 9999, padding: "6px 16px", marginBottom: "1.5rem" }}
           >
             <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#34d399", flexShrink: 0, display: "inline-block" }} />
-            <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#bfdbfe", whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#bfdbfe" }}>
               The SEO Platform Built for African Businesses
             </span>
           </motion.div>
 
-          {/* Headline */}
           <motion.h1
             initial={shouldReduceMotion ? {} : { opacity: 0, y: 30 }}
             animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            style={{ fontSize: "clamp(2rem, 8vw, 4.5rem)", fontWeight: 900, color: "white", letterSpacing: "-0.02em", lineHeight: 1.05, margin: "0 0 1rem" }}
+            style={{ fontSize: "clamp(2.2rem, 8vw, 4.5rem)", fontWeight: 900, color: "white", letterSpacing: "-0.02em", lineHeight: 1.05, margin: "0 0 1.25rem" }}
           >
             Rank Higher and Grow
             <br />
             <span style={{ color: "#f97316" }}>Your Business Online</span>
           </motion.h1>
 
-          {/* Subheadline */}
           <motion.p
             initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
             animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            style={{ fontSize: "clamp(0.95rem, 3vw, 1.15rem)", color: "#bfdbfe", maxWidth: 600, margin: "0 auto 2rem", lineHeight: 1.7 }}
+            style={{ fontSize: "clamp(0.95rem, 3vw, 1.15rem)", color: "#bfdbfe", maxWidth: 580, margin: "0 auto 2.5rem", lineHeight: 1.7 }}
           >
             Hi-SEO gives you keyword research, rank tracking, site audits, backlink analysis,
             and AI content tools to dominate Google and drive consistent organic traffic.
           </motion.p>
 
-          {/* CTA Buttons */}
           <motion.div
             initial={shouldReduceMotion ? {} : { opacity: 0, y: 15 }}
             animate={shouldReduceMotion ? {} : { opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.35 }}
-            style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginBottom: "3rem" }}
+            style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center", marginBottom: "3.5rem" }}
           >
-            <Link
-              to="/signup"
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                backgroundColor: "#f97316", color: "white", fontWeight: 700,
-                padding: "14px 32px", borderRadius: 12, fontSize: "1rem",
-                boxShadow: "0 8px 32px rgba(249,115,22,0.45)",
-                transition: "all 0.3s ease", textDecoration: "none",
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1.05)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
-            >
+            <Link to="/signup" className="btn-orange">
               Get Started Now <ArrowRight size={18} />
             </Link>
-            <Link
-              to="/features"
-              style={{
-                display: "inline-flex", alignItems: "center", gap: 8,
-                background: "rgba(255,255,255,0.1)", backdropFilter: "blur(8px)",
-                border: "1px solid rgba(255,255,255,0.25)", color: "white",
-                fontWeight: 600, padding: "14px 28px", borderRadius: 12,
-                fontSize: "1rem", transition: "all 0.3s ease", textDecoration: "none",
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.18)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}
-            >
+            <Link to="/features" className="btn-ghost">
               See How It Works
             </Link>
           </motion.div>
 
-          {/* Stats */}
           <motion.div
             initial={shouldReduceMotion ? {} : { opacity: 0 }}
             animate={shouldReduceMotion ? {} : { opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1.5rem", maxWidth: 480, margin: "0 auto" }}
-            className="sm:grid-cols-4"
+            style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1.5rem", maxWidth: 420, margin: "0 auto" }}
+            className="stats-grid"
           >
             {[
               { value: "2,400+", label: "Active Users" },
@@ -216,14 +180,13 @@ export default function Home() {
               { value: "4.9/5", label: "User Rating" },
             ].map((stat) => (
               <div key={stat.label} style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "clamp(1.4rem, 5vw, 2rem)", fontWeight: 900, color: "white", lineHeight: 1.1 }}>{stat.value}</div>
+                <div style={{ fontSize: "clamp(1.5rem, 5vw, 2rem)", fontWeight: 900, color: "white", lineHeight: 1.1 }}>{stat.value}</div>
                 <div style={{ fontSize: "0.8rem", color: "#93c5fd", fontWeight: 500, marginTop: 4 }}>{stat.label}</div>
               </div>
             ))}
           </motion.div>
         </div>
 
-        {/* Wave */}
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, lineHeight: 0 }}>
           <svg viewBox="0 0 1440 60" fill="white" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", display: "block" }}>
             <path d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z" />
@@ -232,10 +195,10 @@ export default function Home() {
       </section>
 
       {/* ===== SOCIAL PROOF ===== */}
-      <section style={{ width: "100%", backgroundColor: "white", padding: "4rem 0" }}>
+      <section style={{ width: "100%", backgroundColor: "white", padding: "5rem 0" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.25rem" }}>
-          <motion.div {...mv(0)} style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-            <h2 style={{ fontSize: "clamp(1.5rem, 5vw, 2.25rem)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.02em", margin: "0 0 0.75rem" }}>
+          <motion.div {...mv(0)} style={{ textAlign: "center", marginBottom: "3rem" }}>
+            <h2 style={{ fontSize: "clamp(1.5rem, 5vw, 2.5rem)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.02em", marginBottom: "0.75rem" }}>
               Join 2,400+ Businesses Already Using Hi-SEO
             </h2>
             <p style={{ color: "#64748b", fontSize: "1rem" }}>Real results from real customers across Africa and beyond</p>
@@ -247,13 +210,7 @@ export default function Home() {
             style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.25rem", marginBottom: "2rem" }}
           >
             {testimonials.map((t, i) => (
-              <motion.div
-                key={t.name}
-                variants={fadeUp(i * 0.08)}
-                style={{ backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: 16, padding: "1.5rem", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", transition: "all 0.3s ease", position: "relative", overflow: "hidden" }}
-                onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = "translateY(-6px)"; el.style.boxShadow = "0 20px 40px rgba(0,0,0,0.1)"; }}
-                onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = "translateY(0)"; el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.05)"; }}
-              >
+              <motion.div key={t.name} variants={fadeUp(i * 0.08)} className="card-base">
                 <div style={{ display: "flex", gap: 2, marginBottom: "0.75rem" }}>
                   {[...Array(t.rating)].map((_, si) => <Star key={si} size={14} style={{ color: "#10b981", fill: "#10b981" }} />)}
                 </div>
@@ -272,7 +229,7 @@ export default function Home() {
           </motion.div>
 
           <motion.div {...mv(0.2)} style={{ display: "flex", justifyContent: "center" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 10, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 9999, padding: "10px 20px" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 10, backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 9999, padding: "10px 20px", flexWrap: "wrap", justifyContent: "center" }}>
               <div style={{ display: "flex", gap: 2 }}>
                 {[...Array(5)].map((_, i) => <Star key={i} size={14} style={{ color: "#10b981", fill: "#10b981" }} />)}
               </div>
@@ -287,10 +244,8 @@ export default function Home() {
       <section style={{ width: "100%", backgroundColor: "#f8fafc", padding: "5rem 0" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.25rem" }}>
           <motion.div {...mv(0)} style={{ textAlign: "center", marginBottom: "3rem" }}>
-            <span style={{ display: "inline-block", backgroundColor: "#dbeafe", color: "#1d4ed8", fontSize: "0.75rem", fontWeight: 700, padding: "6px 16px", borderRadius: 9999, marginBottom: "1rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              Everything You Need
-            </span>
-            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.75rem)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.02em", margin: "0 0 1rem" }}>
+            <span className="section-badge-blue">Everything You Need</span>
+            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.75rem)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.02em", marginBottom: "1rem" }}>
               One Platform. Every SEO Tool.
             </h2>
             <p style={{ color: "#64748b", fontSize: "1rem", maxWidth: 560, margin: "0 auto", lineHeight: 1.7 }}>
@@ -306,15 +261,8 @@ export default function Home() {
             {features.map((feature) => {
               const Icon = feature.icon;
               return (
-                <motion.div
-                  key={feature.title}
-                  variants={fadeUp()}
-                  style={{ backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: 16, padding: "2rem", position: "relative", overflow: "hidden", transition: "all 0.3s ease", cursor: "default" }}
-                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = "translateY(-6px)"; el.style.boxShadow = "0 24px 48px rgba(0,0,0,0.1)"; el.style.borderColor = "#bfdbfe"; }}
-                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = "translateY(0)"; el.style.boxShadow = "none"; el.style.borderColor = "#e2e8f0"; }}
-                >
-                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${feature.color} opacity-0 hover:opacity-100`} style={{ transition: "opacity 0.3s" }} />
-                  <div style={{ width: 52, height: 52, borderRadius: 14, background: `linear-gradient(135deg, ${feature.color.includes("blue") ? "#3b82f6,#06b6d4" : feature.color.includes("orange") ? "#f97316,#f59e0b" : feature.color.includes("emerald") ? "#10b981,#14b8a6" : feature.color.includes("purple") ? "#8b5cf6,#7c3aed" : feature.color.includes("pink") ? "#ec4899,#f43f5e" : "#06b6d4,#3b82f6"})`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.25rem", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", transition: "transform 0.3s" }}>
+                <motion.div key={feature.title} variants={fadeUp()} className="card-base">
+                  <div style={{ width: 52, height: 52, borderRadius: 14, background: `linear-gradient(135deg, ${feature.color}, ${feature.colorEnd})`, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.25rem", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
                     <Icon size={24} color="white" />
                   </div>
                   <h3 style={{ fontWeight: 700, color: "#0f172a", fontSize: "1.1rem", marginBottom: "0.625rem" }}>{feature.title}</h3>
@@ -325,12 +273,7 @@ export default function Home() {
           </motion.div>
 
           <motion.div {...mv(0.2)} style={{ textAlign: "center", marginTop: "2.5rem" }}>
-            <Link
-              to="/features"
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, backgroundColor: "#1239a8", color: "white", fontWeight: 700, padding: "14px 32px", borderRadius: 12, fontSize: "1rem", textDecoration: "none", boxShadow: "0 4px 20px rgba(18,57,168,0.3)", transition: "all 0.3s ease" }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1.05)"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
-            >
+            <Link to="/features" className="btn-blue">
               Explore All Features <ArrowRight size={18} />
             </Link>
           </motion.div>
@@ -340,14 +283,10 @@ export default function Home() {
       {/* ===== HOW IT WORKS ===== */}
       <section style={{ position: "relative", width: "100%", padding: "5rem 0", overflow: "hidden", background: "linear-gradient(135deg, #07123f 0%, #0a1a6e 50%, #1239a8 100%)" }}>
         <div style={{ position: "absolute", inset: 0, ...gridStyle }} />
-        <div style={{ position: "absolute", top: 0, right: 0, width: 300, height: 300, borderRadius: "50%", backgroundColor: "rgba(6,182,212,0.1)", filter: "blur(80px)", pointerEvents: "none" }} />
-
         <div style={{ position: "relative", zIndex: 10, maxWidth: 1200, margin: "0 auto", padding: "0 1.25rem" }}>
           <motion.div {...mv(0)} style={{ textAlign: "center", marginBottom: "3rem" }}>
-            <span style={{ display: "inline-block", background: "rgba(255,255,255,0.1)", color: "#bfdbfe", fontSize: "0.75rem", fontWeight: 700, padding: "6px 16px", borderRadius: 9999, marginBottom: "1rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              Simple Setup
-            </span>
-            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.75rem)", fontWeight: 900, color: "white", letterSpacing: "-0.02em", margin: "0 0 1rem" }}>
+            <span className="section-badge-dark">Simple Setup</span>
+            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.75rem)", fontWeight: 900, color: "white", letterSpacing: "-0.02em", marginBottom: "1rem" }}>
               From Zero to Ranking in 3 Steps
             </h2>
             <p style={{ color: "#bfdbfe", fontSize: "1rem", maxWidth: 520, margin: "0 auto", lineHeight: 1.7 }}>
@@ -363,13 +302,7 @@ export default function Home() {
             {steps.map((step, i) => {
               const Icon = step.icon;
               return (
-                <motion.div
-                  key={step.number}
-                  variants={fadeUp(i * 0.1)}
-                  style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "2rem", textAlign: "center", transition: "all 0.3s ease" }}
-                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.1)"; el.style.transform = "translateY(-6px)"; }}
-                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.background = "rgba(255,255,255,0.05)"; el.style.transform = "translateY(0)"; }}
-                >
+                <motion.div key={step.number} variants={fadeUp(i * 0.1)} className="card-dark" style={{ textAlign: "center" }}>
                   <div style={{ fontSize: "4rem", fontWeight: 900, color: "rgba(255,255,255,0.06)", lineHeight: 1, marginBottom: "1rem" }}>{step.number}</div>
                   <div style={{ width: 52, height: 52, borderRadius: 14, background: "rgba(249,115,22,0.15)", border: "1px solid rgba(249,115,22,0.3)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.25rem" }}>
                     <Icon size={24} color="#f97316" />
@@ -381,7 +314,6 @@ export default function Home() {
             })}
           </motion.div>
         </div>
-
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, lineHeight: 0 }}>
           <svg viewBox="0 0 1440 50" fill="#f8fafc" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", display: "block" }}>
             <path d="M0,25 C480,50 960,0 1440,25 L1440,50 L0,50 Z" />
@@ -394,21 +326,14 @@ export default function Home() {
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.25rem" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "3rem", alignItems: "center" }}>
             <motion.div {...mv(0)}>
-              <span style={{ display: "inline-block", backgroundColor: "#ffedd5", color: "#c2410c", fontSize: "0.75rem", fontWeight: 700, padding: "6px 16px", borderRadius: 9999, marginBottom: "1.25rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                Why Hi-SEO
-              </span>
-              <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.75rem)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.1, margin: "0 0 1rem" }}>
+              <span className="section-badge-orange">Why Hi-SEO</span>
+              <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.75rem)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: "1rem" }}>
                 Every Feature to Dominate Search
               </h2>
               <p style={{ color: "#64748b", fontSize: "1rem", lineHeight: 1.7, marginBottom: "2rem" }}>
                 Hi-SEO is not just another SEO dashboard. It is an integrated growth engine that connects your keyword data, technical health, content performance, and backlink authority into one unified view.
               </p>
-              <Link
-                to="/signup"
-                style={{ display: "inline-flex", alignItems: "center", gap: 8, backgroundColor: "#f97316", color: "white", fontWeight: 700, padding: "14px 28px", borderRadius: 12, fontSize: "1rem", textDecoration: "none", boxShadow: "0 4px 20px rgba(249,115,22,0.35)", transition: "all 0.3s ease" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1.05)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
-              >
+              <Link to="/signup" className="btn-orange">
                 Start Free Today <ArrowRight size={18} />
               </Link>
             </motion.div>
@@ -416,16 +341,10 @@ export default function Home() {
             <motion.div
               variants={stagger} initial="hidden" whileInView="visible"
               viewport={{ once: true, amount: 0.1 }}
-              style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem" }}
+              style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.75rem" }}
             >
               {benefits.map((benefit) => (
-                <motion.div
-                  key={benefit}
-                  variants={fadeUp()}
-                  style={{ display: "flex", alignItems: "center", gap: 10, backgroundColor: "white", borderRadius: 12, padding: "12px 14px", border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)", transition: "all 0.25s ease" }}
-                  onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = "translateY(-3px)"; el.style.boxShadow = "0 8px 20px rgba(0,0,0,0.08)"; }}
-                  onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = "translateY(0)"; el.style.boxShadow = "0 1px 3px rgba(0,0,0,0.04)"; }}
-                >
+                <motion.div key={benefit} variants={fadeUp()} style={{ display: "flex", alignItems: "center", gap: 10, backgroundColor: "white", borderRadius: 12, padding: "12px 14px", border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)", transition: "all 0.25s ease" }}>
                   <div style={{ width: 24, height: 24, borderRadius: "50%", backgroundColor: "#d1fae5", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <CheckCircle size={14} color="#059669" />
                   </div>
@@ -441,10 +360,8 @@ export default function Home() {
       <section style={{ width: "100%", backgroundColor: "white", padding: "5rem 0" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.25rem" }}>
           <motion.div {...mv(0)} style={{ textAlign: "center", marginBottom: "3rem" }}>
-            <span style={{ display: "inline-block", backgroundColor: "#dbeafe", color: "#1d4ed8", fontSize: "0.75rem", fontWeight: 700, padding: "6px 16px", borderRadius: 9999, marginBottom: "1rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              Simple Pricing
-            </span>
-            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.75rem)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.02em", margin: "0 0 1rem" }}>
+            <span className="section-badge-blue">Simple Pricing</span>
+            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.75rem)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.02em", marginBottom: "1rem" }}>
               Plans for Every Stage of Growth
             </h2>
             <p style={{ color: "#64748b", fontSize: "1rem", maxWidth: 480, margin: "0 auto" }}>
@@ -461,37 +378,28 @@ export default function Home() {
               <motion.div
                 key={plan.name}
                 variants={fadeUp(i * 0.08)}
-                style={{
-                  backgroundColor: "white",
-                  border: plan.popular ? `2px solid #f97316` : "1px solid #e2e8f0",
-                  borderRadius: 16, padding: "1.5rem",
-                  position: "relative",
-                  boxShadow: plan.popular ? "0 8px 40px rgba(249,115,22,0.15)" : "0 1px 3px rgba(0,0,0,0.04)",
-                  transition: "all 0.3s ease",
-                }}
+                style={{ backgroundColor: "white", border: plan.popular ? "2px solid #f97316" : "1px solid #e2e8f0", borderRadius: 16, padding: "1.75rem 1.5rem", position: "relative", boxShadow: plan.popular ? "0 8px 40px rgba(249,115,22,0.15)" : "0 1px 3px rgba(0,0,0,0.04)", transition: "all 0.3s ease" }}
                 onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.transform = "translateY(-8px)"; el.style.boxShadow = "0 24px 48px rgba(0,0,0,0.12)"; }}
                 onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.transform = "translateY(0)"; el.style.boxShadow = plan.popular ? "0 8px 40px rgba(249,115,22,0.15)" : "0 1px 3px rgba(0,0,0,0.04)"; }}
               >
                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 4, backgroundColor: plan.accent, borderRadius: "14px 14px 0 0" }} />
                 {plan.popular && (
                   <div style={{ position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)", whiteSpace: "nowrap" }}>
-                    <span style={{ backgroundColor: "#f97316", color: "white", fontSize: "0.7rem", fontWeight: 700, padding: "4px 14px", borderRadius: 9999 }}>
-                      Most Popular
-                    </span>
+                    <span style={{ backgroundColor: "#f97316", color: "white", fontSize: "0.7rem", fontWeight: 700, padding: "4px 14px", borderRadius: 9999 }}>Most Popular</span>
                   </div>
                 )}
-                <div style={{ paddingTop: "0.75rem" }}>
+                <div style={{ paddingTop: "0.5rem" }}>
                   <h3 style={{ fontWeight: 900, color: "#0f172a", fontSize: "1.1rem", marginBottom: "0.25rem" }}>{plan.name}</h3>
                   <p style={{ color: "#94a3b8", fontSize: "0.75rem", marginBottom: "1rem", lineHeight: 1.5 }}>{plan.desc}</p>
                   <div style={{ marginBottom: "1rem" }}>
                     {plan.price === "Free" ? (
-                      <span style={{ fontSize: "2rem", fontWeight: 900, color: "#0f172a" }}>Free</span>
+                      <span style={{ fontSize: "2.25rem", fontWeight: 900, color: "#0f172a" }}>Free</span>
                     ) : plan.price === "Custom" ? (
-                      <span style={{ fontSize: "2rem", fontWeight: 900, color: "#0f172a" }}>Custom</span>
+                      <span style={{ fontSize: "2.25rem", fontWeight: 900, color: "#0f172a" }}>Custom</span>
                     ) : (
                       <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
                         <span style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: 600 }}>NGN</span>
-                        <span style={{ fontSize: "2rem", fontWeight: 900, color: "#0f172a" }}>{plan.price}</span>
+                        <span style={{ fontSize: "2.25rem", fontWeight: 900, color: "#0f172a" }}>{plan.price}</span>
                         <span style={{ color: "#94a3b8", fontSize: "0.875rem" }}>{plan.period}</span>
                       </div>
                     )}
@@ -508,8 +416,6 @@ export default function Home() {
                   <Link
                     to={plan.href}
                     style={{ display: "block", textAlign: "center", backgroundColor: plan.popular ? "#f97316" : plan.accent, color: "white", fontWeight: 700, padding: "11px", borderRadius: 10, fontSize: "0.875rem", textDecoration: "none", transition: "all 0.3s ease" }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "0.9"; (e.currentTarget as HTMLElement).style.transform = "scale(1.02)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
                   >
                     {plan.cta}
                   </Link>
@@ -530,35 +436,22 @@ export default function Home() {
       <section style={{ width: "100%", backgroundColor: "#f8fafc", padding: "5rem 0" }}>
         <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 1.25rem" }}>
           <motion.div {...mv(0)} style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-            <span style={{ display: "inline-block", backgroundColor: "#dbeafe", color: "#1d4ed8", fontSize: "0.75rem", fontWeight: 700, padding: "6px 16px", borderRadius: 9999, marginBottom: "1rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              FAQ
-            </span>
-            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.5rem)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.02em", margin: "0 0 0.75rem" }}>
+            <span className="section-badge-blue">FAQ</span>
+            <h2 style={{ fontSize: "clamp(1.75rem, 5vw, 2.5rem)", fontWeight: 900, color: "#0f172a", letterSpacing: "-0.02em", marginBottom: "0.75rem" }}>
               Common Questions
             </h2>
             <p style={{ color: "#64748b", fontSize: "1rem" }}>Everything you need to know before getting started.</p>
           </motion.div>
 
-          <motion.div
-            variants={stagger} initial="hidden" whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}
-          >
+          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {faqs.map((faq, i) => (
-              <motion.div
-                key={i}
-                variants={fadeUp()}
-                style={{ backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
-              >
+              <motion.div key={i} variants={fadeUp()} style={{ backgroundColor: "white", border: "1px solid #e2e8f0", borderRadius: 14, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1.125rem 1.5rem", textAlign: "left", background: "none", border: "none", cursor: "pointer", gap: 12 }}
                 >
                   <span style={{ fontWeight: 700, color: "#0f172a", fontSize: "0.9rem" }}>{faq.question}</span>
-                  <ChevronDown
-                    size={18}
-                    style={{ flexShrink: 0, color: openFaq === i ? "#2563eb" : "#94a3b8", transform: openFaq === i ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s ease" }}
-                  />
+                  <ChevronDown size={18} style={{ flexShrink: 0, color: openFaq === i ? "#2563eb" : "#94a3b8", transform: openFaq === i ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s ease" }} />
                 </button>
                 <AnimatePresence>
                   {openFaq === i && (
@@ -584,23 +477,11 @@ export default function Home() {
       {/* ===== FINAL CTA ===== */}
       <section style={{ position: "relative", width: "100%", padding: "6rem 0", overflow: "hidden", background: "linear-gradient(135deg, #07123f 0%, #0a1a6e 50%, #1239a8 100%)" }}>
         <div style={{ position: "absolute", inset: 0, ...gridStyle }} />
-        <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 160, opacity: 0.2, pointerEvents: "none" }}>
-          <svg viewBox="0 0 200 500" fill="none" style={{ width: "100%", height: "100%" }}>
-            <rect x="-40" y="150" width="180" height="180" stroke="white" strokeWidth="1" fill="none" transform="rotate(-15 50 240)" />
-            <circle cx="20" cy="350" r="5" fill="#f97316" />
-          </svg>
-        </div>
-        <div style={{ position: "absolute", right: 0, top: 0, bottom: 0, width: 160, opacity: 0.2, pointerEvents: "none" }}>
-          <svg viewBox="0 0 200 500" fill="none" style={{ width: "100%", height: "100%" }}>
-            <rect x="60" y="120" width="180" height="180" stroke="white" strokeWidth="1" fill="none" transform="rotate(15 150 210)" />
-            <circle cx="180" cy="100" r="5" fill="#f97316" />
-          </svg>
-        </div>
         <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 500, height: 300, borderRadius: "50%", backgroundColor: "rgba(59,130,246,0.1)", filter: "blur(80px)", pointerEvents: "none" }} />
 
         <div style={{ position: "relative", zIndex: 10, maxWidth: 800, margin: "0 auto", padding: "0 1.25rem", textAlign: "center" }}>
           <motion.div {...mv(0)}>
-            <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: "2rem" }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: "2rem", flexWrap: "wrap" }}>
               {[Award, Shield, Users, Zap].map((Icon, i) => (
                 <div key={i} style={{ width: 44, height: 44, borderRadius: 12, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Icon size={20} color="#93c5fd" />
@@ -608,32 +489,21 @@ export default function Home() {
               ))}
             </div>
 
-            <h2 style={{ fontSize: "clamp(1.75rem, 6vw, 3.5rem)", fontWeight: 900, color: "white", letterSpacing: "-0.02em", lineHeight: 1.1, margin: "0 0 1.25rem" }}>
+            <h2 style={{ fontSize: "clamp(1.75rem, 6vw, 3.5rem)", fontWeight: 900, color: "white", letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: "1.25rem" }}>
               Your Competitors Are Already
               <br />
               <span style={{ color: "#f97316" }}>Gaining Ground on You.</span>
             </h2>
 
-            <p style={{ color: "#bfdbfe", fontSize: "1rem", lineHeight: 1.7, maxWidth: 560, margin: "0 auto 2.5rem" }}>
-              Every day without Hi-SEO is another day your competitors rank above you and capture your customers.
-              Start your free account in 60 seconds. No credit card. No commitment. Just results.
+            <p style={{ color: "#bfdbfe", fontSize: "clamp(0.95rem, 2.5vw, 1.1rem)", lineHeight: 1.7, maxWidth: 560, margin: "0 auto 2.5rem" }}>
+              Every day without Hi-SEO is another day your competitors rank above you. Start your free account in 60 seconds. No credit card. No commitment.
             </p>
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
-              <Link
-                to="/signup"
-                style={{ display: "inline-flex", alignItems: "center", gap: 8, backgroundColor: "#f97316", color: "white", fontWeight: 700, padding: "16px 36px", borderRadius: 12, fontSize: "1rem", textDecoration: "none", boxShadow: "0 8px 40px rgba(249,115,22,0.5)", transition: "all 0.3s ease" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1.05)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
-              >
+              <Link to="/signup" className="btn-orange" style={{ padding: "15px 36px", fontSize: "1rem" }}>
                 Start Free - No Card Needed <ArrowRight size={18} />
               </Link>
-              <Link
-                to="/pricing"
-                style={{ display: "inline-flex", alignItems: "center", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "white", fontWeight: 600, padding: "16px 28px", borderRadius: 12, fontSize: "1rem", textDecoration: "none", transition: "all 0.3s ease" }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.18)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}
-              >
+              <Link to="/pricing" className="btn-ghost" style={{ padding: "15px 28px", fontSize: "1rem" }}>
                 View Pricing
               </Link>
             </div>
@@ -645,6 +515,11 @@ export default function Home() {
         </div>
       </section>
 
+      <style>{`
+        @media (min-width: 640px) {
+          .stats-grid { grid-template-columns: repeat(4, 1fr) !important; max-width: 600px !important; }
+        }
+      `}</style>
     </div>
   );
 }
