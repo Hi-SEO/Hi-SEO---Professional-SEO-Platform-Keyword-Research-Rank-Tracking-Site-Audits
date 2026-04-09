@@ -1,565 +1,716 @@
-﻿import { Link } from "react-router-dom"
-import { motion, useReducedMotion } from "framer-motion"
-import { Button } from "../../components/ui/button"
-import { Card } from "../../components/ui/card"
-import {
-  ArrowRight,
-  BarChart3,
-  CheckCircle2,
-  Globe,
-  Layers3,
-  Search,
-  ShieldCheck,
-  Sparkles,
-  Target,
-  TrendingUp,
-  Zap,
-  Users,
-  FileText,
-  Gauge,
-  Bot,
-  Link2,
-  LineChart,
-  Star,
-  Workflow,
-} from "lucide-react"
+﻿import React, { useState } from "react"
+import { Link } from "react-router-dom"
+import { motion, useReducedMotion, AnimatePresence } from "framer-motion"
 
-const trustItems = [
-  "Built for founders, marketers, and agencies",
-  "Secure auth and workspace control",
-  "Fast SEO workflows in one dashboard",
-]
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 30 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
+  transition: { duration: 0.6, delay, ease: [0.4, 0, 0.2, 1] },
+})
 
-const stats = [
-  { value: "10+", label: "SEO tools" },
-  { value: "1 click", label: "Fast audits" },
-  { value: "Real time", label: "Dashboard updates" },
-  { value: "Free + Premium", label: "Plans" },
-]
-
-const featureCards = [
+const FEATURES = [
   {
-    icon: Search,
+    icon: "search",
     title: "Keyword Explorer",
-    text: "Find search terms people are already using and turn them into traffic opportunities.",
+    desc: "Discover high-impact keywords with real search volume, difficulty scores, and intent classification. Find the exact terms your audience is searching for.",
+    color: "blue",
   },
   {
-    icon: ShieldCheck,
+    icon: "shield",
     title: "Site Audit",
-    text: "Spot SEO problems early and understand what needs attention first.",
+    desc: "Run a full technical SEO audit in seconds. Get a scored health report with critical issues, warnings, and actionable fixes organized by priority.",
+    color: "cyan",
   },
   {
-    icon: TrendingUp,
+    icon: "trending",
     title: "Rank Tracker",
-    text: "Track movement across keywords and quickly see what is improving or falling.",
+    desc: "Track your keyword positions daily across all major search engines. See gains and drops instantly with visual history charts.",
+    color: "orange",
   },
   {
-    icon: Link2,
+    icon: "link",
     title: "Backlink Analytics",
-    text: "Review links, authority signals, and discover where your site is growing.",
+    desc: "Analyze your entire backlink profile. Monitor new and lost links, domain authority scores, and identify toxic links before they hurt your rankings.",
+    color: "purple",
   },
   {
-    icon: Gauge,
-    title: "SERP Analysis",
-    text: "See what appears in search results so you can compete with more clarity.",
+    icon: "users",
+    title: "Competitor Analysis",
+    desc: "Spy on your top competitors. See exactly which keywords they rank for, their backlink sources, and content gaps you can exploit.",
+    color: "green",
   },
   {
-    icon: Bot,
-    title: "AI Writer",
-    text: "Generate content ideas and save time while planning SEO-friendly writing.",
+    icon: "zap",
+    title: "AI Content Writer",
+    desc: "Generate SEO-optimized content briefs, outlines, and full articles using AI trained on top-ranking pages. Publish content that actually ranks.",
+    color: "amber",
   },
 ]
 
-const processSteps = [
+const STEPS = [
   {
     number: "01",
-    title: "Create your workspace",
-    text: "Add your project and organize your SEO work in one place.",
+    title: "Connect your website",
+    desc: "Add your domain to Hi-SEO in seconds. No code, no plugins, no complicated setup. Just enter your URL and we do the rest.",
+    color: "blue",
   },
   {
     number: "02",
-    title: "Run tools",
-    text: "Use audits, keyword research, and analysis tools to collect insights.",
+    title: "Run your first audit",
+    desc: "Get an instant health score with a full breakdown of issues holding your site back. Our AI prioritizes what to fix first for maximum impact.",
+    color: "cyan",
   },
   {
     number: "03",
-    title: "Act with clarity",
-    text: "Use reports and dashboard views to make better decisions faster.",
+    title: "Track and grow",
+    desc: "Monitor rankings, fix issues, build content, and watch your organic traffic climb. Hi-SEO gives you one focused place to manage everything.",
+    color: "orange",
   },
 ]
 
-const benefits = [
-  "Elegant dashboard experience",
-  "Simple and fast daily workflow",
-  "Made for solo users and teams",
-  "Clear reports and action steps",
-  "Scales with your SEO needs",
-  "Easy to understand for new users",
-]
-
-const testimonials = [
+const TESTIMONIALS = [
   {
-    name: "Amina K.",
-    role: "Growth Marketer",
-    quote:
-      "Hi-SEO makes it much easier to manage SEO work without jumping between too many tools.",
+    name: "Chukwuemeka A.",
+    role: "Founder, GrowthStack",
+    text: "Hi-SEO replaced four separate tools for us. The keyword research and site audit alone saved us over 8 hours per week. Our organic traffic is up 280 percent in four months.",
+    rating: 5,
+    avatar: "C",
+    color: "#3b82f6",
   },
   {
-    name: "David T.",
-    role: "Agency Owner",
-    quote:
-      "The dashboard feels premium and organized. It gives the product a real SaaS feel.",
+    name: "Fatima D.",
+    role: "SEO Lead, MediaPulse NG",
+    text: "The rank tracking and competitor analysis features are incredibly powerful. We identified keyword gaps our competitors had and ranked for them within weeks.",
+    rating: 5,
+    avatar: "F",
+    color: "#f97316",
   },
   {
-    name: "Lara M.",
-    role: "Founder",
-    quote:
-      "I like that the product explains itself well. The interface makes SEO feel simpler.",
+    name: "James O.",
+    role: "Agency Owner, SERPcraft",
+    text: "I manage 12 client websites from one Hi-SEO dashboard. The reporting is beautiful, the audits are thorough, and my clients love the results we deliver.",
+    rating: 5,
+    avatar: "J",
+    color: "#06b6d4",
   },
 ]
 
-const faqs = [
+const FAQS = [
   {
-    q: "What is Hi-SEO?",
-    a: "Hi-SEO is an SEO SaaS platform that helps users manage keywords, audits, reports, and SEO analysis in one workspace.",
+    q: "Is Hi-SEO really free to start?",
+    a: "Yes. Our Starter plan is completely free and includes site audits, keyword research, rank tracking, and basic reports. No credit card required to sign up.",
   },
   {
-    q: "Who is it for?",
-    a: "It is built for founders, marketers, agencies, and small teams that want a cleaner SEO workflow.",
+    q: "How accurate is the keyword data?",
+    a: "Hi-SEO pulls keyword volume and difficulty data from multiple trusted sources and refreshes it regularly. Our data is comparable to industry-leading tools at a fraction of the cost.",
   },
   {
-    q: "Can I start free?",
-    a: "Yes. You can start on the free plan and upgrade when you need more tools and access.",
+    q: "Can I manage multiple websites?",
+    a: "Yes. The Pro plan supports up to 10 projects, Business supports 50, and our Agency plan has unlimited projects. Each project gets its own dashboard, audits, and reports.",
   },
   {
-    q: "Why does it feel premium?",
-    a: "Because it is designed with modern UI, smooth motion, clear copy, and a clean SaaS-style layout.",
+    q: "How does the site audit work?",
+    a: "Our crawler scans every page of your website and checks over 100 SEO factors including page speed, meta tags, headings, internal links, mobile friendliness, and more. You get a health score from 0 to 100 with prioritized fixes.",
+  },
+  {
+    q: "Do you support Nigerian businesses and payment?",
+    a: "Absolutely. Hi-SEO is built with Nigerian founders and agencies in mind. We accept payment in Naira via Paystack and our pricing is designed to be accessible for the Nigerian market.",
+  },
+  {
+    q: "Can I cancel or downgrade at any time?",
+    a: "Yes, always. There are no contracts or lock-in periods. You can upgrade, downgrade, or cancel your plan at any time from your billing dashboard.",
   },
 ]
+
+function FeatureIcon({ type, color }: { type: string; color: string }) {
+  const colorMap: Record<string, string> = {
+    blue: "#3b82f6", cyan: "#06b6d4", orange: "#f97316",
+    purple: "#a855f7", green: "#10b981", amber: "#f59e0b",
+  }
+  const c = colorMap[color] || "#3b82f6"
+  const bgMap: Record<string, string> = {
+    blue: "rgba(59,130,246,0.15)", cyan: "rgba(6,182,212,0.15)",
+    orange: "rgba(249,115,22,0.15)", purple: "rgba(168,85,247,0.15)",
+    green: "rgba(16,185,129,0.15)", amber: "rgba(245,158,11,0.15)",
+  }
+  const bg = bgMap[color] || "rgba(59,130,246,0.15)"
+  return (
+    <div
+      className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+      style={{ background: bg, border: `1px solid ${c}30` }}
+    >
+      {type === "search" && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>}
+      {type === "shield" && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>}
+      {type === "trending" && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></svg>}
+      {type === "link" && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>}
+      {type === "users" && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>}
+      {type === "zap" && <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>}
+    </div>
+  )
+}
+
+function FAQItem({ q, a, index }: { q: string; a: string; index: number }) {
+  const [open, setOpen] = useState(false)
+  const shouldReduceMotion = useReducedMotion()
+  return (
+    <motion.div
+      {...fadeUp(index * 0.07)}
+      className="border-b border-white/8 last:border-0"
+    >
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between py-5 text-left gap-4 group"
+      >
+        <span className="text-base font-semibold text-white/90 group-hover:text-white transition-colors">
+          {q}
+        </span>
+        <span
+          className="shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300"
+          style={{
+            background: open ? "rgba(59,130,246,0.2)" : "rgba(255,255,255,0.06)",
+            border: open ? "1px solid rgba(59,130,246,0.3)" : "1px solid rgba(255,255,255,0.1)",
+          }}
+        >
+          <motion.svg
+            width="12" height="12" viewBox="0 0 24 24" fill="none"
+            stroke={open ? "#60a5fa" : "rgba(255,255,255,0.5)"} strokeWidth="2.5"
+            animate={{ rotate: open ? 180 : 0 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.25 }}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </motion.svg>
+        </span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <p className="pb-5 text-sm text-white/55 leading-relaxed font-medium">{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
+}
 
 export default function Home() {
-  const reduceMotion = useReducedMotion()
-
-  const fadeUp = {
-    initial: { opacity: 0, y: 22 },
-    whileInView: { opacity: 1, y: 0 },
-    transition: { duration: 0.55, ease: "easeOut" as const },
-    viewport: { once: true, amount: 0.2 },
-  }
-
-  const fadeIn = {
-    initial: { opacity: 0 },
-    whileInView: { opacity: 1 },
-    transition: { duration: 0.55 },
-    viewport: { once: true, amount: 0.2 },
-  }
+  const shouldReduceMotion = useReducedMotion()
 
   return (
-    <div className="relative overflow-hidden bg-background">
-      {/* Background */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[-10rem] top-[-8rem] h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
-        <div className="absolute right-[-10rem] top-[8rem] h-[30rem] w-[30rem] rounded-full bg-purple-500/20 blur-3xl" />
-        <div className="absolute bottom-[-10rem] left-[15%] h-[26rem] w-[26rem] rounded-full bg-emerald-500/10 blur-3xl" />
-      </div>
+    <div className="overflow-x-hidden">
 
-      {/* Hero */}
-      <section className="relative mx-auto max-w-7xl px-6 py-16 md:py-24 lg:py-28">
-        <div className="grid items-center gap-14 lg:grid-cols-2">
-          {/* Left */}
-          <motion.div {...fadeIn} className="relative">
+      {/* ============ HERO ============ */}
+      <section
+        className="relative min-h-screen flex items-center overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #1239a8 0%, #07123f 60%, #0b1729 100%)" }}
+      >
+        <div className="absolute inset-0 bg-grid-overlay opacity-40" />
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 80% 60% at 50% 40%, rgba(59,130,246,0.25) 0%, transparent 70%)" }} />
+
+        <div className="hero-blob hero-blob-blue animate-blob" style={{ width: "700px", height: "700px", top: "-200px", right: "-200px", opacity: 0.35 }} />
+        <div className="hero-blob hero-blob-cyan animate-blob animate-blob-delay-2" style={{ width: "500px", height: "500px", bottom: "-150px", left: "-150px", opacity: 0.25 }} />
+        <div className="hero-blob hero-blob-orange animate-blob-slow animate-blob-delay-1" style={{ width: "300px", height: "300px", top: "40%", right: "10%", opacity: 0.2 }} />
+
+        <div className="section-container relative z-10 py-24 lg:py-32">
+          <div className="max-w-4xl mx-auto text-center">
             <motion.div
-              {...fadeUp}
-              className="mb-5 inline-flex items-center gap-2 rounded-full border bg-card/70 px-4 py-2 text-sm font-medium shadow-sm backdrop-blur"
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold mb-8"
+              style={{
+                background: "rgba(249,115,22,0.15)",
+                border: "1px solid rgba(249,115,22,0.3)",
+                color: "#fb923c",
+              }}
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Sparkles className="h-4 w-4" />
-              </span>
-              Premium SEO SaaS for growing teams
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+              Premium SEO SaaS for modern teams
             </motion.div>
 
             <motion.h1
-              {...fadeUp}
-              className="max-w-3xl text-5xl font-black tracking-tight md:text-6xl lg:text-7xl"
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.1 }}
+              className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-white leading-[1.05] mb-6"
             >
               Turn SEO into a{" "}
-              <span className="bg-gradient-to-r from-primary via-purple-500 to-emerald-500 bg-clip-text text-transparent">
-                clear, beautiful workflow
-              </span>
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #60a5fa, #06b6d4)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                clear, beautiful
+              </span>{" "}
+              workflow
             </motion.h1>
 
             <motion.p
-              {...fadeUp}
-              className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground md:text-xl"
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.25 }}
+              className="text-lg md:text-xl text-blue-100/70 max-w-2xl mx-auto leading-relaxed mb-10 font-medium"
             >
-              Hi-SEO helps you manage keyword research, audits, backlinks, rankings, reports, and content strategy in one premium dashboard.
-              Instead of switching between tools, you get one focused place to understand what matters and what to do next.
+              Hi-SEO helps you manage keyword research, audits, backlinks, rankings, reports, and content strategy in one premium dashboard. Stop switching between tools and start growing.
             </motion.p>
 
-            <motion.div {...fadeUp} className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="shadow-lg shadow-primary/20">
-                <Link to="/signup">
-                  Start Free Trial
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="bg-background/70 backdrop-blur">
-                <Link to="/features">Explore Features</Link>
-              </Button>
-            </motion.div>
-
-            <motion.div {...fadeUp} className="mt-8 flex flex-wrap gap-3">
-              {trustItems.map((item) => (
-                <div
-                  key={item}
-                  className="inline-flex items-center gap-2 rounded-full border bg-card/70 px-3 py-2 text-sm font-medium shadow-sm backdrop-blur"
-                >
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                  {item}
-                </div>
-              ))}
+            <motion.div
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
+            >
+              <Link
+                to="/signup"
+                className="flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold text-white transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_8px_40px_rgba(249,115,22,0.6)]"
+                style={{
+                  background: "linear-gradient(135deg, #f97316, #ea6c04)",
+                  boxShadow: "0 4px 24px rgba(249,115,22,0.45)",
+                }}
+              >
+                Start Free Trial
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
+              <Link
+                to="/features"
+                className="flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold text-white border border-white/20 hover:bg-white/10 transition-all duration-300"
+              >
+                Explore Features
+              </Link>
             </motion.div>
 
             <motion.div
-              {...fadeUp}
-              className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4"
+              initial={shouldReduceMotion ? {} : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.55 }}
+              className="flex flex-wrap items-center justify-center gap-4"
             >
-              {stats.map((item) => (
-                <Card
-                  key={item.label}
-                  className="border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur transition-transform hover:-translate-y-1"
+              {[
+                { icon: "shield", label: "Built for founders, marketers, and agencies" },
+                { icon: "lock", label: "Secure auth and workspace control" },
+                { icon: "zap", label: "Fast SEO workflows in one dashboard" },
+              ].map((badge) => (
+                <div
+                  key={badge.label}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold text-white/60"
+                  style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
                 >
-                  <p className="text-2xl font-bold tracking-tight">{item.value}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{item.label}</p>
-                </Card>
+                  {badge.icon === "shield" && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>}
+                  {badge.icon === "lock" && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>}
+                  {badge.icon === "zap" && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>}
+                  {badge.label}
+                </div>
               ))}
             </motion.div>
+          </div>
+
+          {/* Stats strip */}
+          <motion.div
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.7 }}
+            className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto"
+          >
+            {[
+              { value: "10+", label: "SEO tools" },
+              { value: "1 click", label: "Fast audits" },
+              { value: "Real time", label: "Dashboard updates" },
+              { value: "Free +", label: "Premium plans" },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="text-center p-5 rounded-2xl"
+                style={{
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  backdropFilter: "blur(12px)",
+                }}
+              >
+                <div className="text-2xl font-black text-white mb-1">{stat.value}</div>
+                <div className="text-xs font-semibold text-white/45 uppercase tracking-wider">{stat.label}</div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Wave */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-16">
+            <path d="M0 80L60 72C120 64 240 48 360 40C480 32 600 32 720 37.3C840 43 960 53 1080 58.7C1200 64 1320 64 1380 64L1440 64V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0Z" fill="white" />
+          </svg>
+        </div>
+      </section>
+
+      {/* ============ TRUST STRIP ============ */}
+      <section className="py-14 bg-white">
+        <div className="section-container">
+          <p className="text-center text-xs font-bold uppercase tracking-widest text-slate-400 mb-8">
+            Trusted by teams at
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-10 opacity-40">
+            {["TechCorp NG", "GrowthStack", "MediaPulse", "SERPcraft", "DigitalFirst", "WebAgency"].map((brand) => (
+              <span key={brand} className="text-slate-500 font-black text-lg tracking-tight">{brand}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ FEATURES ============ */}
+      <section className="py-24 bg-white">
+        <div className="section-container">
+          <motion.div {...fadeUp()} className="text-center max-w-2xl mx-auto mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-4 bg-blue-50 text-blue-600 border border-blue-100">
+              Everything you need
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">
+              One platform for every SEO workflow
+            </h2>
+            <p className="text-slate-500 text-lg leading-relaxed">
+              Stop paying for 5 different tools. Hi-SEO combines keyword research, audits, rank tracking, backlinks, competitor analysis, and AI content in one premium workspace.
+            </p>
           </motion.div>
 
-          {/* Right */}
-          <motion.div
-            initial={reduceMotion ? {} : { opacity: 0, x: 40, scale: 0.96 }}
-            whileInView={reduceMotion ? {} : { opacity: 1, x: 0, scale: 1 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
-            viewport={{ once: true, amount: 0.2 }}
-            className="relative"
-          >
-            <Card className="relative overflow-hidden border-border/60 bg-card/80 p-6 shadow-2xl backdrop-blur-xl">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_35%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_30%)]" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {FEATURES.map((feature, i) => (
+              <motion.div
+                key={feature.title}
+                {...fadeUp(i * 0.08)}
+                className="group p-6 rounded-2xl border border-slate-100 bg-white hover:border-blue-100 hover:shadow-[0_16px_48px_rgba(59,130,246,0.12)] transition-all duration-300 hover:-translate-y-2 cursor-default relative overflow-hidden"
+              >
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: "linear-gradient(135deg, rgba(59,130,246,0.02), rgba(6,182,212,0.02))" }} />
+                <FeatureIcon type={feature.icon} color={feature.color} />
+                <h3 className="text-lg font-bold text-slate-900 mb-2">{feature.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{feature.desc}</p>
+              </motion.div>
+            ))}
+          </div>
 
-              <div className="relative mb-6 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Workspace Overview</p>
-                  <h2 className="text-2xl font-bold">Hi-SEO Dashboard</h2>
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-full border bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600">
-                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
-                  Active
-                </div>
-              </div>
+          <motion.div {...fadeUp(0.3)} className="text-center mt-12">
+            <Link
+              to="/features"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-blue-600 border border-blue-200 hover:bg-blue-50 transition-all duration-200"
+            >
+              View all features
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </motion.div>
+        </div>
+      </section>
 
-              <div className="relative grid gap-4 sm:grid-cols-2">
-                <Card className="border-border/50 bg-background/70 p-4 backdrop-blur">
-                  <p className="text-sm text-muted-foreground">Projects</p>
-                  <p className="mt-2 text-3xl font-bold">12</p>
-                  <div className="mt-3 h-2 rounded-full bg-muted">
-                    <div className="h-2 w-[72%] rounded-full bg-primary" />
-                  </div>
-                </Card>
+      {/* ============ HOW IT WORKS ============ */}
+      <section
+        className="py-24 relative overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #1239a8 0%, #07123f 100%)" }}
+      >
+        <div className="absolute inset-0 bg-grid-overlay opacity-30" />
+        <div className="hero-blob hero-blob-cyan animate-blob" style={{ width: "500px", height: "500px", top: "-100px", right: "-100px", opacity: 0.2 }} />
 
-                <Card className="border-border/50 bg-background/70 p-4 backdrop-blur">
-                  <p className="text-sm text-muted-foreground">Audits Run</p>
-                  <p className="mt-2 text-3xl font-bold">48</p>
-                  <div className="mt-3 h-2 rounded-full bg-muted">
-                    <div className="h-2 w-[58%] rounded-full bg-emerald-500" />
-                  </div>
-                </Card>
+        <div className="section-container relative z-10">
+          <motion.div {...fadeUp()} className="text-center max-w-2xl mx-auto mb-16">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-4"
+              style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.8)" }}
+            >
+              Quick and easy setup
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
+              Get ranking results in three steps
+            </h2>
+            <p className="text-blue-200/60 text-lg leading-relaxed">
+              No technical knowledge required. Hi-SEO is designed to get you from zero to ranking insights in under 5 minutes.
+            </p>
+          </motion.div>
 
-                <Card className="border-border/50 bg-background/70 p-4 backdrop-blur">
-                  <p className="text-sm text-muted-foreground">Saved Keywords</p>
-                  <p className="mt-2 text-3xl font-bold">356</p>
-                  <div className="mt-3 h-2 rounded-full bg-muted">
-                    <div className="h-2 w-[84%] rounded-full bg-purple-500" />
-                  </div>
-                </Card>
-
-                <Card className="border-border/50 bg-background/70 p-4 backdrop-blur">
-                  <p className="text-sm text-muted-foreground">Reports</p>
-                  <p className="mt-2 text-3xl font-bold">29</p>
-                  <div className="mt-3 h-2 rounded-full bg-muted">
-                    <div className="h-2 w-[46%] rounded-full bg-amber-500" />
-                  </div>
-                </Card>
-              </div>
-
-              <div className="relative mt-6 rounded-2xl border border-border/60 bg-background/60 p-4 backdrop-blur">
-                <div className="mb-3 flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                  <p className="font-semibold">Weekly SEO Activity</p>
-                </div>
-
-                <div className="grid grid-cols-7 items-end gap-3">
-                  {[35, 54, 28, 68, 46, 82, 61].map((height, i) => (
-                    <motion.div
-                      key={i}
-                      initial={reduceMotion ? {} : { opacity: 0, y: 20 }}
-                      whileInView={reduceMotion ? {} : { opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.06, duration: 0.4 }}
-                      viewport={{ once: true }}
-                      className="flex h-40 items-end"
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {STEPS.map((step, i) => (
+              <motion.div
+                key={step.number}
+                {...fadeUp(i * 0.15)}
+                className="relative group"
+              >
+                {i < STEPS.length - 1 && (
+                  <div
+                    className="hidden md:block absolute top-10 left-[calc(100%_-_16px)] w-1/2 h-0.5 z-10"
+                    style={{ background: "linear-gradient(90deg, rgba(249,115,22,0.6), transparent)" }}
+                  />
+                )}
+                <div
+                  className="p-7 rounded-2xl h-full transition-all duration-300 group-hover:-translate-y-2"
+                  style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    backdropFilter: "blur(12px)",
+                  }}
+                >
+                  <div className="flex items-center gap-3 mb-5">
+                    <span
+                      className="text-4xl font-black"
+                      style={{
+                        background: step.color === "blue"
+                          ? "linear-gradient(135deg, #60a5fa, #3b82f6)"
+                          : step.color === "cyan"
+                          ? "linear-gradient(135deg, #22d3ee, #06b6d4)"
+                          : "linear-gradient(135deg, #fb923c, #f97316)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        backgroundClip: "text",
+                      }}
                     >
-                      <div
-                        className="w-full rounded-t-xl bg-gradient-to-t from-primary to-purple-500 shadow-md shadow-primary/20"
-                        style={{ height: `${height}%` }}
-                      />
-                    </motion.div>
-                  ))}
+                      {step.number}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-black text-white mb-3">{step.title}</h3>
+                  <p className="text-blue-200/55 text-sm leading-relaxed font-medium">{step.desc}</p>
                 </div>
-              </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-              <div className="relative mt-6 grid gap-4 md:grid-cols-3">
+      {/* ============ BENEFITS ============ */}
+      <section className="py-24 bg-white">
+        <div className="section-container">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <motion.div {...fadeUp()}>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-6 bg-orange-50 text-orange-600 border border-orange-100">
+                Why Hi-SEO
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-6 leading-tight">
+                Built differently for teams that want real results
+              </h2>
+              <p className="text-slate-500 text-lg leading-relaxed mb-8">
+                Most SEO tools are built for enterprises with massive budgets. Hi-SEO is built for founders, growing agencies, and marketing teams who need professional-grade results without the enterprise price tag.
+              </p>
+              <div className="space-y-4">
                 {[
-                  { title: "Site Score", value: "92/100", accent: "emerald" },
-                  { title: "Tracked Keywords", value: "356", accent: "blue" },
-                  { title: "Weekly Growth", value: "+18%", accent: "purple" },
-                ].map((card, index) => (
+                  { title: "No bloat, just workflows", desc: "Every feature in Hi-SEO is designed around a specific SEO workflow. Nothing unnecessary, everything useful." },
+                  { title: "Data you can actually act on", desc: "We do not just show you numbers. We tell you what to fix, why it matters, and how to do it." },
+                  { title: "Built for the Nigerian market", desc: "Naira pricing, Paystack payments, and tools tuned for African and global search markets." },
+                  { title: "Always improving", desc: "New features ship every month. Your feedback directly shapes the product roadmap." },
+                ].map((benefit, i) => (
                   <motion.div
-                    key={card.title}
-                    initial={reduceMotion ? {} : { opacity: 0, y: 14 }}
-                    whileInView={reduceMotion ? {} : { opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.12, duration: 0.45 }}
-                    viewport={{ once: true }}
-                    className="rounded-2xl border bg-background/70 p-4 backdrop-blur"
+                    key={benefit.title}
+                    {...fadeUp(i * 0.1)}
+                    className="flex items-start gap-4"
                   >
-                    <div className="mb-2 flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">{card.title}</p>
-                      <span
-                        className={
-                          "h-2.5 w-2.5 rounded-full " +
-                          (card.accent === "emerald"
-                            ? "bg-emerald-500"
-                            : card.accent === "blue"
-                            ? "bg-blue-500"
-                            : "bg-purple-500")
-                        }
-                      />
+                    <div
+                      className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                      style={{ background: "rgba(249,115,22,0.15)", border: "1px solid rgba(249,115,22,0.3)" }}
+                    >
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="3">
+                        <path d="M20 6L9 17l-5-5" />
+                      </svg>
                     </div>
-                    <p className="text-2xl font-bold">{card.value}</p>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900 mb-0.5">{benefit.title}</h4>
+                      <p className="text-sm text-slate-500 leading-relaxed">{benefit.desc}</p>
+                    </div>
                   </motion.div>
                 ))}
               </div>
-            </Card>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Why section */}
-      <section className="border-t border-border/60 bg-muted/20">
-        <div className="mx-auto max-w-7xl px-6 py-20">
-          <motion.div {...fadeUp} className="mb-10 max-w-2xl">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-background/80 px-3 py-1 text-sm font-medium shadow-sm">
-              <Target className="h-4 w-4 text-primary" />
-              Why Hi-SEO
-            </div>
-            <h2 className="text-3xl font-bold tracking-tight md:text-5xl">
-              Built for clarity, speed, and better decisions
-            </h2>
-            <p className="mt-4 text-muted-foreground md:text-lg">
-              The product is designed to feel premium while still being easy enough for new users to understand quickly.
-            </p>
-          </motion.div>
-
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {featureCards.map((item, index) => {
-              const Icon = item.icon
-              return (
-                <motion.div
-                  key={item.title}
-                  initial={reduceMotion ? {} : { opacity: 0, y: 18 }}
-                  whileInView={reduceMotion ? {} : { opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.08, duration: 0.45 }}
-                  viewport={{ once: true, amount: 0.2 }}
+              <div className="mt-8">
+                <Link
+                  to="/signup"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:scale-[1.03]"
+                  style={{
+                    background: "linear-gradient(135deg, #f97316, #ea6c04)",
+                    boxShadow: "0 4px 20px rgba(249,115,22,0.4)",
+                  }}
                 >
-                  <Card className="group h-full border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-                    <div className="mb-4 inline-flex rounded-2xl bg-primary/10 p-3 text-primary transition-transform group-hover:scale-105">
-                      <Icon className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-xl font-semibold">{item.title}</h3>
-                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.text}</p>
-                  </Card>
-                </motion.div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Benefits */}
-      <section className="mx-auto max-w-7xl px-6 py-20">
-        <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-          <motion.div {...fadeUp}>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-card/80 px-3 py-1 text-sm font-medium shadow-sm">
-              <Workflow className="h-4 w-4 text-primary" />
-              Clean workflow
-            </div>
-            <h2 className="text-3xl font-bold tracking-tight md:text-5xl">
-              One platform for the full SEO journey
-            </h2>
-            <p className="mt-4 text-muted-foreground md:text-lg">
-              From discovery to reporting, Hi-SEO keeps your work moving in a single place.
-            </p>
-          </motion.div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            {benefits.map((item) => (
-              <div
-                key={item}
-                className="flex items-center gap-3 rounded-xl border bg-card/80 p-4 shadow-sm"
-              >
-                <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                <span className="text-sm font-medium">{item}</span>
+                  Start Free Today
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </Link>
               </div>
-            ))}
+            </motion.div>
+
+            <motion.div {...fadeUp(0.2)} className="grid grid-cols-2 gap-4">
+              {[
+                { value: "340%", label: "Average traffic increase reported by Pro users in 6 months", color: "blue" },
+                { value: "10+", label: "SEO tools combined into one clean dashboard workspace", color: "orange" },
+                { value: "98%", label: "Platform uptime guaranteed with real-time monitoring", color: "cyan" },
+                { value: "4.9", label: "Average rating from verified users across all plans", color: "green" },
+              ].map((metric, i) => (
+                <div
+                  key={metric.label}
+                  className="p-6 rounded-2xl border border-slate-100 hover:border-blue-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
+                >
+                  <div
+                    className="text-3xl font-black mb-2"
+                    style={{
+                      background: metric.color === "blue"
+                        ? "linear-gradient(135deg, #3b82f6, #06b6d4)"
+                        : metric.color === "orange"
+                        ? "linear-gradient(135deg, #f97316, #fbbf24)"
+                        : metric.color === "cyan"
+                        ? "linear-gradient(135deg, #06b6d4, #3b82f6)"
+                        : "linear-gradient(135deg, #10b981, #06b6d4)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                    }}
+                  >
+                    {metric.value}
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">{metric.label}</p>
+                </div>
+              ))}
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="border-t border-border/60 bg-muted/20">
-        <div className="mx-auto max-w-7xl px-6 py-20">
-          <motion.div {...fadeUp} className="mb-10 max-w-2xl">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-background/80 px-3 py-1 text-sm font-medium shadow-sm">
-              <Layers3 className="h-4 w-4 text-primary" />
-              Simple process
+      {/* ============ TESTIMONIALS ============ */}
+      <section className="py-24" style={{ background: "#f8fafc" }}>
+        <div className="section-container">
+          <motion.div {...fadeUp()} className="text-center max-w-2xl mx-auto mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-4 bg-blue-50 text-blue-600 border border-blue-100">
+              Real results from real users
             </div>
-            <h2 className="text-3xl font-bold tracking-tight md:text-5xl">
-              How it works
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">
+              Teams that switched to Hi-SEO do not look back
             </h2>
-            <p className="mt-4 text-muted-foreground md:text-lg">
-              A straightforward workflow that makes SEO easier to manage every day.
+            <p className="text-slate-500 text-lg leading-relaxed">
+              Here is what founders, SEO leads, and agency owners say after making the switch.
             </p>
           </motion.div>
 
-          <div className="grid gap-6 md:grid-cols-3">
-            {processSteps.map((step, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {TESTIMONIALS.map((t, i) => (
               <motion.div
-                key={step.number}
-                initial={reduceMotion ? {} : { opacity: 0, y: 18 }}
-                whileInView={reduceMotion ? {} : { opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1, duration: 0.45 }}
-                viewport={{ once: true, amount: 0.2 }}
+                key={t.name}
+                {...fadeUp(i * 0.12)}
+                className="p-7 rounded-2xl bg-white border border-slate-100 hover:border-blue-100 hover:shadow-[0_16px_48px_rgba(59,130,246,0.1)] transition-all duration-300 hover:-translate-y-2"
               >
-                <Card className="h-full border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur">
-                  <p className="text-sm font-semibold text-primary">{step.number}</p>
-                  <h3 className="mt-3 text-xl font-semibold">{step.title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{step.text}</p>
-                </Card>
+                <div className="flex items-center gap-0.5 mb-4">
+                  {Array.from({ length: t.rating }).map((_, s) => (
+                    <svg key={s} width="14" height="14" viewBox="0 0 24 24" fill="#f97316">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-sm text-slate-600 leading-relaxed mb-6 italic">
+                  {t.text}
+                </p>
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0"
+                    style={{ background: t.color }}
+                  >
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">{t.name}</p>
+                    <p className="text-xs text-slate-500 font-medium">{t.role}</p>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="mx-auto max-w-7xl px-6 py-20">
-        <motion.div {...fadeUp} className="mb-10 max-w-2xl">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-card/80 px-3 py-1 text-sm font-medium shadow-sm">
-            <Star className="h-4 w-4 text-amber-500" />
-            User feedback
-          </div>
-          <h2 className="text-3xl font-bold tracking-tight md:text-5xl">
-            What users might love about this experience
-          </h2>
-          <p className="mt-4 text-muted-foreground md:text-lg">
-            Strong copy and clean design help people trust the product faster.
-          </p>
-        </motion.div>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          {testimonials.map((item, index) => (
-            <motion.div
-              key={item.name}
-              initial={reduceMotion ? {} : { opacity: 0, y: 18 }}
-              whileInView={reduceMotion ? {} : { opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.08, duration: 0.45 }}
-              viewport={{ once: true, amount: 0.2 }}
-            >
-              <Card className="h-full border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur">
-                <div className="mb-4 flex items-center gap-1 text-amber-500">
-                  <Star className="h-4 w-4 fill-current" />
-                  <Star className="h-4 w-4 fill-current" />
-                  <Star className="h-4 w-4 fill-current" />
-                  <Star className="h-4 w-4 fill-current" />
-                  <Star className="h-4 w-4 fill-current" />
-                </div>
-                <p className="text-sm leading-7 text-muted-foreground">“{item.quote}”</p>
-                <div className="mt-6">
-                  <p className="font-semibold">{item.name}</p>
-                  <p className="text-sm text-muted-foreground">{item.role}</p>
-                </div>
-              </Card>
+      {/* ============ FAQ ============ */}
+      <section className="py-24 bg-white">
+        <div className="section-container">
+          <div className="max-w-3xl mx-auto">
+            <motion.div {...fadeUp()} className="text-center mb-14">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-4 bg-slate-100 text-slate-600 border border-slate-200">
+                Frequently asked questions
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-4">
+                Everything you need to know
+              </h2>
+              <p className="text-slate-500 text-lg">
+                Still have questions? We are happy to help.{" "}
+                <Link to="/contact" className="text-blue-600 font-semibold hover:text-blue-700 transition-colors">
+                  Contact us
+                </Link>
+              </p>
             </motion.div>
-          ))}
-        </div>
-      </section>
 
-      {/* FAQ */}
-      <section className="border-t border-border/60 bg-muted/20">
-        <div className="mx-auto max-w-7xl px-6 py-20">
-          <motion.div {...fadeUp} className="mb-10 max-w-2xl">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-background/80 px-3 py-1 text-sm font-medium shadow-sm">
-              <FileText className="h-4 w-4 text-primary" />
-              FAQ
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+            >
+              <div className="divide-y divide-slate-100 px-8">
+                {FAQS.map((faq, i) => (
+                  <FAQItem key={faq.q} q={faq.q} a={faq.a} index={i} />
+                ))}
+              </div>
             </div>
-            <h2 className="text-3xl font-bold tracking-tight md:text-5xl">
-              Quick answers
-            </h2>
-          </motion.div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            {faqs.map((item, index) => (
-              <motion.div
-                key={item.q}
-                initial={reduceMotion ? {} : { opacity: 0, y: 16 }}
-                whileInView={reduceMotion ? {} : { opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.06, duration: 0.4 }}
-                viewport={{ once: true, amount: 0.2 }}
-              >
-                <Card className="h-full border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur">
-                  <h3 className="text-lg font-semibold">{item.q}</h3>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.a}</p>
-                </Card>
-              </motion.div>
-            ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="relative border-t border-border/60">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-purple-600 to-emerald-500 opacity-95" />
-        <div className="relative mx-auto max-w-7xl px-6 py-16 text-center text-primary-foreground">
-          <motion.h2 {...fadeUp} className="text-3xl font-bold tracking-tight md:text-5xl">
-            Ready to experience Hi-SEO?
-          </motion.h2>
-          <motion.p {...fadeUp} className="mx-auto mt-4 max-w-2xl text-primary-foreground/85 md:text-lg">
-            Start free, explore the interface, and see how a premium SEO workspace should feel.
-          </motion.p>
-          <motion.div {...fadeUp} className="mt-8 flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg" variant="secondary" className="shadow-lg">
-              <Link to="/signup">
-                Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
+      {/* ============ FINAL CTA ============ */}
+      <section
+        className="py-24 relative overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #1239a8 0%, #07123f 100%)" }}
+      >
+        <div className="absolute inset-0 bg-grid-overlay opacity-30" />
+        <div className="hero-blob hero-blob-orange animate-blob" style={{ width: "400px", height: "400px", top: "-100px", right: "-80px", opacity: 0.2 }} />
+        <div className="hero-blob hero-blob-cyan animate-blob animate-blob-delay-2" style={{ width: "350px", height: "350px", bottom: "-80px", left: "-60px", opacity: 0.18 }} />
+
+        <div className="section-container relative z-10 text-center">
+          <motion.div {...fadeUp()}>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight mb-6 leading-tight">
+              Your competitors are already{" "}
+              <span
+                style={{
+                  background: "linear-gradient(135deg, #fb923c, #f97316)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                using SEO tools.
+              </span>
+            </h2>
+            <p className="text-blue-200/60 text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
+              Join Hi-SEO today and start making data-driven decisions that grow your organic traffic. Free forever, upgrade when ready.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                to="/signup"
+                className="flex items-center gap-2 px-9 py-4 rounded-xl text-base font-bold text-white transition-all duration-300 hover:scale-[1.03]"
+                style={{
+                  background: "linear-gradient(135deg, #f97316, #ea6c04)",
+                  boxShadow: "0 4px 28px rgba(249,115,22,0.5)",
+                }}
+              >
+                Start Free Trial
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
               </Link>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-white/20 bg-white/10 text-white hover:bg-white/20"
-            >
-              <Link to="/contact">Contact Us</Link>
-            </Button>
+              <Link
+                to="/pricing"
+                className="flex items-center gap-2 px-9 py-4 rounded-xl text-base font-bold text-white border border-white/20 hover:bg-white/10 transition-all duration-300"
+              >
+                See Pricing
+              </Link>
+            </div>
+            <p className="mt-6 text-white/30 text-sm font-medium">
+              No credit card required. Free plan available forever.
+            </p>
           </motion.div>
         </div>
       </section>

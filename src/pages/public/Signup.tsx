@@ -1,226 +1,387 @@
-﻿import { useState } from "react"
+﻿import React, { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { motion, useReducedMotion } from "framer-motion"
-import { Button } from "../../components/ui/button"
-import { Card } from "../../components/ui/card"
-import { Input } from "../../components/ui/input"
 import { useAuth } from "../../context/AuthContext"
-import {
-  ArrowRight,
-  CheckCircle2,
-  Sparkles,
-  ShieldCheck,
-  Users,
-  Zap,
-  BarChart3,
-  Search,
-  TrendingUp,
-} from "lucide-react"
-
-const benefits = [
-  "Premium dashboard experience",
-  "SEO tools in one place",
-  "Built for fast workflows",
-  "Secure Supabase auth",
-]
-
-const steps = [
-  { number: "01", title: "Create account", text: "Use your email to get started in seconds." },
-  { number: "02", title: "Set up workspace", text: "Add your project and organize your SEO work." },
-  { number: "03", title: "Start exploring", text: "Run audits, track keywords, and save reports." },
-]
+import { PasswordInput } from "../../components/ui/input"
 
 export default function Signup() {
-  const { signUp } = useAuth()
   const navigate = useNavigate()
-  const reduceMotion = useReducedMotion()
-
+  const shouldReduceMotion = useReducedMotion()
+  const { signUp } = useAuth()
+  const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirm, setConfirm] = useState("")
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-
-  const fadeUp = {
-    initial: { opacity: 0, y: 20 },
-    whileInView: { opacity: 1, y: 0 },
-    transition: { duration: 0.55, ease: "easeOut" as const },
-    viewport: { once: true, amount: 0.2 },
-  }
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-    setSuccess("")
-    setLoading(true)
-
-    try {
-      const { error } = await signUp(email, password)
-
-      if (error) {
-        setError(error.message)
-        return
-      }
-
-      setSuccess("Account created successfully. Please check your email to verify your account.")
-      setTimeout(() => navigate("/login"), 1800)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Signup failed.")
-    } finally {
-      setLoading(false)
+    setError(null)
+    if (!fullName || !email || !password || !confirm) {
+      setError("Please fill in all fields")
+      return
     }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters")
+      return
+    }
+    if (password !== confirm) {
+      setError("Passwords do not match")
+      return
+    }
+    setLoading(true)
+    const { error: authError } = await signUp(email, password, fullName)
+    setLoading(false)
+    if (authError) {
+      setError(authError)
+      return
+    }
+    setSuccess(true)
   }
 
+  const benefits = [
+    "Free forever plan with core SEO tools",
+    "Site audits, keyword research, and rank tracking",
+    "AI-powered content strategy and writing tools",
+    "Upgrade anytime as your team grows",
+  ]
+
   return (
-    <div className="relative overflow-hidden bg-background">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[-8rem] top-[-8rem] h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
-        <div className="absolute right-[-10rem] top-[8rem] h-96 w-96 rounded-full bg-purple-500/20 blur-3xl" />
-      </div>
+    <div
+      className="min-h-screen flex"
+      style={{ background: "linear-gradient(135deg, #07123f 0%, #0b1729 100%)" }}
+    >
+      {/* Left Panel */}
+      <div className="hidden lg:flex flex-col justify-between w-[480px] shrink-0 p-12 relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-overlay opacity-30" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "radial-gradient(ellipse 80% 60% at 30% 50%, rgba(249,115,22,0.15) 0%, rgba(59,130,246,0.15) 50%, transparent 70%)",
+          }}
+        />
+        <div
+          className="hero-blob hero-blob-orange animate-blob"
+          style={{ width: "350px", height: "350px", top: "-80px", right: "-80px", opacity: 0.25 }}
+        />
+        <div
+          className="hero-blob hero-blob-blue animate-blob animate-blob-delay-1"
+          style={{ width: "400px", height: "400px", bottom: "-100px", left: "-100px", opacity: 0.25 }}
+        />
 
-      <div className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl gap-10 px-6 py-16 lg:grid-cols-2 lg:items-center">
-        {/* Left side */}
-        <motion.div {...fadeUp} className="max-w-2xl">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border bg-card/70 px-4 py-2 text-sm font-medium shadow-sm backdrop-blur">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Start your premium SEO workspace
-          </div>
-
-          <h1 className="text-5xl font-black tracking-tight md:text-6xl">
-            Create your{" "}
-            <span className="bg-gradient-to-r from-primary via-purple-500 to-emerald-500 bg-clip-text text-transparent">
-              Hi-SEO account
-            </span>
-          </h1>
-
-          <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground md:text-xl">
-            Join Hi-SEO and manage keyword research, audits, ranking data, backlinks, and reports in one polished dashboard built for speed and clarity.
-          </p>
-
-          <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            {benefits.map((item) => (
-              <div
-                key={item}
-                className="inline-flex items-center gap-2 rounded-xl border bg-card/70 px-4 py-3 text-sm font-medium shadow-sm backdrop-blur"
-              >
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                {item}
+        <div className="relative z-10">
+          <Link to="/" className="flex items-center gap-2.5">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, #1d4ed8, #0ea5e9)",
+                boxShadow: "0 4px 16px rgba(59,130,246,0.5)",
+              }}
+            >
+              <div className="flex flex-col items-center leading-none">
+                <span className="text-white font-black" style={{ fontSize: "8px", letterSpacing: "0.12em" }}>HI</span>
+                <span className="text-white font-black" style={{ fontSize: "11px", lineHeight: 1 }}>SEO</span>
               </div>
-            ))}
-          </div>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {[
-              { icon: Search, label: "Keyword research" },
-              { icon: BarChart3, label: "SEO dashboards" },
-              { icon: TrendingUp, label: "Growth tracking" },
-            ].map((item) => {
-              const Icon = item.icon
-              return (
-                <Card key={item.label} className="border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur">
-                  <Icon className="h-5 w-5 text-primary" />
-                  <p className="mt-3 text-sm font-medium">{item.label}</p>
-                </Card>
-              )
-            })}
-          </div>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {steps.map((step, index) => (
-              <motion.div
-                key={step.number}
-                initial={reduceMotion ? {} : { opacity: 0, y: 18 }}
-                whileInView={reduceMotion ? {} : { opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08, duration: 0.45 }}
-                viewport={{ once: true, amount: 0.2 }}
+            </div>
+            <div className="flex items-baseline gap-0.5">
+              <span className="font-black text-2xl text-white">Hi-</span>
+              <span
+                className="font-black text-2xl"
+                style={{
+                  background: "linear-gradient(135deg, #60a5fa, #06b6d4)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
               >
-                <Card className="h-full border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur">
-                  <p className="text-sm font-semibold text-primary">{step.number}</p>
-                  <h3 className="mt-2 text-base font-semibold">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.text}</p>
-                </Card>
+                SEO
+              </span>
+            </div>
+          </Link>
+        </div>
+
+        <div className="relative z-10 space-y-8">
+          <motion.div
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+          >
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold mb-6"
+              style={{
+                background: "rgba(249,115,22,0.15)",
+                border: "1px solid rgba(249,115,22,0.3)",
+                color: "#fb923c",
+              }}
+            >
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+              Free to start. No credit card required.
+            </div>
+            <h2 className="text-4xl font-black text-white tracking-tight leading-tight mb-4">
+              Join thousands of SEO professionals growing with Hi-SEO
+            </h2>
+            <p className="text-blue-200/60 text-lg leading-relaxed">
+              Get your free account and start auditing, tracking, and optimizing your website in minutes.
+            </p>
+          </motion.div>
+
+          <div className="space-y-3">
+            {benefits.map((benefit, i) => (
+              <motion.div
+                key={benefit}
+                initial={shouldReduceMotion ? {} : { opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + i * 0.1, duration: 0.5 }}
+                className="flex items-start gap-3"
+              >
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                  style={{ background: "rgba(16,185,129,0.2)", border: "1px solid rgba(16,185,129,0.4)" }}
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-white/70">{benefit}</span>
               </motion.div>
             ))}
           </div>
-        </motion.div>
 
-        {/* Right side form */}
-        <motion.div
-          initial={reduceMotion ? {} : { opacity: 0, x: 40, scale: 0.97 }}
-          whileInView={reduceMotion ? {} : { opacity: 1, x: 0, scale: 1 }}
-          transition={{ duration: 0.65, ease: "easeOut" }}
-          viewport={{ once: true, amount: 0.2 }}
-          className="relative"
-        >
-          <Card className="relative overflow-hidden border-border/60 bg-card/80 p-8 shadow-2xl backdrop-blur-xl">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_35%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_30%)]" />
-
-            <div className="relative mb-8">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border bg-background/80 px-3 py-1 text-sm font-medium shadow-sm">
-                <ShieldCheck className="h-4 w-4 text-primary" />
-                Secure signup
+          <div
+            className="p-5 rounded-2xl"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+            }}
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                style={{ background: "linear-gradient(135deg, #f97316, #ea6c04)" }}
+              >
+                A
               </div>
-              <h2 className="text-3xl font-bold tracking-tight">Create your account</h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                Enter your details below to start your SEO workspace. After signup, you may need to verify your email.
-              </p>
+              <div>
+                <p className="text-sm font-bold text-white">Adewale O.</p>
+                <p className="text-xs text-white/40">SEO Manager at TechCorp NG</p>
+              </div>
+            </div>
+            <p className="text-sm text-white/60 leading-relaxed italic">
+              Hi-SEO transformed how we approach organic growth. Our traffic increased 340 percent in 6 months using their audit and keyword tools.
+            </p>
+            <div className="flex items-center gap-0.5 mt-3">
+              {[1,2,3,4,5].map((s) => (
+                <svg key={s} width="12" height="12" viewBox="0 0 24 24" fill="#f97316">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10">
+          <p className="text-xs text-white/25 font-medium">
+            No credit card required. Free plan available forever.
+          </p>
+        </div>
+      </div>
+
+      {/* Right Panel - Form */}
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+        <motion.div
+          initial={shouldReduceMotion ? {} : { opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-md"
+        >
+          <div
+            className="rounded-2xl p-8"
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
+            }}
+          >
+            <div className="lg:hidden flex items-center gap-2 mb-8">
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #1d4ed8, #0ea5e9)" }}
+              >
+                <div className="flex flex-col items-center leading-none">
+                  <span className="text-white font-black" style={{ fontSize: "6px" }}>HI</span>
+                  <span className="text-white font-black" style={{ fontSize: "9px", lineHeight: 1 }}>SEO</span>
+                </div>
+              </div>
+              <span className="font-black text-lg text-white">Hi-SEO</span>
             </div>
 
-            <form onSubmit={handleSubmit} className="relative space-y-5">
-              <div>
-                <label className="mb-2 block text-sm font-medium">Email address</label>
-                <Input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 bg-background/80 backdrop-blur"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium">Password</label>
-                <Input
-                  type="password"
-                  placeholder="Create a password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 bg-background/80 backdrop-blur"
-                  required
-                />
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Use at least 6 characters for your password.
-                </p>
-              </div>
-
-              {error && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                  {error}
-                </div>
-              )}
-
-              {success && (
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
-                  {success}
-                </div>
-              )}
-
-              <Button type="submit" size="lg" className="h-12 w-full shadow-lg shadow-primary/20" disabled={loading}>
-                {loading ? "Creating account..." : "Create account"}
-                {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
-              </Button>
-            </form>
-
-            <div className="relative mt-8 border-t pt-6 text-center">
-              <p className="text-sm text-muted-foreground">
+            <div className="mb-8">
+              <h1 className="text-2xl font-black text-white tracking-tight mb-2">
+                Create your free account
+              </h1>
+              <p className="text-white/50 text-sm font-medium">
                 Already have an account?{" "}
-                <Link to="/login" className="font-medium text-primary hover:underline">
+                <Link to="/login" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
                   Sign in
                 </Link>
               </p>
             </div>
-          </Card>
+
+            {success ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-8 space-y-4"
+              >
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+                  style={{ background: "rgba(16,185,129,0.2)", border: "2px solid rgba(16,185,129,0.4)" }}
+                >
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-black text-white">Account created!</h3>
+                <p className="text-white/50 text-sm leading-relaxed">
+                  We sent a confirmation email to <strong className="text-white/80">{email}</strong>. Please check your inbox and verify your account to get started.
+                </p>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:scale-[1.02]"
+                  style={{
+                    background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                    boxShadow: "0 4px 20px rgba(59,130,246,0.4)",
+                  }}
+                >
+                  Go to Sign In
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </motion.div>
+            ) : (
+              <>
+                {error && (
+                  <div
+                    className="mb-6 p-4 rounded-xl flex items-center gap-3"
+                    style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)" }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                    <span className="text-red-400 text-sm font-semibold">{error}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-white/80">
+                      Full name <span className="text-red-400">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-0 w-11 h-12 flex items-center justify-center text-white/35 pointer-events-none">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                        </svg>
+                      </span>
+                      <input
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="John Doe"
+                        required
+                        className="w-full h-12 pl-11 pr-4 rounded-xl text-sm font-medium text-white placeholder:text-white/30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+                        style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-semibold text-white/80">
+                      Email address <span className="text-red-400">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-0 w-11 h-12 flex items-center justify-center text-white/35 pointer-events-none">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                          <polyline points="22,6 12,13 2,6" />
+                        </svg>
+                      </span>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@company.com"
+                        required
+                        className="w-full h-12 pl-11 pr-4 rounded-xl text-sm font-medium text-white placeholder:text-white/30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+                        style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
+                      />
+                    </div>
+                  </div>
+
+                  <PasswordInput
+                    label="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Min. 6 characters"
+                    required
+                    dark={true}
+                    hint="Must be at least 6 characters"
+                  />
+
+                  <PasswordInput
+                    label="Confirm password"
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    placeholder="Repeat your password"
+                    required
+                    dark={true}
+                    error={confirm && confirm !== password ? "Passwords do not match" : undefined}
+                  />
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-12 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+                    style={{
+                      background: "linear-gradient(135deg, #f97316, #ea6c04)",
+                      boxShadow: "0 4px 20px rgba(249,115,22,0.4)",
+                    }}
+                  >
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M12 2a10 10 0 0 1 10 10" />
+                        </svg>
+                        Creating account...
+                      </>
+                    ) : (
+                      <>
+                        Create Free Account
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                <div className="mt-6 pt-5 border-t border-white/8 text-center">
+                  <p className="text-xs text-white/25 font-medium">
+                    By creating an account you agree to our{" "}
+                    <Link to="/terms" className="text-white/40 hover:text-white/60 underline transition-colors">Terms</Link>
+                    {" "}and{" "}
+                    <Link to="/privacy" className="text-white/40 hover:text-white/60 underline transition-colors">Privacy Policy</Link>
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
         </motion.div>
       </div>
     </div>

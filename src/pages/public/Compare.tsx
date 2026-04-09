@@ -1,284 +1,476 @@
-﻿import { Link } from "react-router-dom"
+﻿import React from "react"
+import { Link } from "react-router-dom"
 import { motion, useReducedMotion } from "framer-motion"
-import { Button } from "../../components/ui/button"
-import { Card } from "../../components/ui/card"
-import {
-  ArrowRight,
-  BadgeCheck,
-  BarChart3,
-  CheckCircle2,
-  Crown,
-  Sparkles,
-  ShieldCheck,
-  Users,
-  X,
-  Zap,
-} from "lucide-react"
 
-const plans = [
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 30 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-60px" },
+  transition: { duration: 0.6, delay, ease: [0.4, 0, 0.2, 1] },
+})
+
+const COMPETITORS = [
+  { name: "Hi-SEO", highlight: true, color: "#3b82f6", price: "From Free", naira: true },
+  { name: "Ahrefs", highlight: false, color: "#64748b", price: "$99/mo", naira: false },
+  { name: "SEMrush", highlight: false, color: "#64748b", price: "$119/mo", naira: false },
+  { name: "Moz Pro", highlight: false, color: "#64748b", price: "$99/mo", naira: false },
+]
+
+const COMPARE_FEATURES = [
+  { category: "Core SEO Tools", isHeader: true },
   {
-    name: "Free",
-    price: "₦0",
-    description: "Great for getting started and exploring the product.",
-    icon: Sparkles,
+    feature: "Keyword Research",
+    hiseo: true, ahrefs: true, semrush: true, moz: true,
+    note: "",
   },
   {
-    name: "Premium",
-    price: "₦15,000",
-    description: "Best for active SEO teams that need the full workflow.",
-    icon: Crown,
-    popular: true,
+    feature: "Site Audit",
+    hiseo: true, ahrefs: true, semrush: true, moz: true,
+    note: "",
   },
   {
-    name: "Agency",
-    price: "Custom",
-    description: "For teams that need more scale, support, and flexibility.",
-    icon: Users,
+    feature: "Rank Tracking",
+    hiseo: true, ahrefs: true, semrush: true, moz: true,
+    note: "",
+  },
+  {
+    feature: "Backlink Analytics",
+    hiseo: true, ahrefs: true, semrush: true, moz: true,
+    note: "",
+  },
+  {
+    feature: "Competitor Analysis",
+    hiseo: true, ahrefs: true, semrush: true, moz: "Limited",
+    note: "",
+  },
+  {
+    feature: "SERP Analysis",
+    hiseo: true, ahrefs: true, semrush: true, moz: false,
+    note: "",
+  },
+  {
+    feature: "Site Explorer",
+    hiseo: true, ahrefs: true, semrush: true, moz: true,
+    note: "",
+  },
+
+  { category: "AI and Content", isHeader: true },
+  {
+    feature: "AI Content Writer",
+    hiseo: true, ahrefs: false, semrush: "Addon", moz: false,
+    note: "Hi-SEO includes AI writing in all paid plans",
+  },
+  {
+    feature: "Content Strategy Tools",
+    hiseo: true, ahrefs: false, semrush: true, moz: false,
+    note: "",
+  },
+  {
+    feature: "Content Brief Generator",
+    hiseo: true, ahrefs: false, semrush: "Addon", moz: false,
+    note: "",
+  },
+
+  { category: "Pricing and Access", isHeader: true },
+  {
+    feature: "Free Plan Available",
+    hiseo: true, ahrefs: false, semrush: false, moz: false,
+    note: "Hi-SEO is the only platform with a truly free tier",
+  },
+  {
+    feature: "Naira Pricing",
+    hiseo: true, ahrefs: false, semrush: false, moz: false,
+    note: "Pay in NGN via Paystack",
+  },
+  {
+    feature: "Paystack Payment",
+    hiseo: true, ahrefs: false, semrush: false, moz: false,
+    note: "",
+  },
+  {
+    feature: "Starting Price",
+    hiseo: "Free", ahrefs: "$99/mo", semrush: "$119/mo", moz: "$99/mo",
+    note: "",
+  },
+  {
+    feature: "No Credit Card to Start",
+    hiseo: true, ahrefs: false, semrush: false, moz: false,
+    note: "",
+  },
+
+  { category: "Reports and Export", isHeader: true },
+  {
+    feature: "PDF Reports",
+    hiseo: true, ahrefs: "Limited", semrush: true, moz: true,
+    note: "",
+  },
+  {
+    feature: "CSV Export",
+    hiseo: true, ahrefs: true, semrush: true, moz: true,
+    note: "",
+  },
+  {
+    feature: "White-label Reports",
+    hiseo: "Business+", ahrefs: false, semrush: "Agency", moz: false,
+    note: "",
+  },
+
+  { category: "Support", isHeader: true },
+  {
+    feature: "Email Support",
+    hiseo: true, ahrefs: true, semrush: true, moz: true,
+    note: "",
+  },
+  {
+    feature: "Priority Support",
+    hiseo: "Pro+", ahrefs: "Paid only", semrush: "Paid only", moz: "Paid only",
+    note: "",
+  },
+  {
+    feature: "Dedicated Manager",
+    hiseo: "Agency", ahrefs: "Enterprise", semrush: "Enterprise", moz: "Enterprise",
+    note: "",
   },
 ]
 
-const rows = [
-  { label: "Dashboard access", free: true, premium: true, agency: true },
-  { label: "Keyword explorer", free: false, premium: true, agency: true },
-  { label: "Site audit tools", free: false, premium: true, agency: true },
-  { label: "Rank tracker", free: false, premium: true, agency: true },
-  { label: "Backlink analytics", free: false, premium: true, agency: true },
-  { label: "Reports export", free: false, premium: true, agency: true },
-  { label: "Team support", free: false, premium: false, agency: true },
-  { label: "Priority support", free: false, premium: false, agency: true },
-]
+function CheckIcon({ color = "#10b981" }: { color?: string }) {
+  return (
+    <div className="flex justify-center">
+      <div
+        className="w-6 h-6 rounded-full flex items-center justify-center"
+        style={{ background: `${color}18` }}
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3">
+          <path d="M20 6L9 17l-5-5" />
+        </svg>
+      </div>
+    </div>
+  )
+}
 
-const reasons = [
-  {
-    icon: Zap,
-    title: "Fast workflow",
-    text: "Everything is designed to help you move faster without switching tools all day.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Secure platform",
-    text: "Auth and sensitive logic are built with secure backend-first patterns.",
-  },
-  {
-    icon: BarChart3,
-    title: "Clear insights",
-    text: "Use reports and dashboards to make better SEO decisions with less noise.",
-  },
-]
+function XIcon() {
+  return (
+    <div className="flex justify-center">
+      <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: "rgba(239,68,68,0.08)" }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5">
+          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </div>
+    </div>
+  )
+}
+
+function CellValue({ value, isHiSeo }: { value: boolean | string; isHiSeo?: boolean }) {
+  if (value === true) return <CheckIcon color={isHiSeo ? "#3b82f6" : "#10b981"} />
+  if (value === false) return <XIcon />
+  return (
+    <div className="text-center">
+      <span
+        className="text-xs font-semibold px-2 py-0.5 rounded-full"
+        style={{
+          background: isHiSeo ? "rgba(59,130,246,0.1)" : "rgba(100,116,139,0.1)",
+          color: isHiSeo ? "#3b82f6" : "#64748b",
+        }}
+      >
+        {value}
+      </span>
+    </div>
+  )
+}
 
 export default function Compare() {
-  const reduceMotion = useReducedMotion()
-
-  const fadeUp = {
-    initial: { opacity: 0, y: 18 },
-    whileInView: { opacity: 1, y: 0 },
-    transition: { duration: 0.5, ease: "easeOut" as const },
-    viewport: { once: true, amount: 0.2 },
-  }
+  const shouldReduceMotion = useReducedMotion()
 
   return (
-    <div className="relative overflow-hidden bg-background">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[-8rem] top-[-8rem] h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
-        <div className="absolute right-[-10rem] top-[8rem] h-96 w-96 rounded-full bg-purple-500/20 blur-3xl" />
-      </div>
+    <div className="overflow-x-hidden">
 
-      <section className="relative mx-auto max-w-7xl px-6 py-16 md:py-24">
-        <motion.div {...fadeUp} className="mx-auto max-w-3xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border bg-card/70 px-4 py-2 text-sm font-medium shadow-sm backdrop-blur">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Compare plans
-          </div>
+      {/* HERO */}
+      <section
+        className="relative py-28 lg:py-36 overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #1239a8 0%, #07123f 100%)" }}
+      >
+        <div className="absolute inset-0 bg-grid-overlay opacity-40" />
+        <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(59,130,246,0.25) 0%, transparent 70%)" }} />
+        <div className="hero-blob hero-blob-blue animate-blob" style={{ width: "600px", height: "600px", top: "-200px", right: "-150px", opacity: 0.3 }} />
+        <div className="hero-blob hero-blob-cyan animate-blob animate-blob-delay-2" style={{ width: "400px", height: "400px", bottom: "-100px", left: "-100px", opacity: 0.2 }} />
 
-          <h1 className="text-5xl font-black tracking-tight md:text-6xl">
-            Pick the plan that fits your{" "}
-            <span className="bg-gradient-to-r from-primary via-purple-500 to-emerald-500 bg-clip-text text-transparent">
-              SEO workflow
-            </span>
-          </h1>
+        <div className="section-container relative z-10 text-center max-w-3xl mx-auto">
+          <motion.div
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold mb-8"
+            style={{ background: "rgba(249,115,22,0.15)", border: "1px solid rgba(249,115,22,0.3)", color: "#fb923c" }}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+            Hi-SEO vs the competition
+          </motion.div>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-muted-foreground md:text-xl">
-            Start free, upgrade when you are ready, and choose the level of support that matches your growth.
-          </p>
-        </motion.div>
-      </section>
+          <motion.h1
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="text-5xl md:text-6xl font-black text-white tracking-tight leading-tight mb-6"
+          >
+            Why teams choose{" "}
+            <span style={{ background: "linear-gradient(135deg, #60a5fa, #06b6d4)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              Hi-SEO
+            </span>{" "}
+            over the alternatives
+          </motion.h1>
 
-      <section className="border-t border-border/60 bg-muted/20">
-        <div className="mx-auto max-w-7xl px-6 py-20">
-          <div className="grid gap-6 lg:grid-cols-3">
-            {plans.map((plan, index) => {
-              const Icon = plan.icon
-              return (
-                <motion.div
-                  key={plan.name}
-                  initial={reduceMotion ? {} : { opacity: 0, y: 20 }}
-                  whileInView={reduceMotion ? {} : { opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.08, duration: 0.45 }}
-                  viewport={{ once: true, amount: 0.2 }}
-                >
-                  <Card
-                    className={
-                      "relative h-full border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur transition-all hover:-translate-y-1 hover:shadow-xl " +
-                      (plan.popular ? "ring-2 ring-primary/40" : "")
-                    }
-                  >
-                    {plan.popular && (
-                      <div className="absolute right-4 top-4 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                        Most Popular
-                      </div>
-                    )}
+          <motion.p
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="text-blue-200/70 text-xl leading-relaxed mb-10 font-medium"
+          >
+            See how Hi-SEO stacks up against Ahrefs, SEMrush, and Moz Pro feature by feature. Spoiler: we do more for less.
+          </motion.p>
 
-                    <div className="mb-5 inline-flex rounded-2xl bg-primary/10 p-3 text-primary">
-                      <Icon className="h-6 w-6" />
-                    </div>
+          <motion.div
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          >
+            <Link
+              to="/signup"
+              className="flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold text-white transition-all duration-300 hover:scale-[1.03]"
+              style={{ background: "linear-gradient(135deg, #f97316, #ea6c04)", boxShadow: "0 4px 24px rgba(249,115,22,0.45)" }}
+            >
+              Try Hi-SEO Free
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+            </Link>
+            <Link
+              to="/pricing"
+              className="flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold text-white border border-white/20 hover:bg-white/10 transition-all duration-300"
+            >
+              See Pricing
+            </Link>
+          </motion.div>
+        </div>
 
-                    <h2 className="text-2xl font-bold">{plan.name}</h2>
-                    <p className="mt-2 text-sm leading-7 text-muted-foreground">{plan.description}</p>
-
-                    <div className="mt-6 flex items-end gap-1">
-                      <span className="text-4xl font-black tracking-tight">{plan.price}</span>
-                      <span className="pb-1 text-sm text-muted-foreground">{plan.name === "Agency" ? "" : "/ month"}</span>
-                    </div>
-
-                    <div className="mt-8">
-                      {plan.name === "Agency" ? (
-                        <Button asChild variant="outline" className="w-full">
-                          <Link to="/contact">
-                            Contact Sales
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
-                      ) : plan.popular ? (
-                        <Button asChild className="w-full">
-                          <Link to="/signup">
-                            Start Premium
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
-                      ) : (
-                        <Button asChild variant="outline" className="w-full">
-                          <Link to="/signup">
-                            Start Free
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
-                      )}
-                    </div>
-                  </Card>
-                </motion.div>
-              )
-            })}
-          </div>
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" className="w-full h-16">
+            <path d="M0 80L60 72C120 64 240 48 360 40C480 32 600 32 720 37.3C840 43 960 53 1080 58.7C1200 64 1320 64 1380 64L1440 64V80H1380C1320 80 1200 80 1080 80C960 80 840 80 720 80C600 80 480 80 360 80C240 80 120 80 60 80H0Z" fill="white" />
+          </svg>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-20">
-        <motion.div {...fadeUp} className="mb-10 max-w-2xl">
-          <h2 className="text-3xl font-bold tracking-tight md:text-5xl">Feature comparison</h2>
-          <p className="mt-4 text-muted-foreground md:text-lg">
-            A simple look at what each plan includes.
-          </p>
-        </motion.div>
-
-        <Card className="overflow-hidden border-border/60 bg-card/80 shadow-sm backdrop-blur">
-          <div className="grid grid-cols-4 gap-0 border-b bg-muted/30 px-4 py-4 text-sm font-semibold md:px-6">
-            <div>Feature</div>
-            <div className="text-center">Free</div>
-            <div className="text-center">Premium</div>
-            <div className="text-center">Agency</div>
-          </div>
-
-          <div className="divide-y">
-            {rows.map((row, index) => (
+      {/* QUICK WINS */}
+      <section className="py-16 bg-white">
+        <div className="section-container">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[
+              { label: "Only platform with a free plan", icon: "gift", color: "#10b981" },
+              { label: "Naira pricing via Paystack", icon: "credit", color: "#3b82f6" },
+              { label: "AI writer included in paid plans", icon: "zap", color: "#f97316" },
+              { label: "All tools in one workspace", icon: "layers", color: "#a855f7" },
+            ].map((item, i) => (
               <motion.div
-                key={row.label}
-                initial={reduceMotion ? {} : { opacity: 0, y: 10 }}
-                whileInView={reduceMotion ? {} : { opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.04, duration: 0.35 }}
-                viewport={{ once: true, amount: 0.2 }}
-                className="grid grid-cols-4 gap-0 px-4 py-4 text-sm md:px-6"
+                key={item.label}
+                {...fadeUp(i * 0.1)}
+                className="flex items-start gap-4 p-5 rounded-2xl border border-slate-100 hover:border-blue-100 hover:shadow-md transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="font-medium">{row.label}</div>
-                <div className="flex justify-center">
-                  {row.free ? (
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  ) : (
-                    <X className="h-5 w-5 text-muted-foreground" />
-                  )}
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: `${item.color}15`, border: `1px solid ${item.color}25` }}
+                >
+                  {item.icon === "gift" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={item.color} strokeWidth="2"><polyline points="20 12 20 22 4 22 4 12" /><rect x="2" y="7" width="20" height="5" /><line x1="12" y1="22" x2="12" y2="7" /><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" /><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" /></svg>}
+                  {item.icon === "credit" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={item.color} strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg>}
+                  {item.icon === "zap" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={item.color} strokeWidth="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>}
+                  {item.icon === "layers" && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={item.color} strokeWidth="2"><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></svg>}
                 </div>
-                <div className="flex justify-center">
-                  {row.premium ? (
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  ) : (
-                    <X className="h-5 w-5 text-muted-foreground" />
-                  )}
-                </div>
-                <div className="flex justify-center">
-                  {row.agency ? (
-                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  ) : (
-                    <X className="h-5 w-5 text-muted-foreground" />
-                  )}
-                </div>
+                <p className="text-sm font-bold text-slate-700 leading-snug">{item.label}</p>
               </motion.div>
             ))}
           </div>
-        </Card>
+        </div>
       </section>
 
-      <section className="border-t border-border/60 bg-muted/20">
-        <div className="mx-auto max-w-7xl px-6 py-20">
-          <motion.div {...fadeUp} className="mb-10 max-w-2xl">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-card/80 px-3 py-1 text-sm font-medium shadow-sm">
-              <BadgeCheck className="h-4 w-4 text-primary" />
-              Why choose Hi-SEO
-            </div>
-            <h2 className="text-3xl font-bold tracking-tight md:text-5xl">
-              Built to feel premium and easy to use
+      {/* COMPARISON TABLE */}
+      <section className="py-10 bg-white">
+        <div className="section-container">
+          <motion.div {...fadeUp()} className="text-center max-w-2xl mx-auto mb-14">
+            <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-4">
+              Full feature comparison
             </h2>
+            <p className="text-slate-500 text-lg leading-relaxed">
+              A transparent, side-by-side look at Hi-SEO vs the most popular SEO tools on the market.
+            </p>
           </motion.div>
 
-          <div className="grid gap-6 md:grid-cols-3">
-            {reasons.map((item, index) => {
-              const Icon = item.icon
-              return (
-                <motion.div
-                  key={item.title}
-                  initial={reduceMotion ? {} : { opacity: 0, y: 16 }}
-                  whileInView={reduceMotion ? {} : { opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.08, duration: 0.45 }}
-                  viewport={{ once: true, amount: 0.2 }}
+          <motion.div {...fadeUp(0.1)} className="overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="w-full min-w-[680px] bg-white">
+              <thead>
+                <tr style={{ borderBottom: "2px solid #e2e8f0" }}>
+                  <th className="text-left p-5 text-sm font-bold text-slate-500 w-[32%]">Feature</th>
+                  {COMPETITORS.map((comp) => (
+                    <th key={comp.name} className="p-5 text-center" style={{ background: comp.highlight ? "rgba(59,130,246,0.04)" : "transparent" }}>
+                      <div
+                        className="text-sm font-black mb-1"
+                        style={{ color: comp.highlight ? "#3b82f6" : "#0f172a" }}
+                      >
+                        {comp.name}
+                        {comp.highlight && (
+                          <span
+                            className="ml-2 px-1.5 py-0.5 rounded-full text-[9px] font-black"
+                            style={{ background: "rgba(249,115,22,0.15)", color: "#f97316" }}
+                          >
+                            YOU
+                          </span>
+                        )}
+                      </div>
+                      <div
+                        className="text-xs font-semibold"
+                        style={{ color: comp.highlight ? "#10b981" : "#94a3b8" }}
+                      >
+                        {comp.price}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARE_FEATURES.map((row, i) => {
+                  if ("isHeader" in row && row.isHeader) {
+                    return (
+                      <tr key={row.category} style={{ background: "rgba(248,250,252,1)", borderBottom: "1px solid #e2e8f0", borderTop: "1px solid #e2e8f0" }}>
+                        <td colSpan={5} className="px-5 py-3 text-xs font-black uppercase tracking-widest text-slate-400">
+                          {row.category}
+                        </td>
+                      </tr>
+                    )
+                  }
+                  const dataRow = row as {
+                    feature: string
+                    hiseo: boolean | string
+                    ahrefs: boolean | string
+                    semrush: boolean | string
+                    moz: boolean | string
+                    note: string
+                  }
+                  return (
+                    <tr
+                      key={dataRow.feature}
+                      className="border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors"
+                    >
+                      <td className="p-4">
+                        <div className="text-sm font-semibold text-slate-700">{dataRow.feature}</div>
+                        {dataRow.note && (
+                          <div className="text-xs text-blue-500 font-medium mt-0.5">{dataRow.note}</div>
+                        )}
+                      </td>
+                      <td className="p-4" style={{ background: "rgba(59,130,246,0.03)" }}>
+                        <CellValue value={dataRow.hiseo} isHiSeo={true} />
+                      </td>
+                      <td className="p-4"><CellValue value={dataRow.ahrefs} /></td>
+                      <td className="p-4"><CellValue value={dataRow.semrush} /></td>
+                      <td className="p-4"><CellValue value={dataRow.moz} /></td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </motion.div>
+
+          <motion.p {...fadeUp(0.2)} className="text-center text-xs text-slate-400 font-medium mt-4">
+            Data based on publicly available information. Prices shown in USD for comparison. Hi-SEO pricing is in NGN.
+          </motion.p>
+        </div>
+      </section>
+
+      {/* WHY WE WIN */}
+      <section className="py-20" style={{ background: "#f8fafc" }}>
+        <div className="section-container">
+          <motion.div {...fadeUp()} className="text-center max-w-2xl mx-auto mb-14">
+            <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-4">
+              The Hi-SEO advantage
+            </h2>
+            <p className="text-slate-500 text-lg leading-relaxed">
+              Three reasons teams switch from expensive tools and never look back.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                number: "01",
+                title: "Built for emerging markets",
+                desc: "Unlike Ahrefs and SEMrush which are built primarily for Western markets, Hi-SEO is designed with Nigerian businesses, agencies, and African search markets in mind. Naira pricing, Paystack integration, and local support.",
+                color: "#3b82f6",
+              },
+              {
+                number: "02",
+                title: "All-in-one at a fraction of the cost",
+                desc: "Ahrefs charges $99 per month just for one tool. SEMrush charges $119. Hi-SEO gives you everything - keyword research, audits, rank tracking, backlinks, AI writing, and more - starting completely free.",
+                color: "#f97316",
+              },
+              {
+                number: "03",
+                title: "AI tools included, not an addon",
+                desc: "Most platforms charge extra for AI features or do not offer them at all. Hi-SEO includes an AI content writer, content strategy tools, and SEO brief generator in all paid plans at no extra cost.",
+                color: "#10b981",
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                {...fadeUp(i * 0.12)}
+                className="p-8 rounded-2xl bg-white border border-slate-100 hover:border-blue-100 hover:shadow-[0_16px_48px_rgba(59,130,246,0.1)] transition-all duration-300 hover:-translate-y-2"
+              >
+                <div
+                  className="text-5xl font-black mb-4"
+                  style={{
+                    background: `linear-gradient(135deg, ${item.color}, ${item.color}80)`,
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
                 >
-                  <Card className="h-full border-border/60 bg-card/80 p-6 shadow-sm backdrop-blur">
-                    <Icon className="h-6 w-6 text-primary" />
-                    <h3 className="mt-4 text-xl font-semibold">{item.title}</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">{item.text}</p>
-                  </Card>
-                </motion.div>
-              )
-            })}
+                  {item.number}
+                </div>
+                <h3 className="text-xl font-black text-slate-900 mb-3">{item.title}</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="border-t border-border/60 bg-muted/20">
-        <div className="mx-auto max-w-7xl px-6 py-16 text-center">
-          <motion.h2 {...fadeUp} className="text-3xl font-bold tracking-tight md:text-5xl">
-            Ready to choose your plan?
-          </motion.h2>
-          <motion.p {...fadeUp} className="mx-auto mt-4 max-w-2xl text-muted-foreground md:text-lg">
-            Start free today and upgrade whenever you need more power.
-          </motion.p>
-          <motion.div {...fadeUp} className="mt-8 flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg">
-              <Link to="/signup">
-                Get Started
-                <ArrowRight className="ml-2 h-4 w-4" />
+      {/* CTA */}
+      <section
+        className="py-24 relative overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #1239a8 0%, #07123f 100%)" }}
+      >
+        <div className="absolute inset-0 bg-grid-overlay opacity-30" />
+        <div className="hero-blob hero-blob-orange animate-blob" style={{ width: "400px", height: "400px", top: "-80px", right: "-80px", opacity: 0.2 }} />
+        <div className="section-container relative z-10 text-center">
+          <motion.div {...fadeUp()}>
+            <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-6">
+              Make the switch to Hi-SEO today
+            </h2>
+            <p className="text-blue-200/60 text-xl max-w-xl mx-auto mb-10 leading-relaxed">
+              Start free with no credit card. Get access to every core SEO tool immediately and upgrade when you need more power.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                to="/signup"
+                className="flex items-center gap-2 px-9 py-4 rounded-xl text-base font-bold text-white transition-all duration-300 hover:scale-[1.03]"
+                style={{ background: "linear-gradient(135deg, #f97316, #ea6c04)", boxShadow: "0 4px 28px rgba(249,115,22,0.5)" }}
+              >
+                Start Free Today
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
               </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link to="/contact">Contact Us</Link>
-            </Button>
+              <Link
+                to="/pricing"
+                className="flex items-center gap-2 px-9 py-4 rounded-xl text-base font-bold text-white border border-white/20 hover:bg-white/10 transition-all duration-300"
+              >
+                View Pricing
+              </Link>
+            </div>
           </motion.div>
         </div>
       </section>

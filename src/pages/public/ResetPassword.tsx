@@ -1,225 +1,256 @@
-﻿import { useState } from "react"
+﻿import React, { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { motion, useReducedMotion } from "framer-motion"
-import { Button } from "../../components/ui/button"
-import { Card } from "../../components/ui/card"
-import { Input } from "../../components/ui/input"
-import { supabase } from "../../lib/supabase"
-import {
-  ArrowRight,
-  CheckCircle2,
-  Sparkles,
-  ShieldCheck,
-  Lock,
-  KeyRound,
-  Clock3,
-} from "lucide-react"
-
-const tips = [
-  "Use a strong password",
-  "Keep it private",
-  "Update it regularly",
-  "Return to your workspace",
-]
-
-const steps = [
-  { number: "01", title: "Enter new password", text: "Choose a secure new password for your account." },
-  { number: "02", title: "Confirm it", text: "Make sure both password fields match exactly." },
-  { number: "03", title: "Sign back in", text: "Return to the dashboard with your updated password." },
-]
+import { useAuth } from "../../context/AuthContext"
+import { PasswordInput } from "../../components/ui/input"
 
 export default function ResetPassword() {
-  const reduceMotion = useReducedMotion()
   const navigate = useNavigate()
-
+  const shouldReduceMotion = useReducedMotion()
+  const { updatePassword } = useAuth()
   const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const [confirm, setConfirm] = useState("")
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-
-  const fadeUp = {
-    initial: { opacity: 0, y: 20 },
-    whileInView: { opacity: 1, y: 0 },
-    transition: { duration: 0.55, ease: "easeOut" as const },
-    viewport: { once: true, amount: 0.2 },
-  }
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-    setSuccess("")
-
-    if (!password.trim()) {
-      setError("Password is required.")
+    setError(null)
+    if (!password || !confirm) {
+      setError("Please fill in both fields")
       return
     }
-
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.")
+      setError("Password must be at least 6 characters")
       return
     }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.")
+    if (password !== confirm) {
+      setError("Passwords do not match")
       return
     }
-
     setLoading(true)
-
-    try {
-      const { error } = await supabase.auth.updateUser({ password })
-
-      if (error) {
-        setError(error.message)
-        return
-      }
-
-      setSuccess("Password updated successfully. Redirecting to login...")
-
-      setTimeout(() => {
-        navigate("/login")
-      }, 1500)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to reset password.")
-    } finally {
-      setLoading(false)
+    const { error: authError } = await updatePassword(password)
+    setLoading(false)
+    if (authError) {
+      setError(authError)
+      return
     }
+    setSuccess(true)
+    setTimeout(() => navigate("/login"), 2500)
   }
 
   return (
-    <div className="relative overflow-hidden bg-background">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[-8rem] top-[-8rem] h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
-        <div className="absolute right-[-10rem] top-[8rem] h-96 w-96 rounded-full bg-purple-500/20 blur-3xl" />
-      </div>
+    <div
+      className="min-h-screen flex items-center justify-center p-6"
+      style={{ background: "linear-gradient(135deg, #07123f 0%, #0b1729 100%)" }}
+    >
+      <div className="absolute inset-0 bg-grid-overlay opacity-30" />
+      <div
+        className="hero-blob hero-blob-blue animate-blob"
+        style={{ width: "500px", height: "500px", top: "-150px", left: "-100px", opacity: 0.25 }}
+      />
+      <div
+        className="hero-blob hero-blob-orange animate-blob animate-blob-delay-1"
+        style={{ width: "350px", height: "350px", bottom: "-100px", right: "-80px", opacity: 0.2 }}
+      />
 
-      <div className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl gap-10 px-6 py-16 lg:grid-cols-2 lg:items-center">
-        {/* Left */}
-        <motion.div {...fadeUp} className="max-w-2xl">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border bg-card/70 px-4 py-2 text-sm font-medium shadow-sm backdrop-blur">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Secure password reset
-          </div>
-
-          <h1 className="text-5xl font-black tracking-tight md:text-6xl">
-            Create a{" "}
-            <span className="bg-gradient-to-r from-primary via-purple-500 to-emerald-500 bg-clip-text text-transparent">
-              new password
-            </span>
-          </h1>
-
-          <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground md:text-xl">
-            Choose a strong new password and get back into your Hi-SEO workspace safely and quickly.
-          </p>
-
-          <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            {tips.map((item) => (
-              <div
-                key={item}
-                className="inline-flex items-center gap-2 rounded-xl border bg-card/70 px-4 py-3 text-sm font-medium shadow-sm backdrop-blur"
-              >
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                {item}
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {steps.map((step, index) => (
-              <motion.div
-                key={step.number}
-                initial={reduceMotion ? {} : { opacity: 0, y: 18 }}
-                whileInView={reduceMotion ? {} : { opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08, duration: 0.45 }}
-                viewport={{ once: true, amount: 0.2 }}
-              >
-                <Card className="h-full border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur">
-                  <p className="text-sm font-semibold text-primary">{step.number}</p>
-                  <h3 className="mt-2 text-base font-semibold">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.text}</p>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Right */}
-        <motion.div
-          initial={reduceMotion ? {} : { opacity: 0, x: 40, scale: 0.97 }}
-          whileInView={reduceMotion ? {} : { opacity: 1, x: 0, scale: 1 }}
-          transition={{ duration: 0.65, ease: "easeOut" }}
-          viewport={{ once: true, amount: 0.2 }}
-          className="relative"
+      <motion.div
+        initial={shouldReduceMotion ? {} : { opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-md relative z-10"
+      >
+        <div
+          className="rounded-2xl p-8"
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
+          }}
         >
-          <Card className="relative overflow-hidden border-border/60 bg-card/80 p-8 shadow-2xl backdrop-blur-xl">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_35%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_30%)]" />
-
-            <div className="relative mb-8">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border bg-background/80 px-3 py-1 text-sm font-medium shadow-sm">
-                <KeyRound className="h-4 w-4 text-primary" />
-                Reset your password
+          {/* Logo */}
+          <div className="flex items-center gap-2.5 mb-8">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, #1d4ed8, #0ea5e9)",
+                boxShadow: "0 4px 16px rgba(59,130,246,0.4)",
+              }}
+            >
+              <div className="flex flex-col items-center leading-none">
+                <span className="text-white font-black" style={{ fontSize: "7px", letterSpacing: "0.12em" }}>HI</span>
+                <span className="text-white font-black" style={{ fontSize: "10px", lineHeight: 1 }}>SEO</span>
               </div>
-              <h2 className="text-3xl font-bold tracking-tight">Set a new password</h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                Enter a new password below. After saving it, you can sign back in to your account.
-              </p>
             </div>
+            <div className="flex items-baseline gap-0.5">
+              <span className="font-black text-xl text-white">Hi-</span>
+              <span
+                className="font-black text-xl"
+                style={{
+                  background: "linear-gradient(135deg, #60a5fa, #06b6d4)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                SEO
+              </span>
+            </div>
+          </div>
 
-            <form onSubmit={handleSubmit} className="relative space-y-5">
-              <div>
-                <label className="mb-2 block text-sm font-medium">New password</label>
-                <Input
-                  type="password"
-                  placeholder="Enter new password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 bg-background/80 backdrop-blur"
-                  required
-                />
+          {success ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-6 space-y-4"
+            >
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+                style={{ background: "rgba(16,185,129,0.2)", border: "2px solid rgba(16,185,129,0.4)" }}
+              >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
               </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium">Confirm password</label>
-                <Input
-                  type="password"
-                  placeholder="Confirm new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="h-12 bg-background/80 backdrop-blur"
-                  required
-                />
+              <h3 className="text-xl font-black text-white">Password updated!</h3>
+              <p className="text-white/50 text-sm leading-relaxed">
+                Your password has been changed successfully. Redirecting you to sign in...
+              </p>
+              <div className="flex justify-center">
+                <div
+                  className="w-32 h-1 rounded-full overflow-hidden"
+                  style={{ background: "rgba(255,255,255,0.1)" }}
+                >
+                  <motion.div
+                    className="h-full rounded-full"
+                    style={{ background: "linear-gradient(90deg, #10b981, #06b6d4)" }}
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 2.5, ease: "linear" }}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          ) : (
+            <>
+              <div className="mb-8">
+                <div
+                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-4"
+                  style={{ background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.25)" }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </div>
+                <h1 className="text-2xl font-black text-white tracking-tight mb-2">
+                  Set a new password
+                </h1>
+                <p className="text-white/50 text-sm font-medium leading-relaxed">
+                  Choose a strong password for your Hi-SEO account. You will use it to sign in going forward.
+                </p>
               </div>
 
               {error && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                  {error}
+                <div
+                  className="mb-6 p-4 rounded-xl flex items-center gap-3"
+                  style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)" }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                  <span className="text-red-400 text-sm font-semibold">{error}</span>
                 </div>
               )}
 
-              {success && (
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
-                  {success}
-                </div>
-              )}
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <PasswordInput
+                  label="New password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Min. 6 characters"
+                  required
+                  dark={true}
+                  hint="Choose something strong and unique"
+                />
 
-              <Button type="submit" size="lg" className="h-12 w-full shadow-lg shadow-primary/20" disabled={loading}>
-                {loading ? "Updating password..." : "Update password"}
-                {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
-              </Button>
-            </form>
+                <PasswordInput
+                  label="Confirm new password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  placeholder="Repeat your new password"
+                  required
+                  dark={true}
+                  error={confirm && confirm !== password ? "Passwords do not match" : undefined}
+                />
 
-            <div className="relative mt-8 border-t pt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                Remember your password?{" "}
-                <Link to="/login" className="font-medium text-primary hover:underline">
-                  Back to login
+                {password.length > 0 && (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-semibold text-white/40">Password strength</span>
+                      <span className="text-xs font-bold" style={{
+                        color: password.length < 6 ? "#ef4444" : password.length < 10 ? "#f59e0b" : "#10b981"
+                      }}>
+                        {password.length < 6 ? "Too short" : password.length < 10 ? "Fair" : "Strong"}
+                      </span>
+                    </div>
+                    <div className="flex gap-1">
+                      {[1,2,3,4].map((bar) => (
+                        <div
+                          key={bar}
+                          className="flex-1 h-1 rounded-full transition-all duration-300"
+                          style={{
+                            background: bar <= (password.length < 6 ? 1 : password.length < 10 ? 2 : 4)
+                              ? (password.length < 6 ? "#ef4444" : password.length < 10 ? "#f59e0b" : "#10b981")
+                              : "rgba(255,255,255,0.1)"
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-12 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  style={{
+                    background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                    boxShadow: "0 4px 20px rgba(59,130,246,0.4)",
+                  }}
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M12 2a10 10 0 0 1 10 10" />
+                      </svg>
+                      Updating password...
+                    </>
+                  ) : (
+                    <>
+                      Update Password
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-6 pt-5 border-t border-white/8 text-center">
+                <Link
+                  to="/login"
+                  className="text-sm text-white/40 hover:text-white/70 font-semibold transition-colors"
+                >
+                  Back to Sign In
                 </Link>
-              </p>
-            </div>
-          </Card>
-        </motion.div>
-      </div>
+              </div>
+            </>
+          )}
+        </div>
+      </motion.div>
     </div>
   )
 }

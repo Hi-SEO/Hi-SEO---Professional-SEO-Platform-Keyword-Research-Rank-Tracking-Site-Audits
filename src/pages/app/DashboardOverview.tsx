@@ -1,75 +1,24 @@
-﻿import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+﻿import React, { useEffect, useState } from "react"
+import { Link } from "react-router-dom"
+import { motion, useReducedMotion } from "framer-motion"
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts"
-import {
-  ArrowUpRight,
-  Globe,
-  Search,
-  Activity,
-  Zap,
-  FileText,
-  Link2,
-  Target,
-  CheckCircle2,
-  FolderOpen,
-  BarChart3,
-  AlertTriangle,
-  RefreshCw,
-  type LucideIcon,
-} from "lucide-react"
-import { supabase } from "../../lib/supabase"
 import { useAuth } from "../../context/AuthContext"
-import { Button } from "../../components/ui/button"
-import { Card } from "../../components/ui/card"
+import { getDashboardData } from "../../lib/supabase"
+import type { DbProject, DbAudit, DbReport, DbKeyword } from "../../lib/supabase"
 
-type ProjectRow = {
-  id: string
-  name: string
-  domain: string | null
-  created_at: string
-}
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 24 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay, ease: [0.4, 0, 0.2, 1] },
+})
 
-type AuditRow = {
-  id: string
-  target_url: string | null
-  score: number | null
-  status: string | null
-  created_at: string
-}
-
-type ReportRow = {
-  id: string
-  title: string
-  report_type: string
-  created_at: string
-}
-
-type WeeklyDataPoint = {
-  name: string
-  audits: number
-  keywords: number
-  backlinks: number
-}
-
-type MetricCardProps = {
-  title: string
-  value: string
-  subtitle: string
-  icon: LucideIcon
-  color: string
-  bg: string
-  onClick: () => void
+interface DashStats {
+  projects: DbProject[]
+  keywords: DbKeyword[]
+  audits: DbAudit[]
+  reports: DbReport[]
 }
 
 function getGreeting() {
@@ -79,586 +28,450 @@ function getGreeting() {
   return "Good evening"
 }
 
-function getScoreColor(score: number) {
-  if (score >= 80) return "text-emerald-500"
-  if (score >= 50) return "text-amber-500"
-  return "text-red-500"
+function getWeeklyData(audits: DbAudit[], keywords: DbKeyword[]) {
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  const now = new Date()
+  return days.map((day, i) => {
+    const date = new Date(now)
+    date.setDate(now.getDate() - (6 - i))
+    const dayAudits = audits.filter((a) => {
+      const d = new Date(a.created_at)
+      return d.toDateString() === date.toDateString()
+    }).length
+    const dayKeywords = keywords.filter((k) => {
+      const d = new Date(k.created_at)
+      return d.toDateString() === date.toDateString()
+    }).length
+    return { day, audits: dayAudits, keywords: dayKeywords, total: dayAudits + dayKeywords }
+  })
 }
 
-function getScoreBg(score: number) {
-  if (score >= 80) return "bg-emerald-500"
-  if (score >= 50) return "bg-amber-500"
-  return "bg-red-500"
-}
+const QUICK_ACTIONS = [
+  { label: "New Site Audit", href: "/app/site-audit", icon: "shield", color: "#06b6d4", desc: "Check your site health" },
+  { label: "Keyword Research", href: "/app/keyword-explorer", icon: "search", color: "#3b82f6", desc: "Find ranking opportunities" },
+  { label: "Track Rankings", href: "/app/rank-tracker", icon: "trending", color: "#f97316", desc: "Monitor positions" },
+  { label: "Analyze Backlinks", href: "/app/backlinks", icon: "link", color: "#a855f7", desc: "Review your link profile" },
+  { label: "Competitor Analysis", href: "/app/competitors", icon: "users", color: "#10b981", desc: "Spy on competitors" },
+  { label: "AI Writer", href: "/app/ai-writer", icon: "zap", color: "#f59e0b", desc: "Generate SEO content" },
+]
 
-function getStatusBadge(status: string | null) {
-  const s = (status || "").toLowerCase()
-  if (s.includes("done") || s.includes("complete") || s.includes("success")) return "bg-emerald-100 text-emerald-700"
-  if (s.includes("error") || s.includes("failed")) return "bg-red-100 text-red-700"
-  return "bg-amber-100 text-amber-700"
-}
-
-function getLast7Days(): string[] {
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-  const result: string[] = []
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    result.push(days[d.getDay()])
-  }
-  return result
-}
-
-export default function DashboardOverview() {
-  const { user, profile } = useAuth()
-  const navigate = useNavigate()
-
-  const [projectCount, setProjectCount] = useState(0)
-  const [keywordCount, setKeywordCount] = useState(0)
-  const [auditCount, setAuditCount] = useState(0)
-  const [reportCount, setReportCount] = useState(0)
-  const [backlinkCount, setBacklinkCount] = useState(0)
-  const [rankCount, setRankCount] = useState(0)
-
-  const [recentProjects, setRecentProjects] = useState<ProjectRow[]>([])
-  const [recentAudits, setRecentAudits] = useState<AuditRow[]>([])
-  const [recentReports, setRecentReports] = useState<ReportRow[]>([])
-  const [weeklyData, setWeeklyData] = useState<WeeklyDataPoint[]>([])
-
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
-  const [reloadKey, setReloadKey] = useState(0)
-
-  useEffect(() => {
-    let mounted = true
-
-    const loadDashboardData = async () => {
-      if (!user) {
-        if (mounted) setLoading(false)
-        return
-      }
-
-      setLoading(true)
-      setError("")
-
-      try {
-        const sevenDaysAgo = new Date()
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-        const sevenDaysAgoISO = sevenDaysAgo.toISOString()
-
-        const [
-          projectsResult,
-          keywordsResult,
-          auditsResult,
-          reportsResult,
-          backlinksResult,
-          ranksResult,
-          recentProjectsResult,
-          recentAuditsResult,
-          recentReportsResult,
-          weeklyAuditsResult,
-          weeklyKeywordsResult,
-          weeklyBacklinksResult,
-        ] = await Promise.all([
-          supabase.from("projects").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-          supabase.from("keywords").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-          supabase.from("audits").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-          supabase.from("reports").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-          supabase.from("backlinks").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-          supabase.from("rank_tracker").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-          supabase.from("projects").select("id, name, domain, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(4),
-          supabase.from("audits").select("id, target_url, score, status, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
-          supabase.from("reports").select("id, title, report_type, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
-          supabase.from("audits").select("created_at").eq("user_id", user.id).gte("created_at", sevenDaysAgoISO),
-          supabase.from("keywords").select("created_at").eq("user_id", user.id).gte("created_at", sevenDaysAgoISO),
-          supabase.from("backlinks").select("created_at").eq("user_id", user.id).gte("created_at", sevenDaysAgoISO),
-        ])
-
-        if (!mounted) return
-
-        setProjectCount(projectsResult.count || 0)
-        setKeywordCount(keywordsResult.count || 0)
-        setAuditCount(auditsResult.count || 0)
-        setReportCount(reportsResult.count || 0)
-        setBacklinkCount(backlinksResult.count || 0)
-        setRankCount(ranksResult.count || 0)
-
-        setRecentProjects(recentProjectsResult.data || [])
-        setRecentAudits(recentAuditsResult.data || [])
-        setRecentReports(recentReportsResult.data || [])
-
-        const dayLabels = getLast7Days()
-        const auditsByDay = new Array(7).fill(0)
-        const keywordsByDay = new Array(7).fill(0)
-        const backlinksByDay = new Array(7).fill(0)
-
-        const today = new Date()
-        today.setHours(23, 59, 59, 999)
-
-        ;(weeklyAuditsResult.data || []).forEach((row: { created_at: string }) => {
-          const d = new Date(row.created_at)
-          const diffDays = Math.floor((today.getTime() - d.getTime()) / (1000 * 60 * 60 * 24))
-          if (diffDays >= 0 && diffDays < 7) auditsByDay[6 - diffDays]++
-        })
-
-        ;(weeklyKeywordsResult.data || []).forEach((row: { created_at: string }) => {
-          const d = new Date(row.created_at)
-          const diffDays = Math.floor((today.getTime() - d.getTime()) / (1000 * 60 * 60 * 24))
-          if (diffDays >= 0 && diffDays < 7) keywordsByDay[6 - diffDays]++
-        })
-
-        ;(weeklyBacklinksResult.data || []).forEach((row: { created_at: string }) => {
-          const d = new Date(row.created_at)
-          const diffDays = Math.floor((today.getTime() - d.getTime()) / (1000 * 60 * 60 * 24))
-          if (diffDays >= 0 && diffDays < 7) backlinksByDay[6 - diffDays]++
-        })
-
-        setWeeklyData(
-          dayLabels.map((name, i) => ({
-            name,
-            audits: auditsByDay[i],
-            keywords: keywordsByDay[i],
-            backlinks: backlinksByDay[i],
-          }))
-        )
-      } catch (err) {
-        console.error("Error loading dashboard:", err)
-        if (mounted) setError("Failed to load dashboard data. Please try again.")
-      } finally {
-        if (mounted) setLoading(false)
-      }
-    }
-
-    loadDashboardData()
-
-    return () => {
-      mounted = false
-    }
-  }, [user, reloadKey])
-
-  const quickActions = [
-    { label: "Run Site Audit", icon: Zap, href: "/app/site-audit", color: "bg-blue-500/10 text-blue-600 hover:bg-blue-500/20" },
-    { label: "Explore Keywords", icon: Search, href: "/app/keyword-explorer", color: "bg-purple-500/10 text-purple-600 hover:bg-purple-500/20" },
-    { label: "Track Rankings", icon: Target, href: "/app/rank-tracker", color: "bg-amber-500/10 text-amber-600 hover:bg-amber-500/20" },
-    { label: "Backlink Analysis", icon: Link2, href: "/app/backlinks", color: "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20" },
-    { label: "Site Explorer", icon: Globe, href: "/app/site-explorer", color: "bg-rose-500/10 text-rose-600 hover:bg-rose-500/20" },
-    { label: "View Reports", icon: FileText, href: "/app/reports", color: "bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20" },
-  ]
-
-  const checklistItems = [
-    { label: "Run a site audit", done: auditCount > 0, icon: Zap, href: "/app/site-audit" },
-    { label: "Research keywords", done: keywordCount > 0, icon: Search, href: "/app/keyword-explorer" },
-    { label: "Create a project", done: projectCount > 0, icon: FolderOpen, href: "/app/projects" },
-    { label: "Track rankings", done: rankCount > 0, icon: Target, href: "/app/rank-tracker" },
-    { label: "Analyze backlinks", done: backlinkCount > 0, icon: Link2, href: "/app/backlinks" },
-    { label: "Save a report", done: reportCount > 0, icon: FileText, href: "/app/reports" },
-  ]
-
-  const completedItems = checklistItems.filter((item) => item.done).length
-  const checklistPercent = Math.round((completedItems / checklistItems.length) * 100)
-
-  const getReportTypeIcon = (type: string) => {
-    if (type === "site-audit") return <Zap className="h-4 w-4 text-blue-500" />
-    if (type === "keyword-explorer") return <Search className="h-4 w-4 text-purple-500" />
-    if (type === "rank-tracker") return <Target className="h-4 w-4 text-amber-500" />
-    if (type === "backlink-analytics") return <Link2 className="h-4 w-4 text-emerald-500" />
-    return <FileText className="h-4 w-4 text-muted-foreground" />
-  }
-
-  const getReportTypeLabel = (type: string) => {
-    const map: Record<string, string> = {
-      "site-audit": "Site Audit",
-      "keyword-explorer": "Keyword Research",
-      "rank-tracker": "Rank Tracker",
-      "backlink-analytics": "Backlink Analysis",
-    }
-    return map[type] || type
-  }
-
+function QuickActionIcon({ type, color }: { type: string; color: string }) {
+  const props = { width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: "2", strokeLinecap: "round" as const, strokeLinejoin: "round" as const }
   return (
-    <div className="mx-auto max-w-[1600px] space-y-8 p-6 md:p-8">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-            <Activity className="h-3.5 w-3.5 text-primary" />
-            Premium SEO workspace
-          </div>
-          <h1 className="text-3xl font-black tracking-tight md:text-4xl">
-            {getGreeting()}, {profile?.full_name ? profile.full_name.split(" ")[0] : user?.email ? user.email.split("@")[0] : "there"}!
-          </h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">
-            Here is your SEO workspace overview for today. Track progress, open tools fast, and see what needs attention next.
-          </p>
-        </div>
+    <>
+      {type === "shield" && <svg {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>}
+      {type === "search" && <svg {...props}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>}
+      {type === "trending" && <svg {...props}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></svg>}
+      {type === "link" && <svg {...props}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>}
+      {type === "users" && <svg {...props}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>}
+      {type === "zap" && <svg {...props}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>}
+    </>
+  )
+}
 
-        <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={() => navigate("/app/reports")}>
-            <FileText className="mr-2 h-4 w-4" />
-            View Reports
-          </Button>
-          <Button variant="premium" onClick={() => navigate("/app/site-audit")}>
-            <Zap className="mr-2 h-4 w-4" />
-            Run Audit
-          </Button>
-        </div>
-      </div>
-
-      {/* Hero summary */}
-      <Card className="overflow-hidden border-border/60 bg-gradient-to-r from-card via-card/90 to-primary/5 p-6 shadow-sm backdrop-blur">
-        <div className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
-          <div>
-            <p className="text-sm font-medium text-primary">Workspace status</p>
-            <h2 className="mt-2 text-2xl font-bold">Everything you need to manage SEO in one place</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-              Use this dashboard to see your activity, open your most important tools, and keep your SEO process organized and easy to follow.
-            </p>
-
-            <div className="mt-5 flex flex-wrap gap-3">
-              {[
-                { label: "Projects", value: projectCount },
-                { label: "Audits", value: auditCount },
-                { label: "Keywords", value: keywordCount },
-                { label: "Reports", value: reportCount },
-              ].map((item) => (
-                <div key={item.label} className="rounded-xl border bg-background/70 px-4 py-2">
-                  <p className="text-xs text-muted-foreground">{item.label}</p>
-                  <p className="text-lg font-bold">{loading ? "..." : item.value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid gap-3">
-            <div className="rounded-2xl border bg-background/70 p-4">
-              <p className="text-xs text-muted-foreground">Setup progress</p>
-              <p className="mt-1 text-3xl font-black">{checklistPercent}%</p>
-              <p className="text-sm text-muted-foreground">
-                {completedItems} of {checklistItems.length} tasks complete
-              </p>
-            </div>
-            <div className="rounded-2xl border bg-background/70 p-4">
-              <p className="text-xs text-muted-foreground">Plan</p>
-              <p className="mt-1 text-2xl font-bold capitalize">{profile?.plan || "free"}</p>
-              <p className="text-sm text-muted-foreground">Your current workspace plan</p>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Error */}
-      {error && (
-        <Card className="border-destructive/20 bg-destructive/10 p-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="mt-0.5 h-5 w-5 text-destructive" />
-              <div>
-                <p className="font-semibold text-destructive">Could not load dashboard data</p>
-                <p className="text-sm text-muted-foreground">{error}</p>
-              </div>
-            </div>
-            <Button variant="outline" onClick={() => setReloadKey((k) => k + 1)}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Retry
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-4">
-        <MetricCard
-          title="Projects"
-          value={loading ? "..." : String(projectCount)}
-          subtitle="Active workspaces"
-          icon={FolderOpen}
-          color="text-blue-500"
-          bg="bg-blue-500/10"
-          onClick={() => navigate("/app/projects")}
-        />
-        <MetricCard
-          title="Saved Keywords"
-          value={loading ? "..." : String(keywordCount)}
-          subtitle="Tracked keywords"
-          icon={Search}
-          color="text-purple-500"
-          bg="bg-purple-500/10"
-          onClick={() => navigate("/app/keyword-explorer")}
-        />
-        <MetricCard
-          title="Audits Run"
-          value={loading ? "..." : String(auditCount)}
-          subtitle="SEO audits completed"
-          icon={Zap}
-          color="text-amber-500"
-          bg="bg-amber-500/10"
-          onClick={() => navigate("/app/site-audit")}
-        />
-        <MetricCard
-          title="Reports Saved"
-          value={loading ? "..." : String(reportCount)}
-          subtitle="Total reports saved"
-          icon={BarChart3}
-          color="text-emerald-500"
-          bg="bg-emerald-500/10"
-          onClick={() => navigate("/app/reports")}
-        />
-      </div>
-
-      {/* Quick Actions */}
-      <Card className="p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold">Quick Actions</h3>
-            <p className="text-sm text-muted-foreground">Jump into your most used SEO tools.</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-          {quickActions.map((action) => {
-            const Icon = action.icon
-            return (
-              <button
-                key={action.href}
-                onClick={() => navigate(action.href)}
-                className={"flex flex-col items-center gap-2 rounded-xl border border-transparent p-4 transition-all hover:border-border hover:shadow-sm " + action.color}
-              >
-                <Icon className="h-6 w-6" />
-                <span className="text-center text-xs font-medium">{action.label}</span>
-              </button>
-            )
-          })}
-        </div>
-      </Card>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <Card className="p-6 xl:col-span-2">
-          <div className="mb-6">
-            <h3 className="text-lg font-bold">Weekly Activity</h3>
-            <p className="text-sm text-muted-foreground">Audits, keywords, and backlinks this week.</p>
-          </div>
-
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={weeklyData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                <Tooltip contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }} />
-                <Legend />
-                <Bar dataKey="audits" name="Audits" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={32} />
-                <Bar dataKey="keywords" name="Keywords" fill="#a855f7" radius={[4, 4, 0, 0]} maxBarSize={32} />
-                <Bar dataKey="backlinks" name="Backlinks" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={32} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h3 className="text-lg font-bold">SEO Setup Progress</h3>
-          <p className="mb-4 text-sm text-muted-foreground">Complete your workspace setup.</p>
-
-          <div className="flex flex-col items-center justify-center gap-4 py-4">
-            <div className="relative flex h-32 w-32 items-center justify-center">
-              <svg className="h-32 w-32 -rotate-90" viewBox="0 0 120 120">
-                <circle cx="60" cy="60" r="50" fill="none" stroke="#f1f5f9" strokeWidth="12" />
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="50"
-                  fill="none"
-                  stroke="#10b981"
-                  strokeWidth="12"
-                  strokeDasharray={`${2 * Math.PI * 50}`}
-                  strokeDashoffset={`${2 * Math.PI * 50 * (1 - checklistPercent / 100)}`}
-                  strokeLinecap="round"
-                  className="transition-all duration-700"
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <span className="text-3xl font-black">{checklistPercent}%</span>
-                <span className="text-xs text-muted-foreground">Complete</span>
-              </div>
-            </div>
-
-            <p className="text-sm text-muted-foreground">
-              {completedItems} of {checklistItems.length} tasks done
-            </p>
-          </div>
-        </Card>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <Card className="overflow-hidden">
-          <div className="flex items-center justify-between border-b bg-muted/20 px-6 py-4">
-            <h3 className="font-semibold">Recent Projects</h3>
-            <button onClick={() => navigate("/app/projects")} className="text-xs text-primary hover:underline">
-              View all
-            </button>
-          </div>
-          <div className="divide-y">
-            {loading ? (
-              <div className="p-6 text-center text-sm text-muted-foreground">Loading...</div>
-            ) : recentProjects.length > 0 ? (
-              recentProjects.map((row) => (
-                <div key={row.id} className="flex items-center gap-3 px-6 py-4 transition-colors hover:bg-muted/10">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
-                    <FolderOpen className="h-4 w-4 text-blue-500" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{row.name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{row.domain || "No domain"}</p>
-                  </div>
-                  <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
-                </div>
-              ))
-            ) : (
-              <div className="p-6 text-center text-sm text-muted-foreground">
-                No projects yet.
-                <button onClick={() => navigate("/app/projects")} className="mx-auto mt-2 block text-xs text-primary hover:underline">
-                  Create your first project
-                </button>
-              </div>
-            )}
-          </div>
-        </Card>
-
-        <Card className="overflow-hidden">
-          <div className="flex items-center justify-between border-b bg-muted/20 px-6 py-4">
-            <h3 className="font-semibold">Recent Audits</h3>
-            <button onClick={() => navigate("/app/site-audit")} className="text-xs text-primary hover:underline">
-              Run new
-            </button>
-          </div>
-          <div className="divide-y">
-            {loading ? (
-              <div className="p-6 text-center text-sm text-muted-foreground">Loading...</div>
-            ) : recentAudits.length > 0 ? (
-              recentAudits.map((row) => (
-                <div key={row.id} className="flex items-center gap-3 px-6 py-4 transition-colors hover:bg-muted/10">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{row.target_url || "Unknown URL"}</p>
-                    <div className="mt-1 flex items-center gap-2">
-                      {row.score !== null && (
-                        <>
-                          <div className="h-1.5 w-16 overflow-hidden rounded-full bg-muted">
-                            <div
-                              className={"h-full rounded-full " + getScoreBg(row.score)}
-                              style={{ width: `${row.score}%` }}
-                            />
-                          </div>
-                          <span className={"text-xs font-medium " + getScoreColor(row.score)}>
-                            {row.score}/100
-                          </span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <span className={"rounded-full px-2 py-1 text-xs font-medium " + getStatusBadge(row.status)}>
-                    {row.status || "done"}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="p-6 text-center text-sm text-muted-foreground">
-                No audits yet.
-                <button onClick={() => navigate("/app/site-audit")} className="mx-auto mt-2 block text-xs text-primary hover:underline">
-                  Run your first audit
-                </button>
-              </div>
-            )}
-          </div>
-        </Card>
-
-        <Card className="overflow-hidden">
-          <div className="flex items-center justify-between border-b bg-muted/20 px-6 py-4">
-            <h3 className="font-semibold">Recent Reports</h3>
-            <button onClick={() => navigate("/app/reports")} className="text-xs text-primary hover:underline">
-              View all
-            </button>
-          </div>
-          <div className="divide-y">
-            {loading ? (
-              <div className="p-6 text-center text-sm text-muted-foreground">Loading...</div>
-            ) : recentReports.length > 0 ? (
-              recentReports.map((row) => (
-                <div key={row.id} className="flex items-center gap-3 px-6 py-4 transition-colors hover:bg-muted/10">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted">
-                    {getReportTypeIcon(row.report_type)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{row.title}</p>
-                    <p className="text-xs text-muted-foreground">{getReportTypeLabel(row.report_type)}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="p-6 text-center text-sm text-muted-foreground">
-                No reports yet.
-                <button onClick={() => navigate("/app/reports")} className="mx-auto mt-2 block text-xs text-primary hover:underline">
-                  View reports
-                </button>
-              </div>
-            )}
-          </div>
-        </Card>
-      </div>
-
-      {/* SEO Checklist */}
-      <Card className="p-6">
-        <h3 className="mb-4 flex items-center gap-2 text-lg font-bold">
-          <Activity className="h-5 w-5 text-primary" />
-          SEO Health Checklist
-        </h3>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-          {checklistItems.map((item) => {
-            const Icon = item.icon
-            return (
-              <button
-                key={item.label}
-                onClick={() => navigate(item.href)}
-                className={
-                  "flex items-center gap-3 rounded-xl border p-4 text-left transition-all hover:shadow-sm " +
-                  (item.done
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : "border-border bg-muted/20 hover:bg-muted/40")
-                }
-              >
-                {item.done ? (
-                  <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-emerald-500" />
-                ) : (
-                  <div className="h-5 w-5 flex-shrink-0 rounded-full border-2 border-muted-foreground/30" />
-                )}
-                <div className="flex items-center gap-2">
-                  <Icon className={"h-4 w-4 " + (item.done ? "text-emerald-500" : "text-muted-foreground")} />
-                  <span className="text-sm font-medium">{item.label}</span>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-      </Card>
+function SkeletonCard() {
+  return (
+    <div className="rounded-2xl p-5 animate-pulse" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+      <div className="h-3 rounded w-1/2 mb-4" style={{ background: "rgba(255,255,255,0.08)" }} />
+      <div className="h-8 rounded w-1/3 mb-2" style={{ background: "rgba(255,255,255,0.08)" }} />
+      <div className="h-2 rounded w-2/3" style={{ background: "rgba(255,255,255,0.05)" }} />
     </div>
   )
 }
 
-function MetricCard({ title, value, subtitle, icon: Icon, color, bg, onClick }: MetricCardProps) {
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="px-4 py-3 rounded-xl text-xs font-semibold" style={{ background: "#0f2040", border: "1px solid rgba(255,255,255,0.12)", color: "white" }}>
+        <p className="text-white/60 mb-1">{label}</p>
+        {payload.map((p: any) => (
+          <p key={p.name} style={{ color: p.color }}>{p.name}: {p.value}</p>
+        ))}
+      </div>
+    )
+  }
+  return null
+}
+
+export default function DashboardOverview() {
+  const { user, profile } = useAuth()
+  const shouldReduceMotion = useReducedMotion()
+  const [stats, setStats] = useState<DashStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!user) return
+    setLoading(true)
+    getDashboardData(user.id)
+      .then((data) => {
+        setStats(data)
+        setLoading(false)
+      })
+      .catch(() => {
+        setError("Failed to load dashboard data")
+        setLoading(false)
+      })
+  }, [user])
+
+  const weeklyData = stats ? getWeeklyData(stats.audits, stats.keywords) : []
+  const recentProjects = stats?.projects.slice(0, 4) || []
+  const recentAudits = stats?.audits.slice(0, 4) || []
+
+  const checklistItems = [
+    { label: "Create your first project", done: (stats?.projects.length || 0) > 0, href: "/app/projects" },
+    { label: "Run a site audit", done: (stats?.audits.length || 0) > 0, href: "/app/site-audit" },
+    { label: "Research keywords", done: (stats?.keywords.length || 0) > 0, href: "/app/keyword-explorer" },
+    { label: "Set up rank tracking", done: false, href: "/app/rank-tracker" },
+    { label: "Analyze your backlinks", done: false, href: "/app/backlinks" },
+    { label: "Upgrade your plan", done: profile?.plan !== "free", href: "/app/billing" },
+  ]
+
+  const completedChecklist = checklistItems.filter((i) => i.done).length
+  const checklistProgress = Math.round((completedChecklist / checklistItems.length) * 100)
+
+  const METRIC_CARDS = [
+    {
+      label: "Projects",
+      value: loading ? "-" : stats?.projects.length ?? 0,
+      icon: "folder",
+      color: "#3b82f6",
+      href: "/app/projects",
+      change: null,
+    },
+    {
+      label: "Saved Keywords",
+      value: loading ? "-" : stats?.keywords.length ?? 0,
+      icon: "tag",
+      color: "#06b6d4",
+      href: "/app/keyword-explorer",
+      change: null,
+    },
+    {
+      label: "Audits Run",
+      value: loading ? "-" : stats?.audits.length ?? 0,
+      icon: "shield",
+      color: "#f97316",
+      href: "/app/site-audit",
+      change: null,
+    },
+    {
+      label: "Reports",
+      value: loading ? "-" : stats?.reports.length ?? 0,
+      icon: "file",
+      color: "#a855f7",
+      href: "/app/reports",
+      change: null,
+    },
+  ]
+
   return (
-    <Card className="cursor-pointer p-6 transition-all hover:shadow-md group" onClick={onClick}>
-      <div className="flex items-center justify-between">
-        <div className={"flex h-10 w-10 items-center justify-center rounded-xl " + bg + " transition-transform group-hover:scale-110"}>
-          <Icon className={"h-5 w-5 " + color} />
+    <div className="p-4 lg:p-6 space-y-6 min-h-screen" style={{ background: "#0b1729" }}>
+
+      {/* HEADER */}
+      <motion.div {...fadeUp(0)} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-black text-white tracking-tight">
+            {getGreeting()}, {profile?.full_name?.split(" ")[0] || "there"} 👋
+          </h2>
+          <p className="text-white/40 text-sm font-medium mt-1">
+            Here is what is happening with your SEO today.
+          </p>
         </div>
-        <ArrowUpRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
+        <Link
+          to="/app/site-audit"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:scale-[1.02] shrink-0"
+          style={{ background: "linear-gradient(135deg, #f97316, #ea6c04)", boxShadow: "0 4px 16px rgba(249,115,22,0.4)" }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+          Run New Audit
+        </Link>
+      </motion.div>
+
+      {error && (
+        <div className="p-4 rounded-xl flex items-center gap-3" style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+          <span className="text-red-400 text-sm font-semibold">{error}</span>
+        </div>
+      )}
+
+      {/* METRIC CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {loading
+          ? Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
+          : METRIC_CARDS.map((card, i) => (
+            <motion.div key={card.label} {...fadeUp(i * 0.08)}>
+              <Link
+                to={card.href}
+                className="block rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 relative overflow-hidden group"
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: `linear-gradient(90deg, ${card.color}, transparent)` }} />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: `${card.color}08` }} />
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-bold uppercase tracking-widest text-white/40">{card.label}</p>
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${card.color}18` }}>
+                      {card.icon === "folder" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={card.color} strokeWidth="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>}
+                      {card.icon === "tag" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={card.color} strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><line x1="7" y1="7" x2="7.01" y2="7" /></svg>}
+                      {card.icon === "shield" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={card.color} strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>}
+                      {card.icon === "file" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={card.color} strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>}
+                    </div>
+                  </div>
+                  <div className="text-3xl font-black text-white tracking-tight">{card.value}</div>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
       </div>
-      <div className="mt-4">
-        <p className="text-3xl font-bold">{value}</p>
-        <p className="mt-1 text-sm font-medium">{title}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* WEEKLY CHART */}
+        <motion.div {...fadeUp(0.15)} className="lg:col-span-2 rounded-2xl p-6" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-base font-black text-white">Weekly SEO Activity</h3>
+              <p className="text-xs text-white/40 font-medium mt-0.5">Audits and keywords this week</p>
+            </div>
+          </div>
+          {loading ? (
+            <div className="h-48 rounded-xl animate-pulse" style={{ background: "rgba(255,255,255,0.04)" }} />
+          ) : weeklyData.every((d) => d.total === 0) ? (
+            <div className="h-48 flex flex-col items-center justify-center gap-3">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2">
+                  <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+              </div>
+              <p className="text-sm text-white/30 font-medium">No activity yet this week</p>
+              <Link to="/app/site-audit" className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors">Run your first audit</Link>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={weeklyData} barGap={4}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="day" tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 600 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "rgba(255,255,255,0.35)", fontSize: 11 }} axisLine={false} tickLine={false} width={24} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+                <Bar dataKey="audits" name="Audits" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="keywords" name="Keywords" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </motion.div>
+
+        {/* SEO CHECKLIST */}
+        <motion.div {...fadeUp(0.2)} className="rounded-2xl p-6" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-base font-black text-white">SEO Setup</h3>
+            <span className="text-xs font-bold text-white/40">{completedChecklist}/{checklistItems.length}</span>
+          </div>
+
+          {/* Progress */}
+          <div className="mb-5">
+            <div className="w-full h-1.5 rounded-full mb-1" style={{ background: "rgba(255,255,255,0.08)" }}>
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${checklistProgress}%`, background: "linear-gradient(90deg, #3b82f6, #06b6d4)" }}
+              />
+            </div>
+            <p className="text-xs text-white/35 font-medium">{checklistProgress}% complete</p>
+          </div>
+
+          <div className="space-y-2">
+            {checklistItems.map((item) => (
+              <Link
+                key={item.label}
+                to={item.href}
+                className="flex items-center gap-3 p-2.5 rounded-xl transition-all duration-200 hover:bg-white/5 group"
+              >
+                <div
+                  className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-110"
+                  style={{
+                    background: item.done ? "rgba(16,185,129,0.2)" : "rgba(255,255,255,0.06)",
+                    border: item.done ? "1px solid rgba(16,185,129,0.4)" : "1px solid rgba(255,255,255,0.12)",
+                  }}
+                >
+                  {item.done && (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="3">
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  )}
+                </div>
+                <span className={`text-xs font-semibold transition-colors ${item.done ? "text-white/40 line-through" : "text-white/70 group-hover:text-white"}`}>
+                  {item.label}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </motion.div>
       </div>
-    </Card>
+
+      {/* QUICK ACTIONS */}
+      <motion.div {...fadeUp(0.25)}>
+        <h3 className="text-base font-black text-white mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {QUICK_ACTIONS.map((action, i) => (
+            <motion.div key={action.label} {...fadeUp(i * 0.06)}>
+              <Link
+                to={action.href}
+                className="flex flex-col items-center gap-2.5 p-4 rounded-2xl text-center transition-all duration-300 hover:-translate-y-1 group"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
+                  style={{ background: `${action.color}18`, border: `1px solid ${action.color}25` }}
+                >
+                  <QuickActionIcon type={action.icon} color={action.color} />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-white/80 leading-tight">{action.label}</p>
+                  <p className="text-[10px] text-white/35 mt-0.5 font-medium">{action.desc}</p>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* RECENT PROJECTS */}
+        <motion.div {...fadeUp(0.3)} className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/6">
+            <h3 className="text-sm font-black text-white">Recent Projects</h3>
+            <Link to="/app/projects" className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors">View all</Link>
+          </div>
+          {loading ? (
+            <div className="p-6 space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-12 rounded-xl animate-pulse" style={{ background: "rgba(255,255,255,0.04)" }} />
+              ))}
+            </div>
+          ) : recentProjects.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                </svg>
+              </div>
+              <p className="text-sm text-white/30 font-medium">No projects yet</p>
+              <Link to="/app/projects" className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors">Create your first project</Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/5">
+              {recentProjects.map((project) => (
+                <div key={project.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-white/3 transition-colors">
+                  <div
+                    className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black text-white shrink-0"
+                    style={{ background: "linear-gradient(135deg, #1d4ed8, #06b6d4)" }}
+                  >
+                    {project.name[0]?.toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-white/85 truncate">{project.name}</p>
+                    <p className="text-xs text-white/35 font-medium truncate">{project.domain}</p>
+                  </div>
+                  <Link
+                    to="/app/site-audit"
+                    className="text-[10px] font-bold px-2.5 py-1 rounded-lg transition-colors hover:bg-white/8"
+                    style={{ color: "#60a5fa", border: "1px solid rgba(96,165,250,0.2)" }}
+                  >
+                    Audit
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+
+        {/* RECENT AUDITS */}
+        <motion.div {...fadeUp(0.35)} className="rounded-2xl overflow-hidden" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/6">
+            <h3 className="text-sm font-black text-white">Recent Audits</h3>
+            <Link to="/app/site-audit" className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors">View all</Link>
+          </div>
+          {loading ? (
+            <div className="p-6 space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-12 rounded-xl animate-pulse" style={{ background: "rgba(255,255,255,0.04)" }} />
+              ))}
+            </div>
+          ) : recentAudits.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </div>
+              <p className="text-sm text-white/30 font-medium">No audits run yet</p>
+              <Link to="/app/site-audit" className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors">Run your first audit</Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/5">
+              {recentAudits.map((audit) => {
+                const score = audit.score ?? 0
+                const scoreColor = score >= 80 ? "#10b981" : score >= 60 ? "#f59e0b" : "#ef4444"
+                return (
+                  <div key={audit.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-white/3 transition-colors">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black shrink-0"
+                      style={{ background: `${scoreColor}18`, color: scoreColor, border: `1px solid ${scoreColor}25` }}
+                    >
+                      {score}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white/85 truncate">{audit.target_url}</p>
+                      <p className="text-xs text-white/35 font-medium">
+                        {new Date(audit.created_at).toLocaleDateString("en-NG", { month: "short", day: "numeric" })}
+                      </p>
+                    </div>
+                    <span
+                      className="text-[10px] font-bold px-2.5 py-1 rounded-lg"
+                      style={{
+                        background: score >= 80 ? "rgba(16,185,129,0.12)" : score >= 60 ? "rgba(245,158,11,0.12)" : "rgba(239,68,68,0.12)",
+                        color: scoreColor,
+                      }}
+                    >
+                      {score >= 80 ? "Good" : score >= 60 ? "Fair" : "Poor"}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* UPGRADE BANNER */}
+      {profile?.plan === "free" && (
+        <motion.div
+          {...fadeUp(0.4)}
+          className="rounded-2xl p-6 relative overflow-hidden"
+          style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.15), rgba(234,108,4,0.08))", border: "1px solid rgba(249,115,22,0.25)" }}
+        >
+          <div className="absolute inset-0 bg-grid-overlay opacity-20" />
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-base font-black text-white mb-1">Unlock the full power of Hi-SEO</h3>
+              <p className="text-sm text-white/50 font-medium">Upgrade to Pro for unlimited audits, 100 tracked keywords, AI writer, and priority support.</p>
+            </div>
+            <Link
+              to="/app/billing"
+              className="shrink-0 flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:scale-[1.02]"
+              style={{ background: "linear-gradient(135deg, #f97316, #ea6c04)", boxShadow: "0 4px 16px rgba(249,115,22,0.4)" }}
+            >
+              Upgrade to Pro
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        </motion.div>
+      )}
+    </div>
   )
 }

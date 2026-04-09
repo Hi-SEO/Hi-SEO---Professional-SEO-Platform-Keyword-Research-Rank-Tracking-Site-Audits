@@ -1,14 +1,17 @@
-﻿import { Navigate } from 'react-router-dom'
-import { ReactNode } from 'react'
-import { useAuth } from '../../context/AuthContext'
-import { LoadingScreen } from '../ui/LoadingScreen'
+﻿import { Navigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import LoadingScreen from "../ui/LoadingScreen";
+import type { ReactNode } from "react";
 
-export default function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth()
+interface Props {
+  children: ReactNode;
+}
 
-  if (loading) return <LoadingScreen />
+export default function ProtectedRoute({ children }: Props) {
+  const { user, loading } = useAuth();
 
-  if (!user) return <Navigate to="/login" replace />
+  if (loading) return <LoadingScreen />;
+  if (!user) return <Navigate to="/login" replace />;
 
-  return <>{children}</>
+  return <>{children}</>;
 }

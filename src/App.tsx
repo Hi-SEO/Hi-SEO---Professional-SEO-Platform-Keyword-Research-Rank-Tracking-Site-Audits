@@ -1,134 +1,115 @@
-import { ArrowRight, BookOpen, CalendarDays, Mail, MessageSquare, Shield, FileText, Users, Target, CheckCircle2, Search } from "lucide-react"
-import { Link, Navigate, Route, Routes } from "react-router-dom"
-import { MarketingLayout } from "./layouts/MarketingLayout"
-import { AppLayout } from "./layouts/AppLayout"
+﻿import { lazy, Suspense } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import GuestRoute from "./components/auth/GuestRoute";
+import LoadingScreen from "./components/ui/LoadingScreen";
 
-// Public Pages
-import Home from "./pages/public/Home"
-import Features from "./pages/public/Features"
-import Pricing from "./pages/public/Pricing"
-import Compare from "./pages/public/Compare"
-import Glossary from "./pages/public/Glossary"
-import Login from "./pages/public/Login"
-import Signup from "./pages/public/Signup"
-import ForgotPassword from "./pages/public/ForgotPassword"
-import ResetPassword from "./pages/public/ResetPassword"
+const MarketingLayout = lazy(() => import("./layouts/MarketingLayout"));
+const AppLayout = lazy(() => import("./layouts/AppLayout"));
 
-// New Public Pages
-import Blog from "./pages/public/Blog"
-import Contact from "./pages/public/Contact"
-import Faq from "./pages/public/Faq"
-import About from "./pages/public/About"
-import Terms from "./pages/public/Terms"
-import Privacy from "./pages/public/Privacy"
+const Home = lazy(() => import("./pages/public/Home"));
+const Features = lazy(() => import("./pages/public/Features"));
+const Pricing = lazy(() => import("./pages/public/Pricing"));
+const Compare = lazy(() => import("./pages/public/Compare"));
+const Glossary = lazy(() => import("./pages/public/Glossary"));
+const Blog = lazy(() => import("./pages/public/Blog"));
+const Faq = lazy(() => import("./pages/public/Faq"));
+const Contact = lazy(() => import("./pages/public/Contact"));
+const About = lazy(() => import("./pages/public/About"));
+const Terms = lazy(() => import("./pages/public/Terms"));
+const Privacy = lazy(() => import("./pages/public/Privacy"));
 
-// App Pages
-import DashboardOverview from "./pages/app/DashboardOverview"
-import Projects from "./pages/app/Projects"
-import Reports from "./pages/app/Reports"
-import ReportDetails from "./pages/app/ReportDetails"
-import SiteExplorer from "./pages/app/SiteExplorer"
-import SiteAudit from "./pages/app/SiteAudit"
-import KeywordExplorer from "./pages/app/KeywordExplorer"
-import RankTracker from "./pages/app/RankTracker"
-import BacklinkAnalytics from "./pages/app/BacklinkAnalytics"
-import CompetitorAnalysis from "./pages/app/CompetitorAnalysis"
-import ContentStrategy from "./pages/app/ContentStrategy"
-import AIWriter from "./pages/app/AIWriter"
-import SerpAnalysis from "./pages/app/SerpAnalysis"
-import Settings from "./pages/app/Settings"
-import Billing from "./pages/app/Billing"
+const Login = lazy(() => import("./pages/public/Login"));
+const Signup = lazy(() => import("./pages/public/Signup"));
+const ForgotPassword = lazy(() => import("./pages/public/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/public/ResetPassword"));
 
-// Auth Components
-import ProtectedRoute from "./components/auth/ProtectedRoute"
-import GuestRoute from "./components/auth/GuestRoute"
+const DashboardOverview = lazy(() => import("./pages/app/DashboardOverview"));
+const Projects = lazy(() => import("./pages/app/Projects"));
+const SiteAudit = lazy(() => import("./pages/app/SiteAudit"));
+const KeywordExplorer = lazy(() => import("./pages/app/KeywordExplorer"));
+const RankTracker = lazy(() => import("./pages/app/RankTracker"));
+const BacklinkAnalytics = lazy(() => import("./pages/app/BacklinkAnalytics"));
+const SiteExplorer = lazy(() => import("./pages/app/SiteExplorer"));
+const CompetitorAnalysis = lazy(() => import("./pages/app/CompetitorAnalysis"));
+const ContentStrategy = lazy(() => import("./pages/app/ContentStrategy"));
+const AIWriter = lazy(() => import("./pages/app/AIWriter"));
+const SerpAnalysis = lazy(() => import("./pages/app/SerpAnalysis"));
+const Reports = lazy(() => import("./pages/app/Reports"));
+const ReportDetails = lazy(() => import("./pages/app/ReportDetails"));
+const Settings = lazy(() => import("./pages/app/Settings"));
+const Billing = lazy(() => import("./pages/app/Billing"));
+const PlaceholderTool = lazy(() => import("./pages/app/PlaceholderTool"));
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen bg-[#07111f] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center">
+          <span className="text-white font-black text-sm">Hi</span>
+        </div>
+        <div className="w-48 h-1 bg-white/5 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full animate-pulse" style={{ width: "60%" }} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<MarketingLayout />}>
-        <Route index element={<Home />} />
-        <Route path="features" element={<Features />} />
-        <Route path="pricing" element={<Pricing />} />
-        <Route path="compare" element={<Compare />} />
-        <Route path="glossary" element={<Glossary />} />
-        <Route path="blog" element={<Blog />} />
-        <Route path="contact" element={<Contact />} />
-        <Route path="faq" element={<Faq />} />
-        <Route path="resources" element={<Navigate to="/glossary" replace />} />
-        <Route path="about" element={<About />} />
-        <Route path="terms" element={<Terms />} />
-        <Route path="privacy" element={<Privacy />} />
-      </Route>
+    <BrowserRouter>
+      <AuthProvider>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Marketing Routes */}
+            <Route element={<MarketingLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/compare" element={<Compare />} />
+              <Route path="/glossary" element={<Glossary />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/faq" element={<Faq />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/resources" element={<Navigate to="/glossary" replace />} />
+            </Route>
 
-      <Route
-        path="/login"
-        element={
-          <GuestRoute>
-            <Login />
-          </GuestRoute>
-        }
-      />
-      <Route
-        path="/signup"
-        element={
-          <GuestRoute>
-            <Signup />
-          </GuestRoute>
-        }
-      />
-      <Route
-        path="/forgot-password"
-        element={
-          <GuestRoute>
-            <ForgotPassword />
-          </GuestRoute>
-        }
-      />
-      <Route path="/reset-password" element={<ResetPassword />} />
+            {/* Auth Routes */}
+            <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+            <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
+            <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
-      <Route
-        path="/app"
-        element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<DashboardOverview />} />
-        <Route path="projects" element={<Projects />} />
-        <Route path="reports" element={<Reports />} />
-        <Route path="reports/:id" element={<ReportDetails />} />
-        <Route path="site-explorer" element={<SiteExplorer />} />
-        <Route path="site-audit" element={<SiteAudit />} />
-        <Route path="keyword-explorer" element={<KeywordExplorer />} />
-        <Route path="rank-tracker" element={<RankTracker />} />
-        <Route path="backlinks" element={<BacklinkAnalytics />} />
-        <Route path="competitors" element={<CompetitorAnalysis />} />
-        <Route path="content-strategy" element={<ContentStrategy />} />
-        <Route path="ai-writer" element={<AIWriter />} />
-        <Route path="serp-analysis" element={<SerpAnalysis />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="billing" element={<Billing />} />
-        <Route path="*" element={<Navigate to="/app" replace />} />
-      </Route>
+            {/* App Routes */}
+            <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+              <Route index element={<DashboardOverview />} />
+              <Route path="projects" element={<Projects />} />
+              <Route path="site-audit" element={<SiteAudit />} />
+              <Route path="keyword-explorer" element={<KeywordExplorer />} />
+              <Route path="rank-tracker" element={<RankTracker />} />
+              <Route path="backlinks" element={<BacklinkAnalytics />} />
+              <Route path="site-explorer" element={<SiteExplorer />} />
+              <Route path="competitors" element={<CompetitorAnalysis />} />
+              <Route path="content-strategy" element={<ContentStrategy />} />
+              <Route path="ai-writer" element={<AIWriter />} />
+              <Route path="serp-analysis" element={<SerpAnalysis />} />
+              <Route path="reports" element={<Reports />} />
+              <Route path="reports/:id" element={<ReportDetails />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="billing" element={<Billing />} />
+              <Route path="*" element={<PlaceholderTool />} />
+            </Route>
 
-      <Route
-        path="*"
-        element={
-          <div className="flex h-screen flex-col items-center justify-center gap-4 text-center">
-            <h1 className="text-6xl font-bold text-primary">404</h1>
-            <p className="text-xl font-semibold">Page Not Found</p>
-            <p className="text-muted-foreground">The page you are looking for does not exist.</p>
-            <Link
-              to="/"
-              className="mt-2 rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-            >
-              Go Home
-            </Link>
-          </div>
-        }
-      />
-    </Routes>
-  )
+            {/* 404 Catch All */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
+      </AuthProvider>
+    </BrowserRouter>
+  );
 }

@@ -1,205 +1,233 @@
-﻿import { useState } from "react"
+﻿import React, { useState } from "react"
 import { Link } from "react-router-dom"
 import { motion, useReducedMotion } from "framer-motion"
-import { Button } from "../../components/ui/button"
-import { Card } from "../../components/ui/card"
-import { Input } from "../../components/ui/input"
-import { supabase } from "../../lib/supabase"
-import {
-  ArrowRight,
-  Mail,
-  Sparkles,
-  ShieldCheck,
-  CheckCircle2,
-  MessageSquare,
-  Clock3,
-} from "lucide-react"
-
-const steps = [
-  { number: "01", title: "Enter email", text: "Use the email linked to your Hi-SEO account." },
-  { number: "02", title: "Check inbox", text: "We will send a secure reset link if the account exists." },
-  { number: "03", title: "Create new password", text: "Return to the app with a fresh password." },
-]
+import { useAuth } from "../../context/AuthContext"
 
 export default function ForgotPassword() {
-  const reduceMotion = useReducedMotion()
-
+  const shouldReduceMotion = useReducedMotion()
+  const { resetPassword } = useAuth()
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
-
-  const fadeUp = {
-    initial: { opacity: 0, y: 20 },
-    whileInView: { opacity: 1, y: 0 },
-    transition: { duration: 0.55, ease: "easeOut" as const },
-    viewport: { once: true, amount: 0.2 },
-  }
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-    setSuccess("")
-    setLoading(true)
-
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      })
-
-      if (error) {
-        setError(error.message)
-        return
-      }
-
-      setSuccess("If the email exists, a password reset link has been sent.")
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send reset link.")
-    } finally {
-      setLoading(false)
+    setError(null)
+    if (!email) {
+      setError("Please enter your email address")
+      return
     }
+    setLoading(true)
+    const { error: authError } = await resetPassword(email)
+    setLoading(false)
+    if (authError) {
+      setError(authError)
+      return
+    }
+    setSuccess(true)
   }
 
   return (
-    <div className="relative overflow-hidden bg-background">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-[-8rem] top-[-8rem] h-80 w-80 rounded-full bg-primary/20 blur-3xl" />
-        <div className="absolute right-[-10rem] top-[8rem] h-96 w-96 rounded-full bg-purple-500/20 blur-3xl" />
-      </div>
+    <div
+      className="min-h-screen flex items-center justify-center p-6"
+      style={{ background: "linear-gradient(135deg, #07123f 0%, #0b1729 100%)" }}
+    >
+      <div className="absolute inset-0 bg-grid-overlay opacity-30" />
+      <div
+        className="hero-blob hero-blob-blue animate-blob"
+        style={{ width: "500px", height: "500px", top: "-150px", right: "-100px", opacity: 0.25 }}
+      />
+      <div
+        className="hero-blob hero-blob-cyan animate-blob animate-blob-delay-2"
+        style={{ width: "400px", height: "400px", bottom: "-100px", left: "-100px", opacity: 0.2 }}
+      />
 
-      <div className="relative mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl gap-10 px-6 py-16 lg:grid-cols-2 lg:items-center">
-        <motion.div {...fadeUp} className="max-w-2xl">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border bg-card/70 px-4 py-2 text-sm font-medium shadow-sm backdrop-blur">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Password recovery
-          </div>
-
-          <h1 className="text-5xl font-black tracking-tight md:text-6xl">
-            Reset your{" "}
-            <span className="bg-gradient-to-r from-primary via-purple-500 to-emerald-500 bg-clip-text text-transparent">
-              Hi-SEO password
-            </span>
-          </h1>
-
-          <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground md:text-xl">
-            We will help you get back into your account quickly and securely. Just enter your email and we will send you a reset link.
-          </p>
-
-          <div className="mt-8 grid gap-3 sm:grid-cols-2">
-            {[
-              "Secure reset flow",
-              "Fast email delivery",
-              "Protected account access",
-              "Simple recovery steps",
-            ].map((item) => (
-              <div
-                key={item}
-                className="inline-flex items-center gap-2 rounded-xl border bg-card/70 px-4 py-3 text-sm font-medium shadow-sm backdrop-blur"
-              >
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                {item}
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {[
-              { icon: Mail, label: "Email link" },
-              { icon: ShieldCheck, label: "Secure access" },
-              { icon: MessageSquare, label: "Help available" },
-            ].map((item) => {
-              const Icon = item.icon
-              return (
-                <Card key={item.label} className="border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur">
-                  <Icon className="h-5 w-5 text-primary" />
-                  <p className="mt-3 text-sm font-medium">{item.label}</p>
-                </Card>
-              )
-            })}
-          </div>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {steps.map((step, index) => (
-              <motion.div
-                key={step.number}
-                initial={reduceMotion ? {} : { opacity: 0, y: 18 }}
-                whileInView={reduceMotion ? {} : { opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08, duration: 0.45 }}
-                viewport={{ once: true, amount: 0.2 }}
-              >
-                <Card className="h-full border-border/60 bg-card/70 p-4 shadow-sm backdrop-blur">
-                  <p className="text-sm font-semibold text-primary">{step.number}</p>
-                  <h3 className="mt-2 text-base font-semibold">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.text}</p>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={reduceMotion ? {} : { opacity: 0, x: 40, scale: 0.97 }}
-          whileInView={reduceMotion ? {} : { opacity: 1, x: 0, scale: 1 }}
-          transition={{ duration: 0.65, ease: "easeOut" }}
-          viewport={{ once: true, amount: 0.2 }}
-          className="relative"
+      <motion.div
+        initial={shouldReduceMotion ? {} : { opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-full max-w-md relative z-10"
+      >
+        {/* Back link */}
+        <Link
+          to="/login"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-white/50 hover:text-white/80 transition-colors mb-8"
         >
-          <Card className="relative overflow-hidden border-border/60 bg-card/80 p-8 shadow-2xl backdrop-blur-xl">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_35%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.12),transparent_30%)]" />
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M19 12H5M12 5l-7 7 7 7" />
+          </svg>
+          Back to Sign In
+        </Link>
 
-            <div className="relative mb-8">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border bg-background/80 px-3 py-1 text-sm font-medium shadow-sm">
-                <Clock3 className="h-4 w-4 text-primary" />
-                Reset request
+        <div
+          className="rounded-2xl p-8"
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.4)",
+          }}
+        >
+          {/* Logo */}
+          <div className="flex items-center gap-2.5 mb-8">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, #1d4ed8, #0ea5e9)",
+                boxShadow: "0 4px 16px rgba(59,130,246,0.4)",
+              }}
+            >
+              <div className="flex flex-col items-center leading-none">
+                <span className="text-white font-black" style={{ fontSize: "7px", letterSpacing: "0.12em" }}>HI</span>
+                <span className="text-white font-black" style={{ fontSize: "10px", lineHeight: 1 }}>SEO</span>
               </div>
-              <h2 className="text-3xl font-bold tracking-tight">Enter your email</h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                We will send a secure link to your inbox so you can choose a new password.
-              </p>
             </div>
+            <div className="flex items-baseline gap-0.5">
+              <span className="font-black text-xl text-white">Hi-</span>
+              <span
+                className="font-black text-xl"
+                style={{
+                  background: "linear-gradient(135deg, #60a5fa, #06b6d4)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
+                SEO
+              </span>
+            </div>
+          </div>
 
-            <form onSubmit={handleSubmit} className="relative space-y-5">
-              <div>
-                <label className="mb-2 block text-sm font-medium">Email address</label>
-                <Input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-12 bg-background/80 backdrop-blur"
-                  required
-                />
+          {success ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-6 space-y-4"
+            >
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mx-auto"
+                style={{ background: "rgba(59,130,246,0.2)", border: "2px solid rgba(59,130,246,0.4)" }}
+              >
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-black text-white">Check your inbox</h3>
+              <p className="text-white/50 text-sm leading-relaxed">
+                We sent a password reset link to{" "}
+                <strong className="text-white/80">{email}</strong>. The link expires in 1 hour.
+              </p>
+              <p className="text-white/30 text-xs">
+                Did not receive it? Check your spam folder or{" "}
+                <button
+                  onClick={() => setSuccess(false)}
+                  className="text-blue-400 hover:text-blue-300 font-semibold transition-colors underline"
+                >
+                  try again
+                </button>
+              </p>
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:scale-[1.02] mt-2"
+                style={{
+                  background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                  boxShadow: "0 4px 20px rgba(59,130,246,0.4)",
+                }}
+              >
+                Back to Sign In
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </motion.div>
+          ) : (
+            <>
+              <div className="mb-8">
+                <h1 className="text-2xl font-black text-white tracking-tight mb-2">
+                  Reset your password
+                </h1>
+                <p className="text-white/50 text-sm font-medium leading-relaxed">
+                  Enter the email address linked to your Hi-SEO account and we will send you a secure reset link.
+                </p>
               </div>
 
               {error && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                  {error}
+                <div
+                  className="mb-6 p-4 rounded-xl flex items-center gap-3"
+                  style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.25)" }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+                  </svg>
+                  <span className="text-red-400 text-sm font-semibold">{error}</span>
                 </div>
               )}
 
-              {success && (
-                <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
-                  {success}
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-white/80">
+                    Email address <span className="text-red-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-0 w-11 h-12 flex items-center justify-center text-white/35 pointer-events-none">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                      </svg>
+                    </span>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@company.com"
+                      required
+                      className="w-full h-12 pl-11 pr-4 rounded-xl text-sm font-medium text-white placeholder:text-white/30 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/60"
+                      style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
+                    />
+                  </div>
                 </div>
-              )}
 
-              <Button type="submit" size="lg" className="h-12 w-full shadow-lg shadow-primary/20" disabled={loading}>
-                {loading ? "Sending link..." : "Send reset link"}
-                {!loading && <ArrowRight className="ml-2 h-4 w-4" />}
-              </Button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-12 rounded-xl text-sm font-bold text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  style={{
+                    background: "linear-gradient(135deg, #2563eb, #1d4ed8)",
+                    boxShadow: "0 4px 20px rgba(59,130,246,0.4)",
+                  }}
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M12 2a10 10 0 0 1 10 10" />
+                      </svg>
+                      Sending reset link...
+                    </>
+                  ) : (
+                    <>
+                      Send Reset Link
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </>
+                  )}
+                </button>
+              </form>
 
-            <div className="relative mt-8 border-t pt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                Remember your password?{" "}
-                <Link to="/login" className="font-medium text-primary hover:underline">
-                  Back to login
-                </Link>
-              </p>
-            </div>
-          </Card>
-        </motion.div>
-      </div>
+              <div className="mt-8 pt-6 border-t border-white/8 text-center">
+                <p className="text-sm text-white/40 font-medium">
+                  Remembered your password?{" "}
+                  <Link to="/login" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">
+                    Sign in
+                  </Link>
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </motion.div>
     </div>
   )
 }
