@@ -25,7 +25,7 @@ const footerLinks = {
     { label: "Features", href: "/features" },
     { label: "Pricing", href: "/pricing" },
     { label: "Compare Plans", href: "/compare" },
-    { label: "Changelog", href: "/blog" },
+    { label: "Blog", href: "/blog" },
   ],
   Resources: [
     { label: "SEO Glossary", href: "/glossary" },
@@ -59,55 +59,64 @@ export default function MarketingLayout() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  return (
-    <div className="min-h-screen flex flex-col" style={{ margin: 0, padding: 0 }}>
+  // Lock body scroll when mobile menu open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
 
-      {/* NAVBAR */}
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", width: "100%", overflowX: "hidden" }}>
+
+      {/* ===== NAVBAR ===== */}
       <header
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
         style={{
-          background: scrolled
-            ? "rgba(7,18,63,0.97)"
-            : "transparent",
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          transition: "all 0.3s ease",
+          background: scrolled ? "rgba(7,18,63,0.97)" : "transparent",
           backdropFilter: scrolled ? "blur(12px)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
           borderBottom: scrolled ? "1px solid rgba(255,255,255,0.08)" : "none",
           boxShadow: scrolled ? "0 4px 30px rgba(0,0,0,0.3)" : "none",
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="flex items-center justify-between h-16 lg:h-20">
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 1.25rem" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 group flex-shrink-0">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300"
-                style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)" }}
-              >
-                <Zap className="w-5 h-5 text-white" />
+            <Link
+              to="/"
+              style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", flexShrink: 0 }}
+            >
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #3b82f6, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(59,130,246,0.4)" }}>
+                <Zap size={18} color="white" />
               </div>
-              <span className="text-xl font-black text-white tracking-tight">
+              <span style={{ fontSize: "1.2rem", fontWeight: 900, color: "white", letterSpacing: "-0.02em" }}>
                 Hi<span style={{ color: "#06b6d4" }}>-SEO</span>
               </span>
             </Link>
 
             {/* Desktop Nav */}
-            <nav className="hidden lg:flex items-center gap-1">
+            <nav style={{ display: "none", alignItems: "center", gap: 4 }} className="lg-nav">
               {navLinks.map((link) =>
                 link.children ? (
                   <div
                     key={link.label}
-                    className="relative"
+                    style={{ position: "relative" }}
                     onMouseEnter={() => setOpenDropdown(link.label)}
                     onMouseLeave={() => setOpenDropdown(null)}
                   >
-                    <button
-                      className="flex items-center gap-1 text-blue-100 hover:text-white font-medium px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm"
-                    >
+                    <button style={{ display: "flex", alignItems: "center", gap: 4, color: "#bfdbfe", fontWeight: 500, padding: "8px 14px", borderRadius: 8, background: "none", border: "none", cursor: "pointer", fontSize: "0.9rem", transition: "all 0.2s" }}>
                       {link.label}
-                      <ChevronDown
-                        className="w-4 h-4 transition-transform duration-200"
-                        style={{ transform: openDropdown === link.label ? "rotate(180deg)" : "rotate(0deg)" }}
-                      />
+                      <ChevronDown size={14} style={{ transition: "transform 0.2s", transform: openDropdown === link.label ? "rotate(180deg)" : "rotate(0)" }} />
                     </button>
                     <AnimatePresence>
                       {openDropdown === link.label && (
@@ -116,18 +125,15 @@ export default function MarketingLayout() {
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: 8, scale: 0.95 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute top-full left-0 mt-2 w-52 rounded-2xl shadow-2xl overflow-hidden"
-                          style={{
-                            background: "rgba(7,18,63,0.98)",
-                            backdropFilter: "blur(12px)",
-                            border: "1px solid rgba(255,255,255,0.1)",
-                          }}
+                          style={{ position: "absolute", top: "100%", left: 0, marginTop: 8, width: 200, background: "rgba(7,18,63,0.98)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 14, boxShadow: "0 20px 40px rgba(0,0,0,0.4)", overflow: "hidden" }}
                         >
                           {link.children.map((child) => (
                             <Link
                               key={child.label}
                               to={child.href}
-                              className="block px-4 py-3 text-sm text-blue-100 hover:text-white hover:bg-white/10 transition-colors duration-150"
+                              style={{ display: "block", padding: "10px 16px", color: "#bfdbfe", fontSize: "0.875rem", textDecoration: "none", transition: "all 0.15s" }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; (e.currentTarget as HTMLElement).style.color = "white"; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = "#bfdbfe"; }}
                             >
                               {child.label}
                             </Link>
@@ -140,7 +146,9 @@ export default function MarketingLayout() {
                   <Link
                     key={link.label}
                     to={link.href}
-                    className="text-blue-100 hover:text-white font-medium px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm"
+                    style={{ color: "#bfdbfe", fontWeight: 500, padding: "8px 14px", borderRadius: 8, fontSize: "0.9rem", textDecoration: "none", transition: "all 0.2s" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "white"; (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#bfdbfe"; (e.currentTarget as HTMLElement).style.background = "none"; }}
                   >
                     {link.label}
                   </Link>
@@ -149,37 +157,38 @@ export default function MarketingLayout() {
             </nav>
 
             {/* Desktop Auth Buttons */}
-            <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
+            <div style={{ display: "none", alignItems: "center", gap: 10 }} className="lg-auth">
               <Link
                 to="/login"
-                className="text-blue-100 hover:text-white font-semibold px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-200 text-sm"
+                style={{ color: "#bfdbfe", fontWeight: 600, padding: "8px 16px", borderRadius: 8, fontSize: "0.9rem", textDecoration: "none", transition: "all 0.2s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "white"; (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#bfdbfe"; (e.currentTarget as HTMLElement).style.background = "none"; }}
               >
                 Log In
               </Link>
               <Link
                 to="/signup"
-                className="inline-flex items-center gap-2 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-all duration-300 hover:scale-105"
-                style={{
-                  backgroundColor: "#f97316",
-                  boxShadow: "0 0 20px rgba(249,115,22,0.35)",
-                }}
+                style={{ display: "inline-flex", alignItems: "center", backgroundColor: "#f97316", color: "white", fontWeight: 700, padding: "9px 20px", borderRadius: 10, fontSize: "0.875rem", textDecoration: "none", boxShadow: "0 0 20px rgba(249,115,22,0.35)", transition: "all 0.3s ease" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1.05)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "scale(1)"; }}
               >
                 Start Free
               </Link>
             </div>
 
-            {/* Mobile menu button */}
+            {/* Mobile hamburger */}
             <button
-              className="lg:hidden text-white p-2 rounded-lg hover:bg-white/10 transition-colors duration-200"
               onClick={() => setMobileOpen(!mobileOpen)}
+              style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 8, background: "rgba(255,255,255,0.1)", border: "none", cursor: "pointer", color: "white", transition: "all 0.2s" }}
+              className="mobile-menu-btn"
               aria-label="Toggle menu"
             >
-              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu Overlay */}
         <AnimatePresence>
           {mobileOpen && (
             <motion.div
@@ -187,53 +196,57 @@ export default function MarketingLayout() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-              className="lg:hidden overflow-hidden"
-              style={{
-                background: "rgba(7,18,63,0.98)",
-                backdropFilter: "blur(12px)",
-                borderTop: "1px solid rgba(255,255,255,0.08)",
-              }}
+              style={{ overflow: "hidden", background: "rgba(7,18,63,0.99)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(255,255,255,0.08)" }}
             >
-              <div className="max-w-7xl mx-auto px-6 py-4 space-y-1">
-                {navLinks.map((link) =>
-                  link.children ? (
-                    <div key={link.label}>
-                      <div className="text-xs font-bold text-blue-400 uppercase tracking-widest px-3 pt-4 pb-2">
-                        {link.label}
+              <div style={{ maxWidth: 1200, margin: "0 auto", padding: "1rem 1.25rem 1.5rem" }}>
+
+                {/* Mobile nav links */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: "1rem" }}>
+                  {navLinks.map((link) =>
+                    link.children ? (
+                      <div key={link.label}>
+                        <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#60a5fa", textTransform: "uppercase", letterSpacing: "0.1em", padding: "12px 12px 6px" }}>
+                          {link.label}
+                        </div>
+                        {link.children.map((child) => (
+                          <Link
+                            key={child.label}
+                            to={child.href}
+                            style={{ display: "block", color: "#bfdbfe", padding: "10px 12px", borderRadius: 8, fontSize: "0.95rem", textDecoration: "none", transition: "all 0.15s" }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "white"; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = "#bfdbfe"; }}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
                       </div>
-                      {link.children.map((child) => (
-                        <Link
-                          key={child.label}
-                          to={child.href}
-                          className="block text-blue-100 hover:text-white px-3 py-2.5 rounded-lg hover:bg-white/10 transition-colors duration-150 text-sm"
-                        >
-                          {child.label}
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <Link
-                      key={link.label}
-                      to={link.href}
-                      className="block text-blue-100 hover:text-white font-medium px-3 py-3 rounded-lg hover:bg-white/10 transition-colors duration-150 text-sm"
-                    >
-                      {link.label}
-                    </Link>
-                  )
-                )}
-                <div className="pt-4 pb-2 border-t border-white/10 space-y-2 mt-2">
+                    ) : (
+                      <Link
+                        key={link.label}
+                        to={link.href}
+                        style={{ display: "block", color: "#bfdbfe", fontWeight: 500, padding: "10px 12px", borderRadius: 8, fontSize: "0.95rem", textDecoration: "none", transition: "all 0.15s" }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.color = "white"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = "#bfdbfe"; }}
+                      >
+                        {link.label}
+                      </Link>
+                    )
+                  )}
+                </div>
+
+                {/* Mobile auth buttons */}
+                <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "1rem", display: "flex", flexDirection: "column", gap: 8 }}>
                   <Link
                     to="/login"
-                    className="block text-center text-blue-100 hover:text-white font-medium px-3 py-3 rounded-xl hover:bg-white/10 transition-colors duration-150 text-sm"
+                    style={{ display: "block", textAlign: "center", color: "white", fontWeight: 600, padding: "12px", borderRadius: 10, fontSize: "0.95rem", textDecoration: "none", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
                   >
                     Log In
                   </Link>
                   <Link
                     to="/signup"
-                    className="block text-center text-white font-bold px-3 py-3 rounded-xl text-sm transition-all duration-300"
-                    style={{ backgroundColor: "#f97316" }}
+                    style={{ display: "block", textAlign: "center", backgroundColor: "#f97316", color: "white", fontWeight: 700, padding: "12px", borderRadius: 10, fontSize: "0.95rem", textDecoration: "none", boxShadow: "0 4px 15px rgba(249,115,22,0.4)" }}
                   >
-                    Start Free
+                    Start Free - No Card Needed
                   </Link>
                 </div>
               </div>
@@ -242,50 +255,60 @@ export default function MarketingLayout() {
         </AnimatePresence>
       </header>
 
-      {/* PAGE CONTENT - no top padding here, each page handles its own hero */}
-      <main className="flex-1 w-full" style={{ margin: 0, padding: 0 }}>
+      {/* Responsive styles injected */}
+      <style>{`
+        @media (min-width: 1024px) {
+          .lg-nav { display: flex !important; }
+          .lg-auth { display: flex !important; }
+          .mobile-menu-btn { display: none !important; }
+        }
+      `}</style>
+
+      {/* PAGE CONTENT */}
+      <main style={{ flex: 1, width: "100%", minWidth: 0 }}>
         <Outlet />
       </main>
 
-      {/* FOOTER */}
-      <footer style={{ backgroundColor: "#07123f", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-16">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 mb-12">
+      {/* ===== FOOTER ===== */}
+      <footer style={{ backgroundColor: "#07123f", borderTop: "1px solid rgba(255,255,255,0.08)", width: "100%" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "4rem 1.25rem 2rem" }}>
 
-            {/* Brand col */}
-            <div className="lg:col-span-2">
-              <Link to="/" className="inline-flex items-center gap-2.5 mb-5 group">
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300"
-                  style={{ background: "linear-gradient(135deg, #3b82f6, #06b6d4)" }}
-                >
-                  <Zap className="w-5 h-5 text-white" />
+          {/* Footer grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "2.5rem", marginBottom: "3rem" }}>
+
+            {/* Brand */}
+            <div style={{ gridColumn: "span 1" }}>
+              <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none", marginBottom: "1rem" }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #3b82f6, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Zap size={18} color="white" />
                 </div>
-                <span className="text-xl font-black text-white tracking-tight">
+                <span style={{ fontSize: "1.1rem", fontWeight: 900, color: "white" }}>
                   Hi<span style={{ color: "#06b6d4" }}>-SEO</span>
                 </span>
               </Link>
-              <p className="text-sm leading-relaxed max-w-xs mb-6" style={{ color: "#93c5fd" }}>
-                The all-in-one SEO platform built for African businesses and growth teams.
-                Rank higher, grow faster, and win online with Hi-SEO.
+              <p style={{ color: "#93c5fd", fontSize: "0.85rem", lineHeight: 1.7, marginBottom: "1rem", maxWidth: 220 }}>
+                The all-in-one SEO platform built for African businesses. Rank higher, grow faster, win online.
               </p>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="text-xs font-medium" style={{ color: "#7dd3fc" }}>All systems operational</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#34d399", display: "inline-block", animation: "pulse 2s infinite" }} />
+                <span style={{ fontSize: "0.75rem", color: "#7dd3fc", fontWeight: 500 }}>All systems operational</span>
               </div>
             </div>
 
-            {/* Footer links */}
+            {/* Link columns */}
             {Object.entries(footerLinks).map(([category, links]) => (
               <div key={category}>
-                <h4 className="text-white font-bold text-xs mb-5 uppercase tracking-widest">{category}</h4>
-                <ul className="space-y-3">
+                <h4 style={{ color: "white", fontWeight: 700, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem" }}>
+                  {category}
+                </h4>
+                <ul style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {links.map((link) => (
                     <li key={link.label}>
                       <Link
                         to={link.href}
-                        className="text-sm transition-colors duration-150 hover:text-white"
-                        style={{ color: "#93c5fd" }}
+                        style={{ color: "#93c5fd", fontSize: "0.875rem", textDecoration: "none", transition: "color 0.15s" }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "white"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#93c5fd"; }}
                       >
                         {link.label}
                       </Link>
@@ -297,24 +320,18 @@ export default function MarketingLayout() {
           </div>
 
           {/* Bottom bar */}
-          <div
-            className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
-          >
-            <p className="text-sm" style={{ color: "#60a5fa" }}>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "1.5rem", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
+            <p style={{ color: "#60a5fa", fontSize: "0.8rem" }}>
               2025 Hi-SEO. All rights reserved. Built for African businesses.
             </p>
-            <div className="flex items-center gap-6">
-              {[
-                { label: "Terms", href: "/terms" },
-                { label: "Privacy", href: "/privacy" },
-                { label: "Contact", href: "/contact" },
-              ].map((l) => (
+            <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+              {[{ label: "Terms", href: "/terms" }, { label: "Privacy", href: "/privacy" }, { label: "Contact", href: "/contact" }].map((l) => (
                 <Link
                   key={l.label}
                   to={l.href}
-                  className="text-sm transition-colors duration-150 hover:text-white"
-                  style={{ color: "#60a5fa" }}
+                  style={{ color: "#60a5fa", fontSize: "0.8rem", textDecoration: "none", transition: "color 0.15s" }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "white"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "#60a5fa"; }}
                 >
                   {l.label}
                 </Link>
